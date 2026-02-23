@@ -1,5 +1,5 @@
 import { sql, relations } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -25,6 +25,9 @@ export const books = pgTable("books", {
   listenTime: integer("listen_time").notNull(),
   audioUrl: text("audio_url"),
   featured: boolean("featured").default(false),
+  principleCount: integer("principle_count").default(0),
+  storyCount: integer("story_count").default(0),
+  exerciseCount: integer("exercise_count").default(0),
 });
 
 export const principles = pgTable("principles", {
@@ -34,6 +37,8 @@ export const principles = pgTable("principles", {
   content: text("content").notNull(),
   orderIndex: integer("order_index").notNull(),
   icon: text("icon"),
+  visualType: text("visual_type"),
+  visualData: jsonb("visual_data"),
 });
 
 export const stories = pgTable("stories", {
@@ -63,6 +68,8 @@ export const userProgress = pgTable("user_progress", {
   completedExercises: text("completed_exercises").array().default([]),
   bookmarked: boolean("bookmarked").default(false),
   lastAccessedAt: timestamp("last_accessed_at").defaultNow(),
+  currentCardIndex: integer("current_card_index").default(0),
+  totalCards: integer("total_cards").default(0),
 });
 
 export const journalEntries = pgTable("journal_entries", {
@@ -70,6 +77,43 @@ export const journalEntries = pgTable("journal_entries", {
   userId: varchar("user_id").references(() => users.id).notNull(),
   exerciseId: varchar("exercise_id").references(() => exercises.id).notNull(),
   content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const userInterests = pgTable("user_interests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  interests: text("interests").array().default([]),
+  onboardingCompleted: boolean("onboarding_completed").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const dailySparks = pgTable("daily_sparks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  quote: text("quote").notNull(),
+  author: text("author").notNull(),
+  bookId: varchar("book_id").references(() => books.id),
+  category: text("category"),
+});
+
+export const userStreaks = pgTable("user_streaks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  currentStreak: integer("current_streak").default(0),
+  longestStreak: integer("longest_streak").default(0),
+  lastActiveDate: date("last_active_date"),
+  totalMinutesListened: integer("total_minutes_listened").default(0),
+  totalExercisesCompleted: integer("total_exercises_completed").default(0),
+  totalBooksStarted: integer("total_books_started").default(0),
+});
+
+export const savedHighlights = pgTable("saved_highlights", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  bookId: varchar("book_id").references(() => books.id).notNull(),
+  principleId: varchar("principle_id").references(() => principles.id),
+  content: text("content").notNull(),
+  type: text("type").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -102,6 +146,20 @@ export const journalEntriesRelations = relations(journalEntries, ({ one }) => ({
   exercise: one(exercises, { fields: [journalEntries.exerciseId], references: [exercises.id] }),
 }));
 
+export const userInterestsRelations = relations(userInterests, ({ one }) => ({
+  user: one(users, { fields: [userInterests.userId], references: [users.id] }),
+}));
+
+export const userStreaksRelations = relations(userStreaks, ({ one }) => ({
+  user: one(users, { fields: [userStreaks.userId], references: [users.id] }),
+}));
+
+export const savedHighlightsRelations = relations(savedHighlights, ({ one }) => ({
+  user: one(users, { fields: [savedHighlights.userId], references: [users.id] }),
+  book: one(books, { fields: [savedHighlights.bookId], references: [books.id] }),
+  principle: one(principles, { fields: [savedHighlights.principleId], references: [principles.id] }),
+}));
+
 export const insertBookSchema = createInsertSchema(books).omit({ id: true });
 export const insertPrincipleSchema = createInsertSchema(principles).omit({ id: true });
 export const insertStorySchema = createInsertSchema(stories).omit({ id: true });
@@ -109,6 +167,10 @@ export const insertExerciseSchema = createInsertSchema(exercises).omit({ id: tru
 export const insertUserProgressSchema = createInsertSchema(userProgress).omit({ id: true });
 export const insertJournalEntrySchema = createInsertSchema(journalEntries).omit({ id: true });
 export const insertCategorySchema = createInsertSchema(categories).omit({ id: true });
+export const insertUserInterestsSchema = createInsertSchema(userInterests).omit({ id: true });
+export const insertDailySparkSchema = createInsertSchema(dailySparks).omit({ id: true });
+export const insertUserStreakSchema = createInsertSchema(userStreaks).omit({ id: true });
+export const insertSavedHighlightSchema = createInsertSchema(savedHighlights).omit({ id: true });
 
 export type InsertBook = z.infer<typeof insertBookSchema>;
 export type Book = typeof books.$inferSelect;
@@ -124,3 +186,11 @@ export type InsertJournalEntry = z.infer<typeof insertJournalEntrySchema>;
 export type JournalEntry = typeof journalEntries.$inferSelect;
 export type Category = typeof categories.$inferSelect;
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
+export type InsertUserInterests = z.infer<typeof insertUserInterestsSchema>;
+export type UserInterest = typeof userInterests.$inferSelect;
+export type InsertDailySpark = z.infer<typeof insertDailySparkSchema>;
+export type DailySpark = typeof dailySparks.$inferSelect;
+export type InsertUserStreak = z.infer<typeof insertUserStreakSchema>;
+export type UserStreak = typeof userStreaks.$inferSelect;
+export type InsertSavedHighlight = z.infer<typeof insertSavedHighlightSchema>;
+export type SavedHighlight = typeof savedHighlights.$inferSelect;

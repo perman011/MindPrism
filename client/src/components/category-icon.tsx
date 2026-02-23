@@ -9,7 +9,7 @@ const iconMap: Record<string, any> = {
   book: BookOpen,
 };
 
-export function CategoryIcon({ name, className }: { name: string; className?: string }) {
-  const Icon = iconMap[name] ?? BookOpen;
+export function CategoryIcon({ name, className }: { name: string | null; className?: string }) {
+  const Icon = iconMap[name ?? "book"] ?? BookOpen;
   return <Icon className={className} />;
 }

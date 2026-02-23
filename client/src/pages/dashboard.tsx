@@ -1,20 +1,64 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
-import type { Book, Category } from "@shared/schema";
+import type { Book, Category, DailySpark, UserStreak, UserProgress } from "@shared/schema";
 import { BookCard } from "@/components/book-card";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Brain, BookOpen, Sparkles, ArrowRight, LogOut, Search } from "lucide-react";
+import { Brain, Flame, ArrowRight, Sparkles, BookOpen, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { CategoryIcon } from "@/components/category-icon";
+import { useAudio } from "@/lib/audio-context";
+
+function ProgressRing({ progress, size = 40 }: { progress: number; size?: number }) {
+  const stroke = 3;
+  const radius = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (progress / 100) * circumference;
+
+  return (
+    <svg width={size} height={size} className="transform -rotate-90">
+      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="hsl(var(--muted))" strokeWidth={stroke} />
+      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="hsl(var(--primary))" strokeWidth={stroke}
+        strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round"
+        className="transition-all duration-500"
+      />
+    </svg>
+  );
+}
+
+function HorizontalScroll({ children, title, actionHref, actionLabel, testId }: {
+  children: React.ReactNode;
+  title: string;
+  actionHref?: string;
+  actionLabel?: string;
+  testId?: string;
+}) {
+  return (
+    <section className="mb-8" data-testid={testId}>
+      <div className="flex items-center justify-between px-5 mb-3">
+        <h2 className="font-serif text-lg font-bold">{title}</h2>
+        {actionHref && (
+          <Link href={actionHref}>
+            <button className="text-xs text-primary font-medium flex items-center gap-0.5" data-testid={`link-${testId}-action`}>
+              {actionLabel ?? "See All"}
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </Link>
+        )}
+      </div>
+      <div className="flex gap-4 overflow-x-auto px-5 pb-2 scrollbar-hide">
+        {children}
+      </div>
+    </section>
+  );
+}
 
 export default function Dashboard() {
-  const { user, logout } = useAuth();
-  const [searchQuery, setSearchQuery] = useState("");
+  const { user } = useAuth();
+  const { play } = useAudio();
 
   const { data: books, isLoading: booksLoading } = useQuery<Book[]>({
     queryKey: ["/api/books"],
@@ -26,11 +70,31 @@ export default function Dashboard() {
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
+  const { data: dailySpark } = useQuery<DailySpark | null>({
+    queryKey: ["/api/daily-spark"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+  });
+
+  const { data: streak } = useQuery<UserStreak | null>({
+    queryKey: ["/api/streak"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+  });
+
+  const { data: allProgress } = useQuery<UserProgress[]>({
+    queryKey: ["/api/progress"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+  });
+
   const featuredBooks = books?.filter((b) => b.featured) ?? [];
-  const filteredBooks = books?.filter((b) =>
-    b.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    b.author.toLowerCase().includes(searchQuery.toLowerCase())
-  ) ?? [];
+  const allBooks = books ?? [];
+  const inProgressBooks = allProgress?.filter(p => p.currentCardIndex && p.currentCardIndex > 0 && p.totalCards && p.currentCardIndex < p.totalCards) ?? [];
+
+  const greeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 17) return "Good Afternoon";
+    return "Good Evening";
+  };
 
   const initials = user
     ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase() || "U"
@@ -38,144 +102,120 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <nav className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-          <Link href="/">
-            <div className="flex items-center gap-2 cursor-pointer" data-testid="link-home">
-              <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
-                <Brain className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="font-serif text-xl font-bold">MindSpark</span>
-            </div>
-          </Link>
-
-          <div className="hidden md:flex flex-1 max-w-md mx-8">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search books, authors..."
-                className="pl-9"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                data-testid="input-search"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Link href="/library">
-              <Button variant="ghost" size="sm" data-testid="link-library">
-                <BookOpen className="w-4 h-4 mr-1.5" />
-                Library
-              </Button>
-            </Link>
-            <div className="flex items-center gap-2">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={user?.profileImageUrl ?? undefined} />
-                <AvatarFallback className="text-xs bg-primary/10 text-primary">{initials}</AvatarFallback>
-              </Avatar>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => logout()}
-                data-testid="button-logout"
-              >
-                <LogOut className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
+      <div className="px-5 pt-6 pb-3 flex items-center justify-between">
+        <div>
+          <p className="text-sm text-muted-foreground">{greeting()}</p>
+          <h1 className="font-serif text-xl font-bold" data-testid="text-welcome">
+            {user?.firstName ?? "Explorer"}
+          </h1>
         </div>
-      </nav>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 bg-orange-500/10 px-3 py-1.5 rounded-full" data-testid="badge-streak">
+            <Flame className="w-4 h-4 text-orange-500" />
+            <span className="text-sm font-bold text-orange-500">{streak?.currentStreak ?? 0}</span>
+          </div>
+          <Link href="/vault">
+            <Avatar className="h-9 w-9 cursor-pointer">
+              <AvatarImage src={user?.profileImageUrl ?? undefined} />
+              <AvatarFallback className="text-xs bg-primary/10 text-primary">{initials}</AvatarFallback>
+            </Avatar>
+          </Link>
+        </div>
+      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <section className="mb-12" data-testid="section-welcome">
-          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-xl p-8">
-            <div className="flex items-start gap-4 flex-wrap">
-              <div className="flex-1 min-w-[200px]">
-                <h1 className="font-serif text-2xl sm:text-3xl font-bold mb-2" data-testid="text-welcome">
-                  Welcome back{user?.firstName ? `, ${user.firstName}` : ""}
-                </h1>
-                <p className="text-muted-foreground mb-4">
-                  Continue your personal growth journey. Pick up where you left off or explore something new.
+      {dailySpark && (
+        <div className="px-5 mb-6">
+          <Card className="p-5 bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 border-primary/20" data-testid="card-daily-spark">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-md bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Sparkles className="w-4 h-4 text-primary" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs font-medium text-primary mb-1.5 uppercase tracking-wider">Daily Spark</p>
+                <p className="font-serif text-base leading-relaxed mb-2" data-testid="text-spark-quote">
+                  "{dailySpark.quote}"
                 </p>
-                <Link href="/library">
-                  <Button size="sm" className="gap-1.5" data-testid="button-explore">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    Explore Library
-                  </Button>
-                </Link>
+                <p className="text-xs text-muted-foreground">— {dailySpark.author}</p>
               </div>
             </div>
+          </Card>
+        </div>
+      )}
+
+      {inProgressBooks.length > 0 && (
+        <HorizontalScroll title="Jump Back In" testId="section-resume">
+          {inProgressBooks.map((prog) => {
+            const book = allBooks.find(b => b.id === prog.bookId);
+            if (!book) return null;
+            const pct = prog.totalCards ? Math.round((prog.currentCardIndex! / prog.totalCards) * 100) : 0;
+            return (
+              <Link key={prog.id} href={`/book/${book.id}/journey`}>
+                <div className="flex-shrink-0 w-36 cursor-pointer" data-testid={`resume-book-${book.id}`}>
+                  <div className="relative w-36 h-44 rounded-lg overflow-hidden mb-2">
+                    {book.coverImage ? (
+                      <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                        <span className="font-serif text-xl font-bold text-primary/30">{book.title[0]}</span>
+                      </div>
+                    )}
+                    <div className="absolute bottom-2 right-2">
+                      <ProgressRing progress={pct} size={36} />
+                    </div>
+                  </div>
+                  <p className="text-xs font-medium truncate">{book.title}</p>
+                  <p className="text-[10px] text-muted-foreground">{pct}% complete</p>
+                </div>
+              </Link>
+            );
+          })}
+        </HorizontalScroll>
+      )}
+
+      {featuredBooks.length > 0 && (
+        <HorizontalScroll title="Based on Your Goals" actionHref="/discover" actionLabel="See All" testId="section-featured">
+          {booksLoading
+            ? Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="flex-shrink-0 w-44 h-60 rounded-xl" />
+              ))
+            : featuredBooks.map((book) => (
+                <div key={book.id} className="flex-shrink-0 w-44">
+                  <BookCard book={book} compact />
+                </div>
+              ))}
+        </HorizontalScroll>
+      )}
+
+      <HorizontalScroll title="Trending Audio Summaries" actionHref="/audio" actionLabel="Listen" testId="section-trending">
+        {booksLoading
+          ? Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="flex-shrink-0 w-44 h-60 rounded-xl" />
+            ))
+          : allBooks.filter(b => b.audioUrl).slice(0, 5).map((book) => (
+              <div key={book.id} className="flex-shrink-0 w-44 cursor-pointer" onClick={() => play(book)}>
+                <BookCard book={book} compact audioMode />
+              </div>
+            ))}
+      </HorizontalScroll>
+
+      {categories && categories.length > 0 && (
+        <section className="mb-8 px-5" data-testid="section-categories">
+          <h2 className="font-serif text-lg font-bold mb-3">Browse by Topic</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {categories.map((cat) => (
+              <Link key={cat.id} href={`/discover?category=${cat.slug}`}>
+                <div
+                  className="p-3 rounded-xl bg-card border border-card-border hover-elevate cursor-pointer transition-colors flex items-center gap-2.5"
+                  data-testid={`card-category-${cat.slug}`}
+                >
+                  <CategoryIcon name={cat.icon} className="w-5 h-5 text-primary flex-shrink-0" />
+                  <span className="font-medium text-xs truncate">{cat.name}</span>
+                </div>
+              </Link>
+            ))}
           </div>
         </section>
-
-        {featuredBooks.length > 0 && (
-          <section className="mb-12" data-testid="section-featured">
-            <div className="flex items-center justify-between gap-4 mb-6">
-              <h2 className="font-serif text-xl sm:text-2xl font-bold">Featured Books</h2>
-              <Link href="/library">
-                <Button variant="ghost" size="sm" className="gap-1" data-testid="link-view-all">
-                  View All
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Button>
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {booksLoading
-                ? Array.from({ length: 3 }).map((_, i) => (
-                    <Skeleton key={i} className="h-72 rounded-xl" />
-                  ))
-                : featuredBooks.slice(0, 3).map((book) => (
-                    <BookCard key={book.id} book={book} />
-                  ))}
-            </div>
-          </section>
-        )}
-
-        {categories && categories.length > 0 && (
-          <section className="mb-12" data-testid="section-categories">
-            <h2 className="font-serif text-xl sm:text-2xl font-bold mb-6">Browse by Topic</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {categories.map((cat) => (
-                <Link key={cat.id} href={`/library?category=${cat.slug}`}>
-                  <div
-                    className="p-4 rounded-xl bg-card border border-card-border hover-elevate cursor-pointer transition-colors"
-                    data-testid={`card-category-${cat.slug}`}
-                  >
-                    <CategoryIcon name={cat.icon} className="w-6 h-6 text-primary mb-2" />
-                    <span className="font-medium text-sm">{cat.name}</span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
-
-        <section data-testid="section-all-books">
-          <h2 className="font-serif text-xl sm:text-2xl font-bold mb-6">
-            {searchQuery ? "Search Results" : "All Books"}
-          </h2>
-          {booksLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-72 rounded-xl" />
-              ))}
-            </div>
-          ) : filteredBooks.length === 0 ? (
-            <div className="text-center py-16">
-              <BookOpen className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-              <p className="text-muted-foreground">No books found matching your search.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredBooks.map((book) => (
-                <BookCard key={book.id} book={book} />
-              ))}
-            </div>
-          )}
-        </section>
-      </div>
+      )}
     </div>
   );
 }

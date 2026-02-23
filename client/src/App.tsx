@@ -1,23 +1,63 @@
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/use-auth";
+import { AudioProvider } from "@/lib/audio-context";
+import { BottomNav } from "@/components/bottom-nav";
+import { MiniPlayer } from "@/components/mini-player";
+import { FullScreenPlayer } from "@/components/full-screen-player";
 import LandingPage from "@/pages/landing";
+import Onboarding from "@/pages/onboarding";
 import Dashboard from "@/pages/dashboard";
-import Library from "@/pages/library";
+import Discover from "@/pages/discover";
+import AudioPage from "@/pages/audio";
+import Vault from "@/pages/vault";
 import BookDetail from "@/pages/book-detail";
+import StoryEngine from "@/pages/story-engine";
 import NotFound from "@/pages/not-found";
+import { getQueryFn } from "@/lib/queryClient";
+import type { UserInterest } from "@shared/schema";
 
-function AuthenticatedRoutes() {
+function AuthenticatedApp() {
+  const { data: interests, isLoading: interestsLoading } = useQuery<UserInterest | null>({
+    queryKey: ["/api/interests"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+  });
+
+  if (interestsLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-md bg-primary animate-pulse" />
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!interests || !interests.onboardingCompleted) {
+    return <Onboarding />;
+  }
+
   return (
-    <Switch>
-      <Route path="/" component={Dashboard} />
-      <Route path="/library" component={Library} />
-      <Route path="/book/:id" component={BookDetail} />
-      <Route component={NotFound} />
-    </Switch>
+    <AudioProvider>
+      <div className="pb-16">
+        <Switch>
+          <Route path="/" component={Dashboard} />
+          <Route path="/discover" component={Discover} />
+          <Route path="/audio" component={AudioPage} />
+          <Route path="/vault" component={Vault} />
+          <Route path="/book/:id" component={BookDetail} />
+          <Route path="/book/:id/journey" component={StoryEngine} />
+          <Route component={NotFound} />
+        </Switch>
+      </div>
+      <MiniPlayer />
+      <FullScreenPlayer />
+      <BottomNav />
+    </AudioProvider>
   );
 }
 
@@ -39,7 +79,7 @@ function AppRouter() {
     return <LandingPage />;
   }
 
-  return <AuthenticatedRoutes />;
+  return <AuthenticatedApp />;
 }
 
 function App() {
