@@ -1,6 +1,6 @@
 import { storage } from "./storage";
 import { db } from "./db";
-import { books, chapterSummaries, mentalModels, commonMistakes, actionItems } from "@shared/schema";
+import { books, chapterSummaries, mentalModels, commonMistakes, actionItems, infographics } from "@shared/schema";
 
 export async function seedDatabase() {
   const existingBooks = await db.select().from(books).limit(1);
@@ -94,6 +94,20 @@ export async function seedDatabase() {
   await storage.createActionItem({ bookId: book1.id, text: "Conduct a monthly Habit Scorecard review: rate all habits and identify one to add and one to remove", type: "long_term", orderIndex: 5 });
   await storage.createActionItem({ bookId: book1.id, text: "Build a habit stack of 3 connected morning routines and practice for 60 days", type: "long_term", orderIndex: 6 });
 
+  // Infographics
+  await storage.createInfographic({ bookId: book1.id, title: "The Habit Loop", description: "How every habit works in 4 steps", steps: [
+    { label: "1. Cue", explanation: "A trigger that tells your brain to initiate a behavior. It could be a time, location, emotion, or preceding action." },
+    { label: "2. Craving", explanation: "The motivational force behind every habit. You don't crave the habit itself—you crave the change in state it delivers." },
+    { label: "3. Response", explanation: "The actual habit you perform—a thought or action. It depends on how motivated you are and how much friction is involved." },
+    { label: "4. Reward", explanation: "The end goal of every habit. Rewards satisfy your craving and teach your brain which actions are worth remembering." },
+  ], orderIndex: 1 });
+  await storage.createInfographic({ bookId: book1.id, title: "1% Better Every Day", description: "The power of tiny gains compounding over time", steps: [
+    { label: "Day 1", explanation: "Start with a habit so small it takes less than 2 minutes. Read one page. Do one push-up." },
+    { label: "Day 30", explanation: "Consistency builds identity. You've cast 30 votes for the person you want to become." },
+    { label: "Day 180", explanation: "The plateau of latent potential is behind you. Results become visible as the compound effect kicks in." },
+    { label: "Day 365", explanation: "1% daily improvement = 37x better in a year. Your system is now automatic and self-reinforcing." },
+  ], orderIndex: 2 });
+
   // ===================== BOOK 2: Thinking, Fast and Slow =====================
   const book2 = await storage.createBook({
     title: "Thinking, Fast and Slow",
@@ -147,6 +161,14 @@ export async function seedDatabase() {
   await storage.createActionItem({ bookId: book2.id, text: "Keep a Decision Journal: log every major decision, your reasoning, and review outcomes monthly", type: "long_term", orderIndex: 3 });
   await storage.createActionItem({ bookId: book2.id, text: "Practice the 'pre-mortem' technique before starting any new project: imagine it failed and list why", type: "long_term", orderIndex: 4 });
 
+  // Infographics
+  await storage.createInfographic({ bookId: book2.id, title: "System 1 vs System 2", description: "Two modes of thinking that drive every decision", steps: [
+    { label: "System 1: Fast", explanation: "Automatic, effortless, emotional. Handles routine decisions in milliseconds. Prone to biases and shortcuts." },
+    { label: "System 2: Slow", explanation: "Deliberate, effortful, logical. Activated for complex problems. Requires focus and mental energy." },
+    { label: "The Conflict", explanation: "System 1 makes quick judgments. System 2 is supposed to check them — but it's lazy and often just endorses System 1's answer." },
+    { label: "The Fix", explanation: "Recognize when System 1 is driving. For important decisions, deliberately activate System 2 by slowing down and questioning assumptions." },
+  ], orderIndex: 1 });
+
   // ===================== BOOK 3: The Power of Now =====================
   const book3 = await storage.createBook({
     title: "The Power of Now",
@@ -195,6 +217,13 @@ export async function seedDatabase() {
   await storage.createActionItem({ bookId: book3.id, text: "Choose one daily activity (washing dishes, walking) and do it with 100% attention today", type: "immediate", orderIndex: 2 });
   await storage.createActionItem({ bookId: book3.id, text: "Practice 5 minutes of 'watching the thinker' meditation every morning for 30 days", type: "long_term", orderIndex: 3 });
   await storage.createActionItem({ bookId: book3.id, text: "Set 3 random daily alarms labeled 'Am I present?' as mindfulness triggers for 60 days", type: "long_term", orderIndex: 4 });
+
+  // Infographics
+  await storage.createInfographic({ bookId: book3.id, title: "The Layers of Presence", description: "Moving from thought to awareness in 3 levels", steps: [
+    { label: "Level 1: Thinking", explanation: "Lost in the stream of thoughts. Past regrets and future anxieties dominate. You identify completely with your mind." },
+    { label: "Level 2: Observing", explanation: "You notice you're thinking. A gap opens between you and your thoughts. This is the beginning of presence." },
+    { label: "Level 3: Being", explanation: "Pure awareness without labels. You experience life directly — sounds, sensations, aliveness — without the filter of mental commentary." },
+  ], orderIndex: 1 });
 
   // ===================== BOOK 4: Emotional Intelligence =====================
   const book4 = await storage.createBook({
@@ -245,6 +274,15 @@ export async function seedDatabase() {
   await storage.createActionItem({ bookId: book4.id, text: "Keep an Emotion Log for 30 days: 3 check-ins per day noting emotion, trigger, and behavior", type: "long_term", orderIndex: 3 });
   await storage.createActionItem({ bookId: book4.id, text: "Practice active listening in one conversation daily: reflect back what you heard before responding", type: "long_term", orderIndex: 4 });
 
+  // Infographics
+  await storage.createInfographic({ bookId: book4.id, title: "The 5 Pillars of EQ", description: "Five skills that define emotional intelligence", steps: [
+    { label: "1. Self-Awareness", explanation: "Recognize your emotions as they happen. Know your strengths, weaknesses, and emotional triggers." },
+    { label: "2. Self-Regulation", explanation: "Manage disruptive emotions. Pause before reacting. Choose your response instead of being controlled by impulse." },
+    { label: "3. Motivation", explanation: "Drive yourself toward goals with optimism and resilience, even when facing setbacks." },
+    { label: "4. Empathy", explanation: "Sense and understand other people's emotions. See situations from their perspective." },
+    { label: "5. Social Skills", explanation: "Build relationships, manage conflict, inspire and influence others through effective communication." },
+  ], orderIndex: 1 });
+
   // ===================== BOOK 5: Man's Search for Meaning =====================
   const book5 = await storage.createBook({
     title: "Man's Search for Meaning",
@@ -291,6 +329,13 @@ export async function seedDatabase() {
   await storage.createActionItem({ bookId: book5.id, text: "Think of a current struggle. Write down what lesson or growth it could be teaching you.", type: "immediate", orderIndex: 2 });
   await storage.createActionItem({ bookId: book5.id, text: "Create a personal mission statement using Frankl's three sources of meaning. Revisit it monthly.", type: "long_term", orderIndex: 3 });
   await storage.createActionItem({ bookId: book5.id, text: "Practice 'attitudinal values' by reframing one difficult situation each week as an opportunity for growth", type: "long_term", orderIndex: 4 });
+
+  // Infographics
+  await storage.createInfographic({ bookId: book5.id, title: "Three Sources of Meaning", description: "Frankl's framework for finding purpose in any circumstance", steps: [
+    { label: "1. Creative Values", explanation: "Find meaning through what you give to the world — your work, art, ideas, or deeds. What can you create or contribute?" },
+    { label: "2. Experiential Values", explanation: "Find meaning through what you receive from the world — love, beauty, truth, nature. What moments take your breath away?" },
+    { label: "3. Attitudinal Values", explanation: "Find meaning through the stance you take toward unavoidable suffering. When you can't change the situation, you can still choose your response." },
+  ], orderIndex: 1 });
 
   // --- Daily Sparks ---
   await storage.createDailySpark({ quote: "We are what we repeatedly do. Excellence, then, is not an act, but a habit.", author: "Aristotle", bookId: book1.id, category: "habits" });

@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   ArrowLeft, BookOpen, Lightbulb, Brain, AlertTriangle,
   Dumbbell, ListChecks, Layers, Bookmark, BookmarkCheck,
-  Clock, Headphones, Play, ChevronRight,
+  Clock, Headphones, Play, ChevronRight, BarChart3,
 } from "lucide-react";
 import { Link, useParams, useLocation } from "wouter";
 import { useAudio } from "@/lib/audio-context";
@@ -23,6 +23,7 @@ interface ContentCounts {
   commonMistakes: number;
   exercises: number;
   actionItems: number;
+  infographics: number;
 }
 
 const BLUEPRINT_TILES = [
@@ -52,6 +53,13 @@ const BLUEPRINT_TILES = [
     label: "Common Mistakes",
     icon: AlertTriangle,
     countKey: "commonMistakes" as keyof ContentCounts,
+    featured: false,
+  },
+  {
+    key: "infographics",
+    label: "Infographics",
+    icon: BarChart3,
+    countKey: "infographics" as keyof ContentCounts,
     featured: false,
   },
   {
@@ -226,29 +234,43 @@ export default function BookDetail() {
           {BLUEPRINT_TILES.map((tile) => {
             const count = contentCounts?.[tile.countKey] ?? 0;
             const Icon = tile.icon;
+
+            if (tile.featured) {
+              return (
+                <Card
+                  key={tile.key}
+                  className="col-span-2 p-4 cursor-pointer hover-elevate active-elevate-2 overflow-visible"
+                  onClick={() => navigate(`/book/${id}/journey?section=${tile.key}`)}
+                  data-testid={`tile-${tile.key}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Icon className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-sm">{tile.label}</p>
+                      <p className="text-xs text-muted-foreground">Tap through key insights chapter by chapter</p>
+                    </div>
+                    <Badge variant="secondary" className="text-[10px] font-semibold">{count}</Badge>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                </Card>
+              );
+            }
+
             return (
               <Card
                 key={tile.key}
-                className={`p-4 cursor-pointer hover-elevate active-elevate-2 overflow-visible ${tile.featured ? "col-span-2" : ""}`}
+                className="p-4 cursor-pointer hover-elevate active-elevate-2 overflow-visible"
                 onClick={() => navigate(`/book/${id}/journey?section=${tile.key}`)}
                 data-testid={`tile-${tile.key}`}
               >
-                <div className={`flex items-center gap-3 ${tile.featured ? "" : "flex-col text-center"}`}>
-                  <div className={`flex-shrink-0 rounded-md bg-primary/10 flex items-center justify-center ${tile.featured ? "w-10 h-10" : "w-9 h-9"}`}>
-                    <Icon className={`text-primary ${tile.featured ? "w-5 h-5" : "w-4 h-4"}`} />
+                <div className="flex flex-col items-center justify-center text-center gap-2 min-h-[100px]">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Icon className="w-5 h-5 text-primary" />
                   </div>
-                  <div className={tile.featured ? "flex-1 flex items-center justify-between gap-2" : ""}>
-                    <div>
-                      <p className={`font-semibold ${tile.featured ? "text-sm" : "text-xs mt-2"}`}>{tile.label}</p>
-                      {tile.featured && (
-                        <p className="text-xs text-muted-foreground">Tap through key insights chapter by chapter</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Badge variant="secondary" className="text-[10px]">{count}</Badge>
-                      {tile.featured && <ChevronRight className="w-4 h-4 text-muted-foreground" />}
-                    </div>
-                  </div>
+                  <p className="font-semibold text-xs leading-tight">{tile.label}</p>
+                  <Badge variant="secondary" className="text-[10px] font-semibold">{count}</Badge>
                 </div>
               </Card>
             );

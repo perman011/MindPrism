@@ -102,6 +102,16 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/books/:id/infographics", async (req, res) => {
+    try {
+      const inf = await storage.getInfographicsByBook(req.params.id);
+      res.json(inf);
+    } catch (error) {
+      console.error("Error fetching infographics:", error);
+      res.status(500).json({ message: "Failed to fetch infographics" });
+    }
+  });
+
   app.get("/api/books/:id/action-items", async (req, res) => {
     try {
       const type = req.query.type as string | undefined;
@@ -173,6 +183,16 @@ export async function registerRoutes(
           cards.push({ type: "action-items-list", data: { items } });
           break;
         }
+        case "infographics": {
+          const infs = await storage.getInfographicsByBook(id);
+          infs.forEach((inf) => {
+            cards.push({ type: "infographic-intro", data: { id: inf.id, title: inf.title, description: inf.description, imageUrl: inf.imageUrl, totalSteps: (inf.steps as any[]).length } });
+            (inf.steps as any[]).forEach((step, i) => {
+              cards.push({ type: "infographic-step", data: { ...step, infographicTitle: inf.title, stepIndex: i, totalSteps: (inf.steps as any[]).length, infographicId: inf.id } });
+            });
+          });
+          break;
+        }
         default: {
           const [bookPrinciples2, bookStories, bookExercises] = await Promise.all([
             storage.getPrinciplesByBook(id),
@@ -215,13 +235,14 @@ export async function registerRoutes(
   app.get("/api/books/:id/content-counts", async (req, res) => {
     try {
       const id = req.params.id;
-      const [chapters, models, principles, mistakes, exercises, items] = await Promise.all([
+      const [chapters, models, principles, mistakes, exercises, items, infs] = await Promise.all([
         storage.getChapterSummariesByBook(id),
         storage.getMentalModelsByBook(id),
         storage.getPrinciplesByBook(id),
         storage.getCommonMistakesByBook(id),
         storage.getExercisesByBook(id),
         storage.getActionItemsByBook(id),
+        storage.getInfographicsByBook(id),
       ]);
       res.json({
         chapterSummaries: chapters.length,
@@ -230,6 +251,7 @@ export async function registerRoutes(
         commonMistakes: mistakes.length,
         exercises: exercises.length,
         actionItems: items.length,
+        infographics: infs.length,
       });
     } catch (error) {
       console.error("Error fetching content counts:", error);

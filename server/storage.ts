@@ -14,9 +14,10 @@ import {
   type MentalModel, type InsertMentalModel,
   type CommonMistake, type InsertCommonMistake,
   type ActionItem, type InsertActionItem,
+  type Infographic, type InsertInfographic,
   books, principles, stories, exercises, userProgress, journalEntries, categories,
   userInterests, dailySparks, userStreaks, savedHighlights,
-  chapterSummaries, mentalModels, commonMistakes, actionItems,
+  chapterSummaries, mentalModels, commonMistakes, actionItems, infographics,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, desc, asc } from "drizzle-orm";
@@ -49,6 +50,9 @@ export interface IStorage {
 
   getCommonMistakesByBook(bookId: string): Promise<CommonMistake[]>;
   createCommonMistake(cm: InsertCommonMistake): Promise<CommonMistake>;
+
+  getInfographicsByBook(bookId: string): Promise<Infographic[]>;
+  createInfographic(inf: InsertInfographic): Promise<Infographic>;
 
   getActionItemsByBook(bookId: string, type?: string): Promise<ActionItem[]>;
   createActionItem(ai: InsertActionItem): Promise<ActionItem>;
@@ -168,6 +172,15 @@ export class DatabaseStorage implements IStorage {
 
   async createCommonMistake(cm: InsertCommonMistake): Promise<CommonMistake> {
     const [result] = await db.insert(commonMistakes).values(cm).returning();
+    return result;
+  }
+
+  async getInfographicsByBook(bookId: string): Promise<Infographic[]> {
+    return db.select().from(infographics).where(eq(infographics.bookId, bookId)).orderBy(asc(infographics.orderIndex));
+  }
+
+  async createInfographic(inf: InsertInfographic): Promise<Infographic> {
+    const [result] = await db.insert(infographics).values(inf).returning();
     return result;
   }
 

@@ -88,6 +88,16 @@ export const commonMistakes = pgTable("common_mistakes", {
   orderIndex: integer("order_index").notNull(),
 });
 
+export const infographics = pgTable("infographics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bookId: varchar("book_id").references(() => books.id).notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  imageUrl: text("image_url"),
+  steps: jsonb("steps").notNull(),
+  orderIndex: integer("order_index").notNull(),
+});
+
 export const actionItems = pgTable("action_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   bookId: varchar("book_id").references(() => books.id).notNull(),
@@ -163,6 +173,7 @@ export const booksRelations = relations(books, ({ one, many }) => ({
   mentalModels: many(mentalModels),
   commonMistakes: many(commonMistakes),
   actionItems: many(actionItems),
+  infographics: many(infographics),
 }));
 
 export const principlesRelations = relations(principles, ({ one, many }) => ({
@@ -189,6 +200,10 @@ export const mentalModelsRelations = relations(mentalModels, ({ one }) => ({
 
 export const commonMistakesRelations = relations(commonMistakes, ({ one }) => ({
   book: one(books, { fields: [commonMistakes.bookId], references: [books.id] }),
+}));
+
+export const infographicsRelations = relations(infographics, ({ one }) => ({
+  book: one(books, { fields: [infographics.bookId], references: [books.id] }),
 }));
 
 export const actionItemsRelations = relations(actionItems, ({ one }) => ({
@@ -231,6 +246,7 @@ export const insertSavedHighlightSchema = createInsertSchema(savedHighlights).om
 export const insertChapterSummarySchema = createInsertSchema(chapterSummaries).omit({ id: true });
 export const insertMentalModelSchema = createInsertSchema(mentalModels).omit({ id: true });
 export const insertCommonMistakeSchema = createInsertSchema(commonMistakes).omit({ id: true });
+export const insertInfographicSchema = createInsertSchema(infographics).omit({ id: true });
 export const insertActionItemSchema = createInsertSchema(actionItems).omit({ id: true });
 
 export type InsertBook = z.infer<typeof insertBookSchema>;
@@ -261,5 +277,7 @@ export type InsertMentalModel = z.infer<typeof insertMentalModelSchema>;
 export type MentalModel = typeof mentalModels.$inferSelect;
 export type InsertCommonMistake = z.infer<typeof insertCommonMistakeSchema>;
 export type CommonMistake = typeof commonMistakes.$inferSelect;
+export type InsertInfographic = z.infer<typeof insertInfographicSchema>;
+export type Infographic = typeof infographics.$inferSelect;
 export type InsertActionItem = z.infer<typeof insertActionItemSchema>;
 export type ActionItem = typeof actionItems.$inferSelect;

@@ -22,6 +22,7 @@ BOOK OBJECT
 ├── Principles         (Fundamental rules to live/work by)
 │   └── Stories        (Real-world anecdotes proving parent principle)
 ├── Common Mistakes    (Anti-patterns with do/don't corrections)
+├── Infographics       (Visual step-by-step frameworks with tap-to-reveal)
 ├── Exercises          (Interactive prompts ranked by impact: high/medium/low)
 └── Action Items       (Categorized: immediate vs long-term checklists)
 ```
@@ -78,6 +79,7 @@ shared/
 - `stories` - bookId, principleId (nullable FK), title, content, moral, orderIndex
 - `exercises` - bookId, title, description, type, content (jsonb), impact (high/medium/low), orderIndex
 - `common_mistakes` - bookId, mistake, correction, orderIndex
+- `infographics` - bookId, title, description, imageUrl, steps (jsonb array), orderIndex
 - `action_items` - bookId, text, type (immediate/long_term), orderIndex
 - `user_progress` - userId, bookId, completedPrinciples, bookmarked, currentCardIndex, currentSection
 - `journal_entries` - userId, exerciseId (optional), content
@@ -97,6 +99,7 @@ shared/
 - `GET /api/books/:id/stories` - Get stories
 - `GET /api/books/:id/exercises` - Get exercises (sorted by impact)
 - `GET /api/books/:id/common-mistakes` - Get common mistakes
+- `GET /api/books/:id/infographics` - Get infographics
 - `GET /api/books/:id/action-items` - Get action items (optional ?type filter)
 - `GET /api/books/:id/cards/:section` - Get cards for Interactive Engine by section
 - `GET /api/books/:id/cards` - Get legacy combined cards
@@ -121,8 +124,9 @@ shared/
 2. **Mental Models**: Intro card + tap-to-reveal step cards with animation
 3. **Principles & Stories**: Principle card with "See the Proof" flip to reveal story
 4. **Common Mistakes**: Do/Don't split card (red mistake vs green correction)
-5. **Exercises**: Workbook with impact badges, reflection/quiz/action_plan types, confetti
-6. **Action Items**: Checklist with immediate/long-term toggle, checkbox animations
+5. **Infographics**: Intro card + tap-to-reveal step cards with progress indicators
+6. **Exercises**: Workbook with impact badges, reflection/quiz/action_plan types, confetti
+7. **Action Items**: Checklist with immediate/long-term toggle, checkbox animations
 
 ## App Flow
 1. Landing page (unauthenticated) → Auto-swiping carousel with 3 slides

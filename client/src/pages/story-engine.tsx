@@ -9,13 +9,13 @@ import {
   X, Lightbulb, BookMarked, Dumbbell, ChevronLeft, ChevronRight,
   CheckCircle2, PenLine, Brain, AlertTriangle, ListChecks,
   BookOpen, Eye, RotateCcw, Check, Zap, TrendingUp, Clock,
-  ArrowRight, Sparkles,
+  ArrowRight, Sparkles, BarChart3,
 } from "lucide-react";
 import { useParams, useLocation, useSearch } from "wouter";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 
-type SectionType = "chapter-summaries" | "mental-models" | "principles" | "common-mistakes" | "exercises" | "action-items";
+type SectionType = "chapter-summaries" | "mental-models" | "principles" | "common-mistakes" | "infographics" | "exercises" | "action-items";
 
 type CardItem = {
   type: string;
@@ -27,6 +27,7 @@ const SECTION_META: Record<SectionType, { label: string; icon: any; color: strin
   "mental-models": { label: "Mental Models", icon: Brain, color: "text-purple-500" },
   "principles": { label: "Principles & Stories", icon: Lightbulb, color: "text-primary" },
   "common-mistakes": { label: "Common Mistakes", icon: AlertTriangle, color: "text-amber-500" },
+  "infographics": { label: "Infographics", icon: BarChart3, color: "text-indigo-500" },
   "exercises": { label: "Exercises", icon: Dumbbell, color: "text-emerald-500" },
   "action-items": { label: "Action Items", icon: ListChecks, color: "text-sky-500" },
 };
@@ -470,6 +471,72 @@ function ActionPlanContent({ steps, exerciseId }: { steps: string[]; exerciseId:
   );
 }
 
+function InfographicCard({ card, onNext }: { card: CardItem; onNext: () => void }) {
+  const d = card.data;
+  const [revealedSteps, setRevealedSteps] = useState<number[]>([]);
+
+  if (card.type === "infographic-intro") {
+    return (
+      <div className="text-center" data-testid={`card-infographic-intro-${d.id}`}>
+        <div className="w-16 h-16 rounded-full bg-indigo-500/10 flex items-center justify-center mx-auto mb-6">
+          <BarChart3 className="w-8 h-8 text-indigo-500" />
+        </div>
+        <h2 className="font-serif text-2xl font-bold mb-3">{d.title}</h2>
+        <p className="text-base text-muted-foreground mb-4">{d.description}</p>
+        <Badge variant="secondary" className="text-xs">
+          {d.totalSteps} steps to explore
+        </Badge>
+        <Button className="mt-8 gap-2 w-full" onClick={onNext} data-testid="button-explore-infographic">
+          <Eye className="w-4 h-4" />
+          Explore
+        </Button>
+      </div>
+    );
+  }
+
+  const stepIndex = d.stepIndex ?? 0;
+  const totalSteps = d.totalSteps ?? 1;
+  const isRevealed = revealedSteps.includes(stepIndex);
+
+  return (
+    <div className="text-center" data-testid={`card-infographic-step-${d.infographicId}-${stepIndex}`}>
+      <p className="text-xs text-indigo-500 font-semibold mb-4 uppercase tracking-wider">
+        {d.infographicTitle} — Step {stepIndex + 1} of {totalSteps}
+      </p>
+
+      <div className="flex justify-center gap-1.5 mb-6">
+        {Array.from({ length: totalSteps }, (_, i) => (
+          <div
+            key={i}
+            className={`h-1.5 rounded-full transition-all duration-300 ${
+              i <= stepIndex ? "w-8 bg-indigo-500" : "w-4 bg-muted"
+            }`}
+          />
+        ))}
+      </div>
+
+      <div
+        className="bg-indigo-500/5 border border-indigo-500/20 rounded-2xl p-6 cursor-pointer transition-all duration-500"
+        onClick={() => !isRevealed && setRevealedSteps((prev) => [...prev, stepIndex])}
+        data-testid={`infographic-step-reveal-${stepIndex}`}
+      >
+        <h3 className="font-serif text-xl font-bold mb-3 text-indigo-600 dark:text-indigo-400">{d.label}</h3>
+
+        {isRevealed ? (
+          <p className="text-sm leading-relaxed animate-in fade-in slide-in-from-bottom-2 duration-500">
+            {d.explanation}
+          </p>
+        ) : (
+          <button className="flex items-center gap-2 mx-auto text-sm text-indigo-500 font-medium">
+            <Eye className="w-4 h-4" />
+            Tap to reveal
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ActionItemsCard({ card }: { card: CardItem }) {
   const items: ActionItem[] = card.data.items || [];
   const [filter, setFilter] = useState<"all" | "immediate" | "long_term">("all");
@@ -610,6 +677,15 @@ export default function StoryEngine() {
     setCurrentIndex(0);
   }, [section]);
 
+  const card = cards?.[currentIndex];
+  const shouldSkipCard = section === "principles" && card?.type === "story" && currentIndex > 0 && cards?.[currentIndex - 1]?.type === "principle";
+
+  useEffect(() => {
+    if (shouldSkipCard) {
+      goTo(currentIndex + 1);
+    }
+  }, [shouldSkipCard, currentIndex, goTo]);
+
   if (isLoading || !cards || !book) {
     return (
       <div className="fixed inset-0 z-[200] bg-background flex items-center justify-center">
@@ -629,34 +705,29 @@ export default function StoryEngine() {
     );
   }
 
-  const card = cards[currentIndex];
   const progress = ((currentIndex + 1) / totalCards) * 100;
   const meta = SECTION_META[section] || SECTION_META["chapter-summaries"];
   const SectionIcon = meta.icon;
 
-  const shouldSkipCard = section === "principles" && card.type === "story" && currentIndex > 0 && cards[currentIndex - 1]?.type === "principle";
-
-  useEffect(() => {
-    if (shouldSkipCard) {
-      goTo(currentIndex + 1);
-    }
-  }, [shouldSkipCard, currentIndex, goTo]);
+  const currentCard = cards[currentIndex];
 
   const renderCard = () => {
-    if (shouldSkipCard) return null;
+    if (shouldSkipCard || !currentCard) return null;
     switch (section) {
       case "chapter-summaries":
-        return <ChapterSummaryCard card={card} onNext={() => goTo(currentIndex + 1)} />;
+        return <ChapterSummaryCard card={currentCard} onNext={() => goTo(currentIndex + 1)} />;
       case "mental-models":
-        return <MentalModelCard card={card} key={currentIndex} />;
+        return <MentalModelCard card={currentCard} key={currentIndex} />;
       case "principles":
-        return <PrincipleStoryCard card={card} cards={cards} currentIndex={currentIndex} goTo={goTo} />;
+        return <PrincipleStoryCard card={currentCard} cards={cards} currentIndex={currentIndex} goTo={goTo} />;
       case "common-mistakes":
-        return <CommonMistakeCard card={card} />;
+        return <CommonMistakeCard card={currentCard} />;
+      case "infographics":
+        return <InfographicCard card={currentCard} onNext={() => goTo(currentIndex + 1)} key={currentIndex} />;
       case "exercises":
-        return <ExerciseCard card={card} bookId={id} key={card.data?.id || currentIndex} />;
+        return <ExerciseCard card={currentCard} bookId={id} key={currentCard.data?.id || currentIndex} />;
       case "action-items":
-        return <ActionItemsCard card={card} />;
+        return <ActionItemsCard card={currentCard} />;
       default:
         return <div className="text-center text-muted-foreground">Unknown section</div>;
     }
