@@ -1,7 +1,7 @@
 # MindSpark - Psychology Made Simple
 
 ## Overview
-MindSpark is a mobile-first web application that transforms dense psychology and self-help books into bite-sized, interactive learning experiences. Instead of reading 500-page books, users get core principles, extracted stories, interactive exercises, and audio summaries.
+MindSpark is a mobile-first web application that transforms dense psychology and self-help books into bite-sized, interactive learning experiences. Instead of reading 500-page books, users get a structured psychological taxonomy: core thesis, chapter summaries, mental models, principles with stories, common mistakes, exercises ranked by impact, and action items.
 
 ## Tech Stack
 - **Frontend:** React + TypeScript + Vite + TailwindCSS + Shadcn/UI
@@ -11,6 +11,20 @@ MindSpark is a mobile-first web application that transforms dense psychology and
 - **Routing:** Wouter
 - **State:** TanStack React Query
 - **Audio:** Global AudioContext with simulated playback
+
+## Content Architecture (Psychological Taxonomy)
+Every book follows this hierarchical structure:
+```
+BOOK OBJECT
+├── Core Thesis        (1-2 sentence "Big Idea" of the whole book)
+├── Chapter Summaries  (Tap-through breakdown per chapter, Instagram Stories-style)
+├── Mental Models      (Reusable visual frameworks with tap-to-reveal steps)
+├── Principles         (Fundamental rules to live/work by)
+│   └── Stories        (Real-world anecdotes proving parent principle)
+├── Common Mistakes    (Anti-patterns with do/don't corrections)
+├── Exercises          (Interactive prompts ranked by impact: high/medium/low)
+└── Action Items       (Categorized: immediate vs long-term checklists)
+```
 
 ## Project Structure
 ```
@@ -22,8 +36,8 @@ client/src/
     discover.tsx         - Book library with search, category pills, book grid
     audio.tsx            - Audio summaries listing page
     vault.tsx            - Growth vault: journal, highlights, stats, settings
-    book-detail.tsx      - Book detail with hero image, Start Journey, tabs
-    story-engine.tsx     - Instagram Stories-style card swiping for principles/stories/exercises
+    book-detail.tsx      - Book Master Hub with core thesis + Blueprint Grid (6 tiles)
+    story-engine.tsx     - Interactive Engine with 6 card templates per content type
     not-found.tsx        - 404 page
   components/
     book-card.tsx        - Reusable book card (compact/full/audio modes)
@@ -31,7 +45,6 @@ client/src/
     mini-player.tsx      - Persistent mini audio player above bottom nav
     full-screen-player.tsx - Full-screen audio player with controls
     category-icon.tsx    - Dynamic category icon mapper
-    audio-player.tsx     - Legacy standalone audio player (deprecated)
     ui/                  - Shadcn components
   hooks/
     use-auth.ts          - Authentication hook
@@ -45,31 +58,56 @@ server/
   routes.ts             - API endpoints
   storage.ts            - Database storage layer (IStorage interface)
   db.ts                 - Database connection
-  seed.ts               - Database seed data
+  seed.ts               - Database seed data (5 books with full taxonomy)
   replit_integrations/  - Auth integration
 
 shared/
-  schema.ts             - Drizzle schema + types
+  schema.ts             - Drizzle schema + types (books, principles, stories, exercises,
+                          chapter_summaries, mental_models, common_mistakes, action_items,
+                          user_progress, journal_entries, user_interests, daily_sparks,
+                          user_streaks, saved_highlights)
   models/auth.ts        - Auth schema
 ```
+
+## Database Tables
+- `books` - title, author, coreThesis, coverImage, readTime, listenTime, audioUrl, featured
+- `categories` - name, slug, icon, color
+- `chapter_summaries` - bookId, chapterNumber, chapterTitle, cards (jsonb array)
+- `mental_models` - bookId, title, description, steps (jsonb array), orderIndex
+- `principles` - bookId, title, content, orderIndex, icon
+- `stories` - bookId, principleId (nullable FK), title, content, moral, orderIndex
+- `exercises` - bookId, title, description, type, content (jsonb), impact (high/medium/low), orderIndex
+- `common_mistakes` - bookId, mistake, correction, orderIndex
+- `action_items` - bookId, text, type (immediate/long_term), orderIndex
+- `user_progress` - userId, bookId, completedPrinciples, bookmarked, currentCardIndex, currentSection
+- `journal_entries` - userId, exerciseId (optional), content
+- `user_interests` - userId, interests array, onboardingCompleted
+- `daily_sparks` - quote, author, bookId, category
+- `user_streaks` - userId, currentStreak, longestStreak, totalMinutesListened, etc.
+- `saved_highlights` - userId, bookId, content, type
 
 ## API Endpoints
 - `GET /api/categories` - List categories
 - `GET /api/books` - List all books
-- `GET /api/books/:id` - Get single book
-- `GET /api/books/:id/principles` - Get principles for a book
-- `GET /api/books/:id/stories` - Get stories for a book
-- `GET /api/books/:id/exercises` - Get exercises for a book
-- `GET /api/books/:id/cards` - Get combined cards (principles+stories+exercises) for story engine
+- `GET /api/books/:id` - Get single book (includes coreThesis)
+- `GET /api/books/:id/content-counts` - Get counts for all 6 content types
+- `GET /api/books/:id/chapter-summaries` - Get chapter summaries
+- `GET /api/books/:id/mental-models` - Get mental models
+- `GET /api/books/:id/principles` - Get principles
+- `GET /api/books/:id/stories` - Get stories
+- `GET /api/books/:id/exercises` - Get exercises (sorted by impact)
+- `GET /api/books/:id/common-mistakes` - Get common mistakes
+- `GET /api/books/:id/action-items` - Get action items (optional ?type filter)
+- `GET /api/books/:id/cards/:section` - Get cards for Interactive Engine by section
+- `GET /api/books/:id/cards` - Get legacy combined cards
 - `GET /api/progress` - Get all user progress (auth required)
 - `GET /api/progress/:bookId` - Get user progress for a book (auth required)
 - `POST /api/progress/:bookId/bookmark` - Toggle bookmark (auth required)
-- `POST /api/progress/:bookId/principle/:principleId` - Toggle principle completion (auth required)
-- `POST /api/progress/:bookId/card` - Update card progress (auth required)
+- `POST /api/progress/:bookId/card` - Update card progress with section (auth required)
 - `GET /api/journal` - Get journal entries (auth required)
 - `POST /api/journal` - Save journal entry (auth required)
 - `GET /api/interests` - Get user interests (auth required)
-- `POST /api/interests` - Save user interests and complete onboarding (auth required)
+- `POST /api/interests` - Save user interests (auth required)
 - `GET /api/daily-spark` - Get daily spark quote
 - `GET /api/streak` - Get user streak stats (auth required)
 - `POST /api/streak/activity` - Update streak (auth required)
@@ -78,13 +116,21 @@ shared/
 - `POST /api/highlights` - Save highlight (auth required)
 - `DELETE /api/highlights/:id` - Delete highlight (auth required)
 
+## Interactive Engine Card Templates
+1. **Chapter Summaries**: Tap-through cards with 1-2 sentences, chapter transitions
+2. **Mental Models**: Intro card + tap-to-reveal step cards with animation
+3. **Principles & Stories**: Principle card with "See the Proof" flip to reveal story
+4. **Common Mistakes**: Do/Don't split card (red mistake vs green correction)
+5. **Exercises**: Workbook with impact badges, reflection/quiz/action_plan types, confetti
+6. **Action Items**: Checklist with immediate/long-term toggle, checkbox animations
+
 ## App Flow
 1. Landing page (unauthenticated) → Auto-swiping carousel with 3 slides
 2. Login via Replit Auth
 3. Onboarding (first login) → Select 3+ interests from 12 tiles
 4. Dashboard → Daily spark, streak, horizontal carousels, category grid
-5. Book Detail → Hero image, Start Journey button, Principles/Stories/Exercises tabs
-6. Story Engine → Card-by-card journey through principles → stories → exercises
+5. Book Detail (Master Hub) → Core thesis + Blueprint Grid (6 tiles)
+6. Interactive Engine → Section-specific card templates
 7. Audio → Browse and play audio summaries via global audio player
 
 ## Design
@@ -93,17 +139,3 @@ shared/
 - Mobile-first with fixed bottom navigation
 - Dark gradient backgrounds on landing/onboarding
 - Card-based UI with hover-elevate interactions
-
-## Key Features
-1. Auto-swiping splash carousel (3 slides, 3.5s interval)
-2. Personalization onboarding with 12 interest tiles
-3. Bottom navigation: Home / Discover / Audio / My Vault
-4. Dashboard with daily spark quotes, streak badge, horizontal carousels
-5. Discover page with search bar and category filtering
-6. Story Engine: Instagram Stories-style card swiping
-7. Three exercise types: Reflection (journal), Quiz, Action Plan
-8. Global audio player with mini-player and full-screen mode
-9. Streak tracking and stats (days, minutes listened, exercises done)
-10. Growth Vault with journal entries, saved highlights, settings
-11. Bookmark and progress tracking per book
-12. Replit Auth for login

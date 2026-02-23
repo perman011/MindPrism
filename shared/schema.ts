@@ -20,6 +20,7 @@ export const books = pgTable("books", {
   author: text("author").notNull(),
   coverImage: text("cover_image"),
   description: text("description").notNull(),
+  coreThesis: text("core_thesis"),
   categoryId: varchar("category_id").references(() => categories.id),
   readTime: integer("read_time").notNull(),
   listenTime: integer("listen_time").notNull(),
@@ -44,6 +45,7 @@ export const principles = pgTable("principles", {
 export const stories = pgTable("stories", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   bookId: varchar("book_id").references(() => books.id).notNull(),
+  principleId: varchar("principle_id"),
   title: text("title").notNull(),
   content: text("content").notNull(),
   moral: text("moral"),
@@ -57,6 +59,40 @@ export const exercises = pgTable("exercises", {
   description: text("description").notNull(),
   type: text("type").notNull(),
   content: jsonb("content").notNull(),
+  impact: text("impact").default("medium"),
+  orderIndex: integer("order_index").notNull(),
+});
+
+export const chapterSummaries = pgTable("chapter_summaries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bookId: varchar("book_id").references(() => books.id).notNull(),
+  chapterNumber: integer("chapter_number").notNull(),
+  chapterTitle: text("chapter_title").notNull(),
+  cards: jsonb("cards").notNull(),
+});
+
+export const mentalModels = pgTable("mental_models", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bookId: varchar("book_id").references(() => books.id).notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  steps: jsonb("steps").notNull(),
+  orderIndex: integer("order_index").notNull(),
+});
+
+export const commonMistakes = pgTable("common_mistakes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bookId: varchar("book_id").references(() => books.id).notNull(),
+  mistake: text("mistake").notNull(),
+  correction: text("correction").notNull(),
+  orderIndex: integer("order_index").notNull(),
+});
+
+export const actionItems = pgTable("action_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bookId: varchar("book_id").references(() => books.id).notNull(),
+  text: text("text").notNull(),
+  type: text("type").notNull(),
   orderIndex: integer("order_index").notNull(),
 });
 
@@ -70,12 +106,13 @@ export const userProgress = pgTable("user_progress", {
   lastAccessedAt: timestamp("last_accessed_at").defaultNow(),
   currentCardIndex: integer("current_card_index").default(0),
   totalCards: integer("total_cards").default(0),
+  currentSection: text("current_section"),
 });
 
 export const journalEntries = pgTable("journal_entries", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull(),
-  exerciseId: varchar("exercise_id").references(() => exercises.id).notNull(),
+  exerciseId: varchar("exercise_id"),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -111,7 +148,7 @@ export const savedHighlights = pgTable("saved_highlights", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull(),
   bookId: varchar("book_id").references(() => books.id).notNull(),
-  principleId: varchar("principle_id").references(() => principles.id),
+  principleId: varchar("principle_id"),
   content: text("content").notNull(),
   type: text("type").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
@@ -122,18 +159,40 @@ export const booksRelations = relations(books, ({ one, many }) => ({
   principles: many(principles),
   stories: many(stories),
   exercises: many(exercises),
+  chapterSummaries: many(chapterSummaries),
+  mentalModels: many(mentalModels),
+  commonMistakes: many(commonMistakes),
+  actionItems: many(actionItems),
 }));
 
-export const principlesRelations = relations(principles, ({ one }) => ({
+export const principlesRelations = relations(principles, ({ one, many }) => ({
   book: one(books, { fields: [principles.bookId], references: [books.id] }),
+  stories: many(stories),
 }));
 
 export const storiesRelations = relations(stories, ({ one }) => ({
   book: one(books, { fields: [stories.bookId], references: [books.id] }),
+  principle: one(principles, { fields: [stories.principleId], references: [principles.id] }),
 }));
 
 export const exercisesRelations = relations(exercises, ({ one }) => ({
   book: one(books, { fields: [exercises.bookId], references: [books.id] }),
+}));
+
+export const chapterSummariesRelations = relations(chapterSummaries, ({ one }) => ({
+  book: one(books, { fields: [chapterSummaries.bookId], references: [books.id] }),
+}));
+
+export const mentalModelsRelations = relations(mentalModels, ({ one }) => ({
+  book: one(books, { fields: [mentalModels.bookId], references: [books.id] }),
+}));
+
+export const commonMistakesRelations = relations(commonMistakes, ({ one }) => ({
+  book: one(books, { fields: [commonMistakes.bookId], references: [books.id] }),
+}));
+
+export const actionItemsRelations = relations(actionItems, ({ one }) => ({
+  book: one(books, { fields: [actionItems.bookId], references: [books.id] }),
 }));
 
 export const userProgressRelations = relations(userProgress, ({ one }) => ({
@@ -143,7 +202,6 @@ export const userProgressRelations = relations(userProgress, ({ one }) => ({
 
 export const journalEntriesRelations = relations(journalEntries, ({ one }) => ({
   user: one(users, { fields: [journalEntries.userId], references: [users.id] }),
-  exercise: one(exercises, { fields: [journalEntries.exerciseId], references: [exercises.id] }),
 }));
 
 export const userInterestsRelations = relations(userInterests, ({ one }) => ({
@@ -157,7 +215,6 @@ export const userStreaksRelations = relations(userStreaks, ({ one }) => ({
 export const savedHighlightsRelations = relations(savedHighlights, ({ one }) => ({
   user: one(users, { fields: [savedHighlights.userId], references: [users.id] }),
   book: one(books, { fields: [savedHighlights.bookId], references: [books.id] }),
-  principle: one(principles, { fields: [savedHighlights.principleId], references: [principles.id] }),
 }));
 
 export const insertBookSchema = createInsertSchema(books).omit({ id: true });
@@ -171,6 +228,10 @@ export const insertUserInterestsSchema = createInsertSchema(userInterests).omit(
 export const insertDailySparkSchema = createInsertSchema(dailySparks).omit({ id: true });
 export const insertUserStreakSchema = createInsertSchema(userStreaks).omit({ id: true });
 export const insertSavedHighlightSchema = createInsertSchema(savedHighlights).omit({ id: true });
+export const insertChapterSummarySchema = createInsertSchema(chapterSummaries).omit({ id: true });
+export const insertMentalModelSchema = createInsertSchema(mentalModels).omit({ id: true });
+export const insertCommonMistakeSchema = createInsertSchema(commonMistakes).omit({ id: true });
+export const insertActionItemSchema = createInsertSchema(actionItems).omit({ id: true });
 
 export type InsertBook = z.infer<typeof insertBookSchema>;
 export type Book = typeof books.$inferSelect;
@@ -194,3 +255,11 @@ export type InsertUserStreak = z.infer<typeof insertUserStreakSchema>;
 export type UserStreak = typeof userStreaks.$inferSelect;
 export type InsertSavedHighlight = z.infer<typeof insertSavedHighlightSchema>;
 export type SavedHighlight = typeof savedHighlights.$inferSelect;
+export type InsertChapterSummary = z.infer<typeof insertChapterSummarySchema>;
+export type ChapterSummary = typeof chapterSummaries.$inferSelect;
+export type InsertMentalModel = z.infer<typeof insertMentalModelSchema>;
+export type MentalModel = typeof mentalModels.$inferSelect;
+export type InsertCommonMistake = z.infer<typeof insertCommonMistakeSchema>;
+export type CommonMistake = typeof commonMistakes.$inferSelect;
+export type InsertActionItem = z.infer<typeof insertActionItemSchema>;
+export type ActionItem = typeof actionItems.$inferSelect;

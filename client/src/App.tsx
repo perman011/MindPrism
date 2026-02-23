@@ -50,6 +50,7 @@ function AuthenticatedApp() {
           <Route path="/audio" component={AudioPage} />
           <Route path="/vault" component={Vault} />
           <Route path="/book/:id" component={BookDetail} />
+          <Route path="/book/:id/journey/:section" component={StoryEngine} />
           <Route path="/book/:id/journey" component={StoryEngine} />
           <Route component={NotFound} />
         </Switch>

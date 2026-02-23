@@ -64,11 +64,131 @@ export async function registerRoutes(
 
   app.get("/api/books/:id/exercises", async (req, res) => {
     try {
-      const e = await storage.getExercisesByBook(req.params.id);
+      const e = await storage.getExercisesByBookSorted(req.params.id);
       res.json(e);
     } catch (error) {
       console.error("Error fetching exercises:", error);
       res.status(500).json({ message: "Failed to fetch exercises" });
+    }
+  });
+
+  app.get("/api/books/:id/chapter-summaries", async (req, res) => {
+    try {
+      const cs = await storage.getChapterSummariesByBook(req.params.id);
+      res.json(cs);
+    } catch (error) {
+      console.error("Error fetching chapter summaries:", error);
+      res.status(500).json({ message: "Failed to fetch chapter summaries" });
+    }
+  });
+
+  app.get("/api/books/:id/mental-models", async (req, res) => {
+    try {
+      const mm = await storage.getMentalModelsByBook(req.params.id);
+      res.json(mm);
+    } catch (error) {
+      console.error("Error fetching mental models:", error);
+      res.status(500).json({ message: "Failed to fetch mental models" });
+    }
+  });
+
+  app.get("/api/books/:id/common-mistakes", async (req, res) => {
+    try {
+      const cm = await storage.getCommonMistakesByBook(req.params.id);
+      res.json(cm);
+    } catch (error) {
+      console.error("Error fetching common mistakes:", error);
+      res.status(500).json({ message: "Failed to fetch common mistakes" });
+    }
+  });
+
+  app.get("/api/books/:id/action-items", async (req, res) => {
+    try {
+      const type = req.query.type as string | undefined;
+      const ai = await storage.getActionItemsByBook(req.params.id, type);
+      res.json(ai);
+    } catch (error) {
+      console.error("Error fetching action items:", error);
+      res.status(500).json({ message: "Failed to fetch action items" });
+    }
+  });
+
+  app.get("/api/books/:id/cards/:section", async (req, res) => {
+    try {
+      const { id, section } = req.params;
+      let cards: any[] = [];
+
+      switch (section) {
+        case "chapter-summaries": {
+          const chapters = await storage.getChapterSummariesByBook(id);
+          chapters.forEach((ch) => {
+            const chCards = (ch.cards as any[]) || [];
+            chCards.forEach((card, i) => {
+              cards.push({ type: "chapter-summary", data: { ...card, chapterNumber: ch.chapterNumber, chapterTitle: ch.chapterTitle, cardIndex: i, totalInChapter: chCards.length, chapterId: ch.id } });
+            });
+            if (chapters.indexOf(ch) < chapters.length - 1) {
+              const next = chapters[chapters.indexOf(ch) + 1];
+              cards.push({ type: "chapter-transition", data: { nextChapterNumber: next.chapterNumber, nextChapterTitle: next.chapterTitle } });
+            }
+          });
+          break;
+        }
+        case "mental-models": {
+          const models = await storage.getMentalModelsByBook(id);
+          models.forEach((model) => {
+            cards.push({ type: "mental-model-intro", data: { id: model.id, title: model.title, description: model.description, totalSteps: (model.steps as any[]).length } });
+            (model.steps as any[]).forEach((step, i) => {
+              cards.push({ type: "mental-model-step", data: { ...step, modelTitle: model.title, stepIndex: i, totalSteps: (model.steps as any[]).length, modelId: model.id } });
+            });
+          });
+          break;
+        }
+        case "principles": {
+          const bookPrinciples = await storage.getPrinciplesByBook(id);
+          for (const p of bookPrinciples) {
+            cards.push({ type: "principle", data: p });
+            const pStories = await storage.getStoriesByPrinciple(p.id);
+            pStories.forEach((s) => {
+              cards.push({ type: "story", data: s });
+            });
+          }
+          break;
+        }
+        case "common-mistakes": {
+          const mistakes = await storage.getCommonMistakesByBook(id);
+          mistakes.forEach((m) => {
+            cards.push({ type: "common-mistake", data: m });
+          });
+          break;
+        }
+        case "exercises": {
+          const exs = await storage.getExercisesByBookSorted(id);
+          exs.forEach((e) => {
+            cards.push({ type: "exercise", data: e });
+          });
+          break;
+        }
+        case "action-items": {
+          const items = await storage.getActionItemsByBook(id);
+          cards.push({ type: "action-items-list", data: { items } });
+          break;
+        }
+        default: {
+          const [bookPrinciples2, bookStories, bookExercises] = await Promise.all([
+            storage.getPrinciplesByBook(id),
+            storage.getStoriesByBook(id),
+            storage.getExercisesByBook(id),
+          ]);
+          bookPrinciples2.forEach((p) => cards.push({ type: "principle", data: p }));
+          bookStories.forEach((s) => cards.push({ type: "story", data: s }));
+          bookExercises.forEach((e) => cards.push({ type: "exercise", data: e }));
+        }
+      }
+
+      res.json(cards);
+    } catch (error) {
+      console.error("Error fetching section cards:", error);
+      res.status(500).json({ message: "Failed to fetch cards" });
     }
   });
 
@@ -81,24 +201,39 @@ export async function registerRoutes(
       ]);
 
       const cards: any[] = [];
-      const sorted = [...bookPrinciples].sort((a, b) => a.orderIndex - b.orderIndex);
-      const sortedStories = [...bookStories].sort((a, b) => a.orderIndex - b.orderIndex);
-      const sortedExercises = [...bookExercises].sort((a, b) => a.orderIndex - b.orderIndex);
-
-      sorted.forEach((p) => {
-        cards.push({ type: "principle", data: p });
-      });
-      sortedStories.forEach((s) => {
-        cards.push({ type: "story", data: s });
-      });
-      sortedExercises.forEach((e) => {
-        cards.push({ type: "exercise", data: e });
-      });
+      bookPrinciples.forEach((p) => cards.push({ type: "principle", data: p }));
+      bookStories.forEach((s) => cards.push({ type: "story", data: s }));
+      bookExercises.forEach((e) => cards.push({ type: "exercise", data: e }));
 
       res.json(cards);
     } catch (error) {
       console.error("Error fetching cards:", error);
       res.status(500).json({ message: "Failed to fetch cards" });
+    }
+  });
+
+  app.get("/api/books/:id/content-counts", async (req, res) => {
+    try {
+      const id = req.params.id;
+      const [chapters, models, principles, mistakes, exercises, items] = await Promise.all([
+        storage.getChapterSummariesByBook(id),
+        storage.getMentalModelsByBook(id),
+        storage.getPrinciplesByBook(id),
+        storage.getCommonMistakesByBook(id),
+        storage.getExercisesByBook(id),
+        storage.getActionItemsByBook(id),
+      ]);
+      res.json({
+        chapterSummaries: chapters.length,
+        mentalModels: models.length,
+        principles: principles.length,
+        commonMistakes: mistakes.length,
+        exercises: exercises.length,
+        actionItems: items.length,
+      });
+    } catch (error) {
+      console.error("Error fetching content counts:", error);
+      res.status(500).json({ message: "Failed to fetch content counts" });
     }
   });
 
@@ -149,10 +284,10 @@ export async function registerRoutes(
   app.post("/api/progress/:bookId/card", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const schema = z.object({ cardIndex: z.number(), totalCards: z.number() });
+      const schema = z.object({ cardIndex: z.number(), totalCards: z.number(), section: z.string().optional() });
       const parsed = schema.safeParse(req.body);
       if (!parsed.success) return res.status(400).json({ message: "Invalid data" });
-      const result = await storage.updateCardProgress(userId, req.params.bookId, parsed.data.cardIndex, parsed.data.totalCards);
+      const result = await storage.updateCardProgress(userId, req.params.bookId, parsed.data.cardIndex, parsed.data.totalCards, parsed.data.section);
       await storage.updateUserStreak(userId);
       res.json(result);
     } catch (error) {
@@ -165,12 +300,12 @@ export async function registerRoutes(
     try {
       const userId = req.user.claims.sub;
       const journalSchema = z.object({
-        exerciseId: z.string().min(1),
+        exerciseId: z.string().optional(),
         content: z.string().min(1),
       });
       const parsed = journalSchema.safeParse(req.body);
       if (!parsed.success) {
-        return res.status(400).json({ message: "exerciseId and content are required" });
+        return res.status(400).json({ message: "content is required" });
       }
       const { exerciseId, content } = parsed.data;
       const entry = await storage.createJournalEntry({ userId, exerciseId, content });

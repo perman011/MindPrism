@@ -10,11 +10,16 @@ import {
   type DailySpark, type InsertDailySpark,
   type UserStreak, type InsertUserStreak,
   type SavedHighlight, type InsertSavedHighlight,
+  type ChapterSummary, type InsertChapterSummary,
+  type MentalModel, type InsertMentalModel,
+  type CommonMistake, type InsertCommonMistake,
+  type ActionItem, type InsertActionItem,
   books, principles, stories, exercises, userProgress, journalEntries, categories,
   userInterests, dailySparks, userStreaks, savedHighlights,
+  chapterSummaries, mentalModels, commonMistakes, actionItems,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, sql, desc } from "drizzle-orm";
+import { eq, and, sql, desc, asc } from "drizzle-orm";
 
 export interface IStorage {
   getCategories(): Promise<Category[]>;
@@ -29,17 +34,31 @@ export interface IStorage {
   createPrinciple(p: InsertPrinciple): Promise<Principle>;
 
   getStoriesByBook(bookId: string): Promise<Story[]>;
+  getStoriesByPrinciple(principleId: string): Promise<Story[]>;
   createStory(s: InsertStory): Promise<Story>;
 
   getExercisesByBook(bookId: string): Promise<Exercise[]>;
+  getExercisesByBookSorted(bookId: string): Promise<Exercise[]>;
   createExercise(e: InsertExercise): Promise<Exercise>;
+
+  getChapterSummariesByBook(bookId: string): Promise<ChapterSummary[]>;
+  createChapterSummary(cs: InsertChapterSummary): Promise<ChapterSummary>;
+
+  getMentalModelsByBook(bookId: string): Promise<MentalModel[]>;
+  createMentalModel(mm: InsertMentalModel): Promise<MentalModel>;
+
+  getCommonMistakesByBook(bookId: string): Promise<CommonMistake[]>;
+  createCommonMistake(cm: InsertCommonMistake): Promise<CommonMistake>;
+
+  getActionItemsByBook(bookId: string, type?: string): Promise<ActionItem[]>;
+  createActionItem(ai: InsertActionItem): Promise<ActionItem>;
 
   getUserProgress(userId: string, bookId: string): Promise<UserProgress | undefined>;
   getAllUserProgress(userId: string): Promise<UserProgress[]>;
   upsertUserProgress(data: InsertUserProgress): Promise<UserProgress>;
   toggleBookmark(userId: string, bookId: string): Promise<UserProgress>;
   togglePrincipleComplete(userId: string, bookId: string, principleId: string): Promise<UserProgress>;
-  updateCardProgress(userId: string, bookId: string, cardIndex: number, totalCards: number): Promise<UserProgress>;
+  updateCardProgress(userId: string, bookId: string, cardIndex: number, totalCards: number, section?: string): Promise<UserProgress>;
 
   createJournalEntry(entry: InsertJournalEntry): Promise<JournalEntry>;
   getJournalEntries(userId: string): Promise<JournalEntry[]>;
@@ -89,7 +108,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPrinciplesByBook(bookId: string): Promise<Principle[]> {
-    return db.select().from(principles).where(eq(principles.bookId, bookId));
+    return db.select().from(principles).where(eq(principles.bookId, bookId)).orderBy(asc(principles.orderIndex));
   }
 
   async createPrinciple(p: InsertPrinciple): Promise<Principle> {
@@ -98,7 +117,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getStoriesByBook(bookId: string): Promise<Story[]> {
-    return db.select().from(stories).where(eq(stories.bookId, bookId));
+    return db.select().from(stories).where(eq(stories.bookId, bookId)).orderBy(asc(stories.orderIndex));
+  }
+
+  async getStoriesByPrinciple(principleId: string): Promise<Story[]> {
+    return db.select().from(stories).where(eq(stories.principleId, principleId)).orderBy(asc(stories.orderIndex));
   }
 
   async createStory(s: InsertStory): Promise<Story> {
@@ -107,11 +130,58 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getExercisesByBook(bookId: string): Promise<Exercise[]> {
-    return db.select().from(exercises).where(eq(exercises.bookId, bookId));
+    return db.select().from(exercises).where(eq(exercises.bookId, bookId)).orderBy(asc(exercises.orderIndex));
+  }
+
+  async getExercisesByBookSorted(bookId: string): Promise<Exercise[]> {
+    const all = await db.select().from(exercises).where(eq(exercises.bookId, bookId));
+    const order: Record<string, number> = { high: 0, medium: 1, low: 2 };
+    return all.sort((a, b) => (order[a.impact ?? "medium"] ?? 1) - (order[b.impact ?? "medium"] ?? 1));
   }
 
   async createExercise(e: InsertExercise): Promise<Exercise> {
     const [result] = await db.insert(exercises).values(e).returning();
+    return result;
+  }
+
+  async getChapterSummariesByBook(bookId: string): Promise<ChapterSummary[]> {
+    return db.select().from(chapterSummaries).where(eq(chapterSummaries.bookId, bookId)).orderBy(asc(chapterSummaries.chapterNumber));
+  }
+
+  async createChapterSummary(cs: InsertChapterSummary): Promise<ChapterSummary> {
+    const [result] = await db.insert(chapterSummaries).values(cs).returning();
+    return result;
+  }
+
+  async getMentalModelsByBook(bookId: string): Promise<MentalModel[]> {
+    return db.select().from(mentalModels).where(eq(mentalModels.bookId, bookId)).orderBy(asc(mentalModels.orderIndex));
+  }
+
+  async createMentalModel(mm: InsertMentalModel): Promise<MentalModel> {
+    const [result] = await db.insert(mentalModels).values(mm).returning();
+    return result;
+  }
+
+  async getCommonMistakesByBook(bookId: string): Promise<CommonMistake[]> {
+    return db.select().from(commonMistakes).where(eq(commonMistakes.bookId, bookId)).orderBy(asc(commonMistakes.orderIndex));
+  }
+
+  async createCommonMistake(cm: InsertCommonMistake): Promise<CommonMistake> {
+    const [result] = await db.insert(commonMistakes).values(cm).returning();
+    return result;
+  }
+
+  async getActionItemsByBook(bookId: string, type?: string): Promise<ActionItem[]> {
+    if (type) {
+      return db.select().from(actionItems)
+        .where(and(eq(actionItems.bookId, bookId), eq(actionItems.type, type)))
+        .orderBy(asc(actionItems.orderIndex));
+    }
+    return db.select().from(actionItems).where(eq(actionItems.bookId, bookId)).orderBy(asc(actionItems.orderIndex));
+  }
+
+  async createActionItem(ai: InsertActionItem): Promise<ActionItem> {
+    const [result] = await db.insert(actionItems).values(ai).returning();
     return result;
   }
 
@@ -175,17 +245,17 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
-  async updateCardProgress(userId: string, bookId: string, cardIndex: number, totalCards: number): Promise<UserProgress> {
+  async updateCardProgress(userId: string, bookId: string, cardIndex: number, totalCards: number, section?: string): Promise<UserProgress> {
     const existing = await this.getUserProgress(userId, bookId);
     if (existing) {
       const [result] = await db.update(userProgress)
-        .set({ currentCardIndex: cardIndex, totalCards, lastAccessedAt: new Date() })
+        .set({ currentCardIndex: cardIndex, totalCards, currentSection: section ?? existing.currentSection, lastAccessedAt: new Date() })
         .where(eq(userProgress.id, existing.id))
         .returning();
       return result;
     }
     const [result] = await db.insert(userProgress)
-      .values({ userId, bookId, currentCardIndex: cardIndex, totalCards, completedPrinciples: [], completedExercises: [], bookmarked: false })
+      .values({ userId, bookId, currentCardIndex: cardIndex, totalCards, currentSection: section, completedPrinciples: [], completedExercises: [], bookmarked: false })
       .returning();
     return result;
   }

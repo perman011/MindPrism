@@ -1,49 +1,89 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
-import type { Book, Principle, Story, Exercise, UserProgress } from "@shared/schema";
+import type { Book, UserProgress } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  ArrowLeft, BookOpen, Lightbulb, BookMarked, Dumbbell,
-  CheckCircle2, Circle, Bookmark, BookmarkCheck, Clock, Headphones,
-  Play, ChevronRight,
+  ArrowLeft, BookOpen, Lightbulb, Brain, AlertTriangle,
+  Dumbbell, ListChecks, Layers, Bookmark, BookmarkCheck,
+  Clock, Headphones, Play, ChevronRight,
 } from "lucide-react";
-import { Link, useParams } from "wouter";
-import { useState } from "react";
+import { Link, useParams, useLocation } from "wouter";
 import { useAudio } from "@/lib/audio-context";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/auth-utils";
+
+interface ContentCounts {
+  chapterSummaries: number;
+  mentalModels: number;
+  principles: number;
+  commonMistakes: number;
+  exercises: number;
+  actionItems: number;
+}
+
+const BLUEPRINT_TILES = [
+  {
+    key: "chapter-summaries",
+    label: "Chapter Summaries",
+    icon: Layers,
+    countKey: "chapterSummaries" as keyof ContentCounts,
+    featured: true,
+  },
+  {
+    key: "mental-models",
+    label: "Mental Models",
+    icon: Brain,
+    countKey: "mentalModels" as keyof ContentCounts,
+    featured: false,
+  },
+  {
+    key: "principles",
+    label: "Principles & Stories",
+    icon: Lightbulb,
+    countKey: "principles" as keyof ContentCounts,
+    featured: false,
+  },
+  {
+    key: "common-mistakes",
+    label: "Common Mistakes",
+    icon: AlertTriangle,
+    countKey: "commonMistakes" as keyof ContentCounts,
+    featured: false,
+  },
+  {
+    key: "exercises",
+    label: "Exercises",
+    icon: Dumbbell,
+    countKey: "exercises" as keyof ContentCounts,
+    featured: false,
+  },
+  {
+    key: "action-items",
+    label: "Action Items",
+    icon: ListChecks,
+    countKey: "actionItems" as keyof ContentCounts,
+    featured: false,
+  },
+];
 
 export default function BookDetail() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { toast } = useToast();
   const { play } = useAudio();
-  const [activeTab, setActiveTab] = useState("principles");
+  const [, navigate] = useLocation();
 
   const { data: book, isLoading: bookLoading } = useQuery<Book>({
     queryKey: ["/api/books", id],
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
-  const { data: principles } = useQuery<Principle[]>({
-    queryKey: ["/api/books", id, "principles"],
-    queryFn: getQueryFn({ on401: "throw" }),
-    enabled: !!id,
-  });
-
-  const { data: stories } = useQuery<Story[]>({
-    queryKey: ["/api/books", id, "stories"],
-    queryFn: getQueryFn({ on401: "throw" }),
-    enabled: !!id,
-  });
-
-  const { data: exercises } = useQuery<Exercise[]>({
-    queryKey: ["/api/books", id, "exercises"],
+  const { data: contentCounts } = useQuery<ContentCounts>({
+    queryKey: ["/api/books", id, "content-counts"],
     queryFn: getQueryFn({ on401: "throw" }),
     enabled: !!id,
   });
@@ -72,7 +112,6 @@ export default function BookDetail() {
     },
   });
 
-  const completedPrinciples = progress?.completedPrinciples ?? [];
   const isBookmarked = progress?.bookmarked ?? false;
   const cardProgress = progress?.currentCardIndex && progress?.totalCards
     ? Math.round((progress.currentCardIndex / progress.totalCards) * 100) : 0;
@@ -114,7 +153,7 @@ export default function BookDetail() {
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
         </div>
 
-        <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
+        <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2">
           <Link href="/">
             <button className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center" data-testid="button-back">
               <ArrowLeft className="w-5 h-5 text-white" />
@@ -143,18 +182,9 @@ export default function BookDetail() {
             <Badge variant="secondary" className="gap-1 text-[10px]">
               <Headphones className="w-3 h-3" />{book.listenTime} min listen
             </Badge>
-            {principles && (
-              <Badge variant="secondary" className="gap-1 text-[10px]">
-                <Lightbulb className="w-3 h-3" />{principles.length} principles
-              </Badge>
-            )}
           </div>
 
-          <p className="text-sm text-muted-foreground leading-relaxed mb-5" data-testid="text-book-description">
-            {book.description}
-          </p>
-
-          <div className="flex gap-3 mb-6">
+          <div className="flex gap-3 mb-5">
             <Link href={`/book/${id}/journey`} className="flex-1">
               <Button className="w-full gap-2" data-testid="button-start-journey">
                 <Play className="w-4 h-4" />
@@ -176,99 +206,54 @@ export default function BookDetail() {
       </div>
 
       <div className="px-5 pb-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-4" data-testid="tabs-book-content">
-            <TabsTrigger value="principles" className="gap-1 text-xs" data-testid="tab-principles">
-              <Lightbulb className="w-3 h-3" />Principles
-            </TabsTrigger>
-            <TabsTrigger value="stories" className="gap-1 text-xs" data-testid="tab-stories">
-              <BookMarked className="w-3 h-3" />Stories
-            </TabsTrigger>
-            <TabsTrigger value="exercises" className="gap-1 text-xs" data-testid="tab-exercises">
-              <Dumbbell className="w-3 h-3" />Exercises
-            </TabsTrigger>
-          </TabsList>
+        {book.coreThesis && (
+          <Card className="p-4 mb-6 bg-primary/5 border-primary/20" data-testid="card-core-thesis">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center">
+                <Lightbulb className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-primary font-semibold mb-1">Core Thesis</p>
+                <p className="text-sm leading-relaxed" data-testid="text-core-thesis">{book.coreThesis}</p>
+              </div>
+            </div>
+          </Card>
+        )}
 
-          <TabsContent value="principles">
-            <div className="space-y-3" data-testid="list-principles">
-              {principles?.map((principle, idx) => {
-                const isCompleted = completedPrinciples.includes(principle.id);
-                return (
-                  <Card key={principle.id} className={`p-4 ${isCompleted ? "bg-primary/5 border-primary/20" : ""}`} data-testid={`card-principle-${principle.id}`}>
-                    <div className="flex items-start gap-3">
-                      <div className="mt-0.5 flex-shrink-0">
-                        {isCompleted
-                          ? <CheckCircle2 className="w-5 h-5 text-primary" />
-                          : <Circle className="w-5 h-5 text-muted-foreground/30" />
-                        }
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[10px] text-muted-foreground font-mono">{String(idx + 1).padStart(2, "0")}</span>
-                          <h3 className="font-semibold text-sm">{principle.title}</h3>
-                        </div>
-                        <p className="text-xs text-muted-foreground leading-relaxed">{principle.content}</p>
-                      </div>
+        <h2 className="font-serif text-lg font-bold mb-3" data-testid="text-blueprint-heading">Blueprint</h2>
+
+        <div className="grid grid-cols-2 gap-3" data-testid="grid-blueprint">
+          {BLUEPRINT_TILES.map((tile) => {
+            const count = contentCounts?.[tile.countKey] ?? 0;
+            const Icon = tile.icon;
+            return (
+              <Card
+                key={tile.key}
+                className={`p-4 cursor-pointer hover-elevate active-elevate-2 overflow-visible ${tile.featured ? "col-span-2" : ""}`}
+                onClick={() => navigate(`/book/${id}/journey?section=${tile.key}`)}
+                data-testid={`tile-${tile.key}`}
+              >
+                <div className={`flex items-center gap-3 ${tile.featured ? "" : "flex-col text-center"}`}>
+                  <div className={`flex-shrink-0 rounded-md bg-primary/10 flex items-center justify-center ${tile.featured ? "w-10 h-10" : "w-9 h-9"}`}>
+                    <Icon className={`text-primary ${tile.featured ? "w-5 h-5" : "w-4 h-4"}`} />
+                  </div>
+                  <div className={tile.featured ? "flex-1 flex items-center justify-between gap-2" : ""}>
+                    <div>
+                      <p className={`font-semibold ${tile.featured ? "text-sm" : "text-xs mt-2"}`}>{tile.label}</p>
+                      {tile.featured && (
+                        <p className="text-xs text-muted-foreground">Tap through key insights chapter by chapter</p>
+                      )}
                     </div>
-                  </Card>
-                );
-              })}
-              {(!principles || principles.length === 0) && (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Lightbulb className="w-10 h-10 mx-auto mb-3 opacity-20" />
-                  <p className="text-sm">No principles available yet.</p>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="stories">
-            <div className="space-y-3" data-testid="list-stories">
-              {stories?.map((story) => (
-                <Card key={story.id} className="p-4" data-testid={`card-story-${story.id}`}>
-                  <h3 className="font-semibold text-sm mb-2">{story.title}</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed mb-3 line-clamp-3">{story.content}</p>
-                  {story.moral && (
-                    <div className="bg-primary/5 rounded-md p-3 border-l-2 border-primary">
-                      <p className="text-xs"><span className="text-primary font-semibold">Takeaway: </span>{story.moral}</p>
+                    <div className="flex items-center gap-1">
+                      <Badge variant="secondary" className="text-[10px]">{count}</Badge>
+                      {tile.featured && <ChevronRight className="w-4 h-4 text-muted-foreground" />}
                     </div>
-                  )}
-                </Card>
-              ))}
-              {(!stories || stories.length === 0) && (
-                <div className="text-center py-12 text-muted-foreground">
-                  <BookMarked className="w-10 h-10 mx-auto mb-3 opacity-20" />
-                  <p className="text-sm">No stories available yet.</p>
+                  </div>
                 </div>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="exercises">
-            <div className="space-y-3" data-testid="list-exercises">
-              {exercises?.map((exercise) => (
-                <Card key={exercise.id} className="p-4" data-testid={`card-exercise-${exercise.id}`}>
-                  <Badge variant="secondary" className="text-[10px] mb-2">
-                    {exercise.type === "reflection" ? "Reflection" : exercise.type === "quiz" ? "Quiz" : "Action Plan"}
-                  </Badge>
-                  <h3 className="font-semibold text-sm mb-1">{exercise.title}</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{exercise.description}</p>
-                  <Link href={`/book/${id}/journey`}>
-                    <Button variant="link" size="sm" className="mt-2 px-0 gap-1 text-xs h-auto" data-testid={`button-try-exercise-${exercise.id}`}>
-                      Try in Journey <ChevronRight className="w-3 h-3" />
-                    </Button>
-                  </Link>
-                </Card>
-              ))}
-              {(!exercises || exercises.length === 0) && (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Dumbbell className="w-10 h-10 mx-auto mb-3 opacity-20" />
-                  <p className="text-sm">No exercises available yet.</p>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
+              </Card>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
