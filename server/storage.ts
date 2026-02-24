@@ -15,12 +15,13 @@ import {
   type CommonMistake, type InsertCommonMistake,
   type ActionItem, type InsertActionItem,
   type Infographic, type InsertInfographic,
+  type Comment, type InsertComment,
   books, principles, stories, exercises, userProgress, journalEntries, categories,
   userInterests, dailySparks, userStreaks, savedHighlights,
-  chapterSummaries, mentalModels, commonMistakes, actionItems, infographics,
+  chapterSummaries, mentalModels, commonMistakes, actionItems, infographics, comments,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, sql, desc, asc } from "drizzle-orm";
+import { eq, and, sql, desc, asc, inArray } from "drizzle-orm";
 
 export interface IStorage {
   getCategories(): Promise<Category[]>;
@@ -81,6 +82,42 @@ export interface IStorage {
   getSavedHighlights(userId: string): Promise<SavedHighlight[]>;
   createSavedHighlight(highlight: InsertSavedHighlight): Promise<SavedHighlight>;
   deleteSavedHighlight(id: string, userId: string): Promise<void>;
+
+  updateBook(id: string, data: Partial<InsertBook>): Promise<Book>;
+  deleteBook(id: string): Promise<void>;
+  deleteBookCascade(id: string): Promise<void>;
+
+  updatePrinciple(id: string, data: Partial<InsertPrinciple>): Promise<Principle>;
+  deletePrinciple(id: string): Promise<void>;
+
+  updateStory(id: string, data: Partial<InsertStory>): Promise<Story>;
+  deleteStory(id: string): Promise<void>;
+
+  updateExercise(id: string, data: Partial<InsertExercise>): Promise<Exercise>;
+  deleteExercise(id: string): Promise<void>;
+
+  updateChapterSummary(id: string, data: Partial<InsertChapterSummary>): Promise<ChapterSummary>;
+  deleteChapterSummary(id: string): Promise<void>;
+
+  updateMentalModel(id: string, data: Partial<InsertMentalModel>): Promise<MentalModel>;
+  deleteMentalModel(id: string): Promise<void>;
+
+  updateCommonMistake(id: string, data: Partial<InsertCommonMistake>): Promise<CommonMistake>;
+  deleteCommonMistake(id: string): Promise<void>;
+
+  updateInfographic(id: string, data: Partial<InsertInfographic>): Promise<Infographic>;
+  deleteInfographic(id: string): Promise<void>;
+
+  updateActionItem(id: string, data: Partial<InsertActionItem>): Promise<ActionItem>;
+  deleteActionItem(id: string): Promise<void>;
+
+  updateOrderIndexes(type: string, items: { id: string; orderIndex: number }[]): Promise<void>;
+
+  getCommentsByBook(bookId: string): Promise<Comment[]>;
+  getCommentsByBlock(bookId: string, blockType: string, blockId: string): Promise<Comment[]>;
+  createComment(comment: InsertComment): Promise<Comment>;
+  updateComment(id: string, data: Partial<InsertComment & { resolved: boolean }>): Promise<Comment>;
+  deleteComment(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -398,6 +435,148 @@ export class DatabaseStorage implements IStorage {
   async deleteSavedHighlight(id: string, userId: string): Promise<void> {
     await db.delete(savedHighlights)
       .where(and(eq(savedHighlights.id, id), eq(savedHighlights.userId, userId)));
+  }
+
+  async updateBook(id: string, data: Partial<InsertBook>): Promise<Book> {
+    const [result] = await db.update(books).set({ ...data, updatedAt: new Date() }).where(eq(books.id, id)).returning();
+    return result;
+  }
+
+  async deleteBook(id: string): Promise<void> {
+    await db.delete(books).where(eq(books.id, id));
+  }
+
+  async deleteBookCascade(id: string): Promise<void> {
+    await db.delete(comments).where(eq(comments.bookId, id));
+    await db.delete(savedHighlights).where(eq(savedHighlights.bookId, id));
+    await db.delete(userProgress).where(eq(userProgress.bookId, id));
+    await db.delete(journalEntries).where(eq(journalEntries.exerciseId, id));
+    await db.delete(actionItems).where(eq(actionItems.bookId, id));
+    await db.delete(infographics).where(eq(infographics.bookId, id));
+    await db.delete(commonMistakes).where(eq(commonMistakes.bookId, id));
+    await db.delete(mentalModels).where(eq(mentalModels.bookId, id));
+    await db.delete(chapterSummaries).where(eq(chapterSummaries.bookId, id));
+    await db.delete(exercises).where(eq(exercises.bookId, id));
+    await db.delete(stories).where(eq(stories.bookId, id));
+    await db.delete(principles).where(eq(principles.bookId, id));
+    await db.delete(dailySparks).where(eq(dailySparks.bookId, id));
+    await db.delete(books).where(eq(books.id, id));
+  }
+
+  async updatePrinciple(id: string, data: Partial<InsertPrinciple>): Promise<Principle> {
+    const [result] = await db.update(principles).set(data).where(eq(principles.id, id)).returning();
+    return result;
+  }
+
+  async deletePrinciple(id: string): Promise<void> {
+    await db.delete(stories).where(eq(stories.principleId, id));
+    await db.delete(principles).where(eq(principles.id, id));
+  }
+
+  async updateStory(id: string, data: Partial<InsertStory>): Promise<Story> {
+    const [result] = await db.update(stories).set(data).where(eq(stories.id, id)).returning();
+    return result;
+  }
+
+  async deleteStory(id: string): Promise<void> {
+    await db.delete(stories).where(eq(stories.id, id));
+  }
+
+  async updateExercise(id: string, data: Partial<InsertExercise>): Promise<Exercise> {
+    const [result] = await db.update(exercises).set(data).where(eq(exercises.id, id)).returning();
+    return result;
+  }
+
+  async deleteExercise(id: string): Promise<void> {
+    await db.delete(exercises).where(eq(exercises.id, id));
+  }
+
+  async updateChapterSummary(id: string, data: Partial<InsertChapterSummary>): Promise<ChapterSummary> {
+    const [result] = await db.update(chapterSummaries).set(data).where(eq(chapterSummaries.id, id)).returning();
+    return result;
+  }
+
+  async deleteChapterSummary(id: string): Promise<void> {
+    await db.delete(chapterSummaries).where(eq(chapterSummaries.id, id));
+  }
+
+  async updateMentalModel(id: string, data: Partial<InsertMentalModel>): Promise<MentalModel> {
+    const [result] = await db.update(mentalModels).set(data).where(eq(mentalModels.id, id)).returning();
+    return result;
+  }
+
+  async deleteMentalModel(id: string): Promise<void> {
+    await db.delete(mentalModels).where(eq(mentalModels.id, id));
+  }
+
+  async updateCommonMistake(id: string, data: Partial<InsertCommonMistake>): Promise<CommonMistake> {
+    const [result] = await db.update(commonMistakes).set(data).where(eq(commonMistakes.id, id)).returning();
+    return result;
+  }
+
+  async deleteCommonMistake(id: string): Promise<void> {
+    await db.delete(commonMistakes).where(eq(commonMistakes.id, id));
+  }
+
+  async updateInfographic(id: string, data: Partial<InsertInfographic>): Promise<Infographic> {
+    const [result] = await db.update(infographics).set(data).where(eq(infographics.id, id)).returning();
+    return result;
+  }
+
+  async deleteInfographic(id: string): Promise<void> {
+    await db.delete(infographics).where(eq(infographics.id, id));
+  }
+
+  async updateActionItem(id: string, data: Partial<InsertActionItem>): Promise<ActionItem> {
+    const [result] = await db.update(actionItems).set(data).where(eq(actionItems.id, id)).returning();
+    return result;
+  }
+
+  async deleteActionItem(id: string): Promise<void> {
+    await db.delete(actionItems).where(eq(actionItems.id, id));
+  }
+
+  async updateOrderIndexes(type: string, items: { id: string; orderIndex: number }[]): Promise<void> {
+    const tableMap: Record<string, any> = {
+      principles,
+      stories,
+      exercises,
+      mentalModels,
+      commonMistakes,
+      infographics,
+      actionItems,
+    };
+    const table = tableMap[type];
+    if (!table) throw new Error(`Unknown type: ${type}`);
+    await Promise.all(
+      items.map((item) =>
+        db.update(table).set({ orderIndex: item.orderIndex }).where(eq(table.id, item.id))
+      )
+    );
+  }
+
+  async getCommentsByBook(bookId: string): Promise<Comment[]> {
+    return db.select().from(comments).where(eq(comments.bookId, bookId)).orderBy(asc(comments.createdAt));
+  }
+
+  async getCommentsByBlock(bookId: string, blockType: string, blockId: string): Promise<Comment[]> {
+    return db.select().from(comments)
+      .where(and(eq(comments.bookId, bookId), eq(comments.blockType, blockType), eq(comments.blockId, blockId)))
+      .orderBy(asc(comments.createdAt));
+  }
+
+  async createComment(comment: InsertComment): Promise<Comment> {
+    const [result] = await db.insert(comments).values(comment).returning();
+    return result;
+  }
+
+  async updateComment(id: string, data: Partial<InsertComment & { resolved: boolean }>): Promise<Comment> {
+    const [result] = await db.update(comments).set(data).where(eq(comments.id, id)).returning();
+    return result;
+  }
+
+  async deleteComment(id: string): Promise<void> {
+    await db.delete(comments).where(eq(comments.id, id));
   }
 }
 

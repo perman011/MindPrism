@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -17,6 +17,8 @@ import Vault from "@/pages/vault";
 import BookDetail from "@/pages/book-detail";
 import StoryEngine from "@/pages/story-engine";
 import NotFound from "@/pages/not-found";
+import AdminBooks from "@/pages/admin/admin-books";
+import AdminBookEditor from "@/pages/admin/admin-book-editor";
 import { getQueryFn } from "@/lib/queryClient";
 import type { UserInterest } from "@shared/schema";
 
@@ -64,6 +66,7 @@ function AuthenticatedApp() {
 
 function AppRouter() {
   const { user, isLoading } = useAuth();
+  const [location] = useLocation();
 
   if (isLoading) {
     return (
@@ -78,6 +81,16 @@ function AppRouter() {
 
   if (!user) {
     return <LandingPage />;
+  }
+
+  if (location.startsWith("/admin")) {
+    return (
+      <Switch>
+        <Route path="/admin" component={AdminBooks} />
+        <Route path="/admin/books/:id" component={AdminBookEditor} />
+        <Route component={NotFound} />
+      </Switch>
+    );
   }
 
   return <AuthenticatedApp />;

@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
+import { registerAdminRoutes } from "./admin-routes";
 import { z } from "zod";
 
 export async function registerRoutes(
@@ -10,6 +11,7 @@ export async function registerRoutes(
 ): Promise<Server> {
   await setupAuth(app);
   registerAuthRoutes(app);
+  registerAdminRoutes(app);
 
   app.get("/api/categories", async (_req, res) => {
     try {
@@ -21,10 +23,12 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/books", async (_req, res) => {
+  app.get("/api/books", async (req, res) => {
     try {
       const allBooks = await storage.getBooks();
-      res.json(allBooks);
+      const isAdminRequest = req.query.includeAll === "true";
+      const result = isAdminRequest ? allBooks : allBooks.filter(b => b.status === "published" || !b.status);
+      res.json(result);
     } catch (error) {
       console.error("Error fetching books:", error);
       res.status(500).json({ message: "Failed to fetch books" });

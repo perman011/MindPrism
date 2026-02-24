@@ -40,6 +40,23 @@ client/src/
     book-detail.tsx      - Book Master Hub with core thesis + Blueprint Grid (6 tiles)
     story-engine.tsx     - Interactive Engine with 6 card templates per content type
     not-found.tsx        - 404 page
+    admin/
+      admin-books.tsx      - Admin book list with create/delete, status badges
+      admin-book-editor.tsx - 3-panel workspace (Mind Tree + Block Builder + Mobile Preview)
+      mind-tree.tsx        - Collapsible navigation tree with section counts
+      mobile-preview.tsx   - iPhone-frame live preview of content
+      block-controls.tsx   - Floating toolbar (Add/Copy/Delete/Comment)
+      comment-thread.tsx   - Comment thread panel for review workflow
+      publish-panel.tsx    - Pre-publish checklist and publish/unpublish actions
+      editors/
+        book-setup-editor.tsx    - Title, author, metadata, core thesis (200-char limit)
+        chapter-editor.tsx       - Chapter summaries with tap-through card builder
+        mental-model-editor.tsx  - Mental models with tap-to-reveal steps
+        principle-editor.tsx     - Principles with nested story attachments
+        mistake-editor.tsx       - Common mistakes (red/green do/don't split)
+        infographic-editor.tsx   - Infographics with reveal steps
+        exercise-editor.tsx      - Exercises with type/impact selectors
+        action-item-editor.tsx   - Action items with immediate/long-term toggle
   components/
     book-card.tsx        - Reusable book card (compact/full/audio modes)
     bottom-nav.tsx       - Fixed bottom navigation (Home/Discover/Audio/Vault)
@@ -49,6 +66,7 @@ client/src/
     ui/                  - Shadcn components
   hooks/
     use-auth.ts          - Authentication hook
+    use-auto-save.ts     - Debounced auto-save hook for admin editors
   lib/
     queryClient.ts       - TanStack Query setup with getQueryFn
     audio-context.tsx    - Global AudioProvider with play/pause/seek/speed/skip
@@ -56,7 +74,8 @@ client/src/
 
 server/
   index.ts              - Express server entry
-  routes.ts             - API endpoints
+  routes.ts             - Consumer API endpoints
+  admin-routes.ts       - Admin CRUD endpoints (auth + role gated)
   storage.ts            - Database storage layer (IStorage interface)
   db.ts                 - Database connection
   seed.ts               - Database seed data (5 books with full taxonomy)
@@ -66,12 +85,12 @@ shared/
   schema.ts             - Drizzle schema + types (books, principles, stories, exercises,
                           chapter_summaries, mental_models, common_mistakes, action_items,
                           user_progress, journal_entries, user_interests, daily_sparks,
-                          user_streaks, saved_highlights)
-  models/auth.ts        - Auth schema
+                          user_streaks, saved_highlights, comments)
+  models/auth.ts        - Auth schema (users table with role field)
 ```
 
 ## Database Tables
-- `books` - title, author, coreThesis, coverImage, readTime, listenTime, audioUrl, featured
+- `books` - title, author, coreThesis, coverImage, readTime, listenTime, audioUrl, featured, status (draft/published), updatedAt
 - `categories` - name, slug, icon, color
 - `chapter_summaries` - bookId, chapterNumber, chapterTitle, cards (jsonb array)
 - `mental_models` - bookId, title, description, steps (jsonb array), orderIndex
@@ -87,6 +106,7 @@ shared/
 - `daily_sparks` - quote, author, bookId, category
 - `user_streaks` - userId, currentStreak, longestStreak, totalMinutesListened, etc.
 - `saved_highlights` - userId, bookId, content, type
+- `comments` - bookId, blockType, blockId, userId, content, resolved, createdAt
 
 ## API Endpoints
 - `GET /api/categories` - List categories
@@ -119,6 +139,42 @@ shared/
 - `POST /api/highlights` - Save highlight (auth required)
 - `DELETE /api/highlights/:id` - Delete highlight (auth required)
 
+## Admin API Endpoints (role-gated: admin/editor/writer)
+- `POST /api/admin/books` - Create new book (draft)
+- `PUT /api/admin/books/:id` - Update book metadata
+- `DELETE /api/admin/books/:id` - Cascade delete book + all content
+- `POST /api/admin/books/:id/publish` - Set status to published
+- `POST /api/admin/books/:id/unpublish` - Set status to draft
+- `POST /api/admin/books/:bookId/chapters` - Create chapter summary
+- `PUT /api/admin/chapters/:id` - Update chapter
+- `DELETE /api/admin/chapters/:id` - Delete chapter
+- `POST /api/admin/books/:bookId/mental-models` - Create mental model
+- `PUT /api/admin/mental-models/:id` - Update mental model
+- `DELETE /api/admin/mental-models/:id` - Delete mental model
+- `POST /api/admin/books/:bookId/principles` - Create principle
+- `PUT /api/admin/principles/:id` - Update principle
+- `DELETE /api/admin/principles/:id` - Delete principle
+- `POST /api/admin/books/:bookId/stories` - Create story
+- `PUT /api/admin/stories/:id` - Update story
+- `DELETE /api/admin/stories/:id` - Delete story
+- `POST /api/admin/books/:bookId/common-mistakes` - Create mistake
+- `PUT /api/admin/common-mistakes/:id` - Update mistake
+- `DELETE /api/admin/common-mistakes/:id` - Delete mistake
+- `POST /api/admin/books/:bookId/infographics` - Create infographic
+- `PUT /api/admin/infographics/:id` - Update infographic
+- `DELETE /api/admin/infographics/:id` - Delete infographic
+- `POST /api/admin/books/:bookId/exercises` - Create exercise
+- `PUT /api/admin/exercises/:id` - Update exercise
+- `DELETE /api/admin/exercises/:id` - Delete exercise
+- `POST /api/admin/books/:bookId/action-items` - Create action item
+- `PUT /api/admin/action-items/:id` - Update action item
+- `DELETE /api/admin/action-items/:id` - Delete action item
+- `PUT /api/admin/reorder` - Reorder content blocks
+- `GET /api/admin/books/:bookId/comments` - Get comments for book
+- `POST /api/admin/comments` - Create comment
+- `PATCH /api/admin/comments/:id` - Update/resolve comment
+- `DELETE /api/admin/comments/:id` - Delete comment
+
 ## Interactive Engine Card Templates
 1. **Chapter Summaries**: Tap-through cards with 1-2 sentences, chapter transitions
 2. **Mental Models**: Intro card + tap-to-reveal step cards with animation
@@ -136,6 +192,20 @@ shared/
 5. Book Detail (Master Hub) → Core thesis + Blueprint Grid (6 tiles)
 6. Interactive Engine → Section-specific card templates
 7. Audio → Browse and play audio summaries via global audio player
+
+## Admin Portal Flow (at /admin)
+1. Admin Books List → Grid of all books with Draft/Published badges
+2. Create New Book → Creates draft book, redirects to editor
+3. 3-Panel Editor → Mind Tree (left) + Block Builder (center) + Mobile Preview (right)
+4. Edit content → All 8 section editors with auto-save
+5. Comment/Review → Add/resolve comments on any content block
+6. Publish → Pre-publish checklist validation → Set book to published → Visible in consumer app
+
+### User Roles
+- `user` (default) → Consumer app access only
+- `writer` → Can create/edit book content in admin portal
+- `editor` → Same as writer + can manage comments
+- `admin` → Full access including publish/unpublish and delete
 
 ## Design
 - Purple/gold color scheme

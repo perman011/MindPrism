@@ -26,9 +26,11 @@ export const books = pgTable("books", {
   listenTime: integer("listen_time").notNull(),
   audioUrl: text("audio_url"),
   featured: boolean("featured").default(false),
+  status: text("status").default("draft"),
   principleCount: integer("principle_count").default(0),
   storyCount: integer("story_count").default(0),
   exerciseCount: integer("exercise_count").default(0),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const principles = pgTable("principles", {
@@ -164,6 +166,17 @@ export const savedHighlights = pgTable("saved_highlights", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const comments = pgTable("comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bookId: varchar("book_id").references(() => books.id).notNull(),
+  blockType: text("block_type").notNull(),
+  blockId: text("block_id").notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  content: text("content").notNull(),
+  resolved: boolean("resolved").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const booksRelations = relations(books, ({ one, many }) => ({
   category: one(categories, { fields: [books.categoryId], references: [categories.id] }),
   principles: many(principles),
@@ -232,6 +245,11 @@ export const savedHighlightsRelations = relations(savedHighlights, ({ one }) => 
   book: one(books, { fields: [savedHighlights.bookId], references: [books.id] }),
 }));
 
+export const commentsRelations = relations(comments, ({ one }) => ({
+  user: one(users, { fields: [comments.userId], references: [users.id] }),
+  book: one(books, { fields: [comments.bookId], references: [books.id] }),
+}));
+
 export const insertBookSchema = createInsertSchema(books).omit({ id: true });
 export const insertPrincipleSchema = createInsertSchema(principles).omit({ id: true });
 export const insertStorySchema = createInsertSchema(stories).omit({ id: true });
@@ -248,6 +266,7 @@ export const insertMentalModelSchema = createInsertSchema(mentalModels).omit({ i
 export const insertCommonMistakeSchema = createInsertSchema(commonMistakes).omit({ id: true });
 export const insertInfographicSchema = createInsertSchema(infographics).omit({ id: true });
 export const insertActionItemSchema = createInsertSchema(actionItems).omit({ id: true });
+export const insertCommentSchema = createInsertSchema(comments).omit({ id: true });
 
 export type InsertBook = z.infer<typeof insertBookSchema>;
 export type Book = typeof books.$inferSelect;
@@ -281,3 +300,5 @@ export type InsertInfographic = z.infer<typeof insertInfographicSchema>;
 export type Infographic = typeof infographics.$inferSelect;
 export type InsertActionItem = z.infer<typeof insertActionItemSchema>;
 export type ActionItem = typeof actionItems.$inferSelect;
+export type InsertComment = z.infer<typeof insertCommentSchema>;
+export type Comment = typeof comments.$inferSelect;
