@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CHAKRA_MAP, type ChakraType, type ChakraProgress } from "@shared/schema";
 import { motion, AnimatePresence } from "framer-motion";
+import chakraFigureImg from "@assets/chakra-meditating-figure.png";
 
 interface ChakraAvatarProps {
   activeChakra: ChakraType | null;
@@ -52,7 +53,7 @@ export function ChakraAvatar({ activeChakra, onChakraSelect, progress, size = "m
         }}
       >
         <img
-          src="/images/chakra-meditating-figure.png"
+          src={chakraFigureImg}
           alt="Meditating figure with chakra points"
           className="w-full h-full object-contain select-none pointer-events-none"
           draggable={false}
