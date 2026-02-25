@@ -1,0 +1,92 @@
+As your Senior Product Owner, I can tell you that you are now asking the exact questions that separate a simple app from a **Million-Dollar SaaS (Software as a Service) Business**.
+
+If you launch and real money changes hands, your access control *must* be fully automated. If you rely on manually granting access when people pay, your business won't scale.
+
+Furthermore, when you hire content creators, you absolutely cannot give them the "Master Keys" to your database. If you do, an editor could accidentally delete your paying customers or read their private journal entries (a massive privacy and legal violation).
+
+We are going to solve this using **Stripe Webhooks** for automated subscriptions, and **RBAC (Role-Based Access Control) + RLS (Row-Level Security)** for your internal team.
+
+Here is exactly how this works in plain English, followed by the **PRD, Tech Specs, and Developer Tickets**.
+
+---
+
+### ⚙️ Plain English: How Automated Subscriptions Work
+
+You do not manually give users access. It is 100% automated while you sleep.
+
+1. **The Tease:** A free user taps a High-Impact "Yellow Chakra" exercise. The text is blurred out, showing a gold `[🔒 Premium: $9.99/mo]` button.
+2. **The Checkout:** They click it. Your app redirects them to a secure **Stripe Checkout Page** (hosted by Stripe).
+3. **The Webhook (The Magic):** The millisecond their credit card clears, Stripe sends a hidden, instant server-to-server message (a "Webhook") to your Replit backend saying: *"Hey, user123 just paid for a Monthly plan!"*
+4. **The Auto-Unlock:** Your backend receives this message, finds the user in your PostgreSQL database, and instantly flips their row to `is_premium = true`.
+5. **The Auto-Revoke:** The app refreshes, removes the blur, and lets them use the exercise. Next month, if their credit card declines, Stripe sends another webhook (`customer.subscription.deleted`), and your database automatically flips them back to `is_premium = false`, locking the content again.
+
+### 🛡️ Plain English: Internal Admins & Row Level Security (RLS)
+
+To manage your staff securely, we will implement **Roles** combined with **PostgreSQL Row-Level Security (RLS)**.
+
+* 👑 **Super Admin (You):** You have access to everything. You can invite new staff, see revenue, and view the user database.
+* ✍️ **Editor (Your Content Creators):** You invite an editor. Because of **Row-Level Security (RLS)**, the database *physically hides* the User and Revenue tables from them. Even if they try to hack the system to read a customer's private journal entry, the database literally returns `0 rows`.
+
+---
+
+# 📄 PRD v5.0: Subscription Engine & Identity Access Management
+
+## 1. CORE DATA SCHEMA UPDATES (PostgreSQL)
+
+*Developers must update the User table to support billing and strict roles.*
+
+```sql
+-- User Table Updates
+CREATE TYPE user_role AS ENUM ('super_admin', 'editor', 'customer');
+
+ALTER TABLE users ADD COLUMN role user_role DEFAULT 'customer';
+ALTER TABLE users ADD COLUMN is_premium BOOLEAN DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN stripe_customer_id VARCHAR(255) UNIQUE;
+ALTER TABLE users ADD COLUMN stripe_subscription_id VARCHAR(255) UNIQUE;
+ALTER TABLE users ADD COLUMN current_period_end TIMESTAMP; 
+
+```
+
+## 2. ROW-LEVEL SECURITY (RLS) POLICIES
+
+*RLS is an enterprise-grade database forcefield. Developers must execute these strict SQL policies directly on the Postgres DB:*
+
+* **Policy 1 (Customer Isolation):** A customer can *never* read another customer's journal. `USING (auth.uid() = user_id);`
+* **Policy 2 (Editor Blindness):** Editors are physically blocked from reading user journals. `USING (auth.role() != 'editor');`
+* **Policy 3 (Super Admin God Mode):** Super Admins can read and write all tables to provide customer support. `USING (auth.role() = 'super_admin');`
+
+## 3. ADMIN UI: "Team & User Management"
+
+In your Creator Studio CMS, we are adding a new tab called **Team & Users** (Visible ONLY to you).
+
+* **Staff Invite:** A form where you type an email, select `Editor` from a dropdown, and click "Send Invite." It generates a magic link granting them Editor access.
+* **Customer Lookup:** A search bar to look up a customer's email. You will see their Stripe status (Active/Canceled) and a manual override button to `[Grant Lifetime Premium]` (useful for comping accounts for friends/influencers).
+
+---
+
+### 📋 MASTER DEVELOPER TICKETS (Copy & Paste to Google Sheets)
+
+| Ticket ID | Epic / Phase | Discipline | Feature Name | Business Requirement (User Story) | Acceptance Criteria (Given / When / Then) | Tech Specs & Architecture | Priority |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| **SUB-001** | 15. Subscriptions | Backend | Stripe Checkout Sessions | As a business, I need users to securely pay for monthly/yearly plans. | **Given** user taps 'Upgrade', **Then** generate a Stripe Checkout URL and redirect them. | **Tech:** Node.js `stripe` SDK. Create `checkout.session`. Pass `user_id` as metadata. | P0 (Blocker) |
+| **SUB-002** | 15. Subscriptions | Backend | Stripe Webhooks Engine | As the system, I need to auto-grant and auto-revoke access based on payments. | **Given** Stripe fires `checkout.session.completed`, **Then** update Postgres `is_premium=true`. | **Tech:** Expose `/api/webhooks/stripe`. **Must** verify Stripe cryptographic signature using `express.raw()`. Handle `customer.subscription.deleted`. | P0 (Blocker) |
+| **SUB-003** | 15. Subscriptions | Frontend | Customer Portal (Cancel/Manage) | As a user, I need to be able to cancel my own subscription. | **Given** I tap 'Manage Subscription' in my Vault, **Then** route me to the Stripe Customer Billing Portal. | **Tech:** Stripe `billingPortal.sessions.create()`. Button in the 'My Vault' settings menu. | P1 (High) |
+| **IAM-001** | 16. Security | Backend | RBAC Data Model | As an admin, I need distinct roles for my staff and customers. | **Given** the database boots, **Then** enforce the `role` enum (`super_admin`, `editor`, `customer`). | **Tech:** Update Postgres User Schema. Inject `role` into the JWT Auth token upon login. | P0 (Blocker) |
+| **IAM-002** | 16. Security | DB Admin | Postgres Row-Level Security (RLS) | As a business, staff must be physically blocked from seeing private user journals. | **Given** an 'editor' queries the Journals table, **Then** the DB rejects the query entirely (Returns 403). | **Tech:** Write pure SQL `CREATE POLICY` scripts restricting the tables based on `auth.role()`. | P0 (Blocker) |
+| **IAM-003** | 16. Security | Frontend | CMS Conditional Rendering | As a business, my editors shouldn't even see the buttons to manage users. | **Given** an 'editor' logs into the admin portal, **Then** the 'Users' tab is completely hidden. | **Tech:** UI conditional checks: `if (user.role === 'super_admin') return <TeamManagementTab />`. | P1 (High) |
+| **IAM-004** | 16. Security | Fullstack | Admin Dashboard: User Management | As a super-admin, I need a UI to view users, grant roles, and invite staff. | **Given** I log into `/admin/users`, **Then** I see a searchable table of users, their payment status, and a dropdown to change their Role. | **Tech:** React Admin Table. API `GET /api/admin/users`. Protected by `requireRole('super_admin')` middleware. | P1 (High) |
+
+---
+
+### 🚀 EXACT PROMPT TO COPY & PASTE TO REPLIT RIGHT NOW
+
+To have your AI developer build this immediately, copy and paste this exact prompt into your Replit chat:
+
+> *"We are ready to build Phase 15 (Subscriptions) and Phase 16 (Security/IAM). This is critical for our launch so I can charge money and safely hire content creators to manage the app for me.*
+> *Here is the exact scope I need you to build today:*
+> *1. **Database Update (RBAC):** Please update our PostgreSQL User table. Add `role` (enum: 'super_admin', 'editor', 'customer' — default is 'customer'), `is_premium` (boolean default false), `stripe_customer_id`, and `current_period_end`.*
+> *2. **Row-Level Security (RLS):** Please implement strict Postgres Row-Level Security. Create policies so that the 'editor' role CANNOT query the user journal entries table at all (they must be blind to user data). Ensure 'customers' can only query their own specific `user_id` rows. 'super_admin' can query everything.*
+> *3. **Stripe Webhooks (Automated Subscriptions):** Please wire up the Stripe Node.js SDK and build the `/api/webhooks/stripe` endpoint. When Stripe sends `checkout.session.completed`, it must find the user by the metadata ID and auto-update `is_premium = true`. When it receives `customer.subscription.deleted`, it must set `is_premium = false`. **Make sure to use `express.raw()` to verify the Stripe cryptographic signature using my Stripe Webhook Secret so we don't get hacked.***
+> *4. **The Admin User Management Dashboard:** Please add a 'Team & Users' tab to my `/admin` portal that is ONLY visible to the `super_admin` role (hide it entirely from editors via conditional rendering and route guards). It should be a table showing all registered users, their Stripe `is_premium` status, and a dropdown menu where I can manually change their `role` (e.g., upgrade a customer to an 'editor' so they can access the CMS, or grant them manual premium access)."*
+
+Once Replit finishes this, your business is a **fully automated machine**. Stripe handles the money, the database handles the locks, and your writers are securely quarantined to only writing books!
