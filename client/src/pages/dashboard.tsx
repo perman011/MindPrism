@@ -223,8 +223,24 @@ export default function Dashboard() {
                     ))}
                   </div>
                 ) : (
-                  <div className="py-4 text-center">
-                    <p className="text-xs text-white/30">No books for this chakra yet</p>
+                  <div className="py-8 flex flex-col items-center gap-3">
+                    <div className="relative">
+                      <div
+                        className="w-16 h-16 rounded-full animate-pulse flex items-center justify-center"
+                        style={{
+                          background: `radial-gradient(circle, ${CHAKRA_MAP[activeChakra].color}30 0%, transparent 70%)`,
+                          boxShadow: `0 0 30px ${CHAKRA_MAP[activeChakra].color}15`,
+                        }}
+                      >
+                        <Sparkles className="w-7 h-7" style={{ color: CHAKRA_MAP[activeChakra].color, opacity: 0.6 }} />
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-white/50">Curating energy...</p>
+                      <p className="text-[11px] text-white/25 mt-1">
+                        {CHAKRA_MAP[activeChakra].name} content coming soon
+                      </p>
+                    </div>
                   </div>
                 )}
               </motion.div>
@@ -328,4 +344,5 @@ export default function Dashboard() {
       )}
     </div>
   );
+
 }

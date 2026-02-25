@@ -8,6 +8,7 @@ import { AudioProvider } from "@/lib/audio-context";
 import { BottomNav } from "@/components/bottom-nav";
 import { MiniPlayer } from "@/components/mini-player";
 import { FullScreenPlayer } from "@/components/full-screen-player";
+import { PageTransition } from "@/components/page-transition";
 import LandingPage from "@/pages/landing";
 import Onboarding from "@/pages/onboarding";
 import Dashboard from "@/pages/dashboard";
@@ -23,6 +24,7 @@ import { getQueryFn } from "@/lib/queryClient";
 import type { UserInterest } from "@shared/schema";
 
 function AuthenticatedApp() {
+  const [location] = useLocation();
   const { data: interests, isLoading: interestsLoading } = useQuery<UserInterest | null>({
     queryKey: ["/api/interests"],
     queryFn: getQueryFn({ on401: "returnNull" }),
@@ -46,16 +48,18 @@ function AuthenticatedApp() {
   return (
     <AudioProvider>
       <div className="pb-16">
-        <Switch>
-          <Route path="/" component={Dashboard} />
-          <Route path="/discover" component={Discover} />
-          <Route path="/audio" component={AudioPage} />
-          <Route path="/vault" component={Vault} />
-          <Route path="/book/:id" component={BookDetail} />
-          <Route path="/book/:id/journey/:section" component={StoryEngine} />
-          <Route path="/book/:id/journey" component={StoryEngine} />
-          <Route component={NotFound} />
-        </Switch>
+        <PageTransition key={location}>
+          <Switch>
+            <Route path="/" component={Dashboard} />
+            <Route path="/discover" component={Discover} />
+            <Route path="/audio" component={AudioPage} />
+            <Route path="/vault" component={Vault} />
+            <Route path="/book/:id" component={BookDetail} />
+            <Route path="/book/:id/journey/:section" component={StoryEngine} />
+            <Route path="/book/:id/journey" component={StoryEngine} />
+            <Route component={NotFound} />
+          </Switch>
+        </PageTransition>
       </div>
       <MiniPlayer />
       <FullScreenPlayer />

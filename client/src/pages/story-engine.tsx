@@ -1,6 +1,8 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
-import type { Book, Principle, Story, Exercise, CommonMistake, ActionItem } from "@shared/schema";
+import type { Book, Principle, Story, Exercise, CommonMistake, ActionItem, ChakraType } from "@shared/schema";
+import { CHAKRA_MAP } from "@shared/schema";
+import { ChakraEnergyBurst } from "@/components/chakra-energy-burst";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +11,7 @@ import {
   X, Lightbulb, BookMarked, Dumbbell, ChevronLeft, ChevronRight,
   CheckCircle2, PenLine, Brain, AlertTriangle, ListChecks,
   BookOpen, Eye, RotateCcw, Check, Zap, TrendingUp, Clock,
-  ArrowRight, Sparkles, BarChart3,
+  ArrowRight, Sparkles, BarChart3, CalendarPlus,
 } from "lucide-react";
 import { useParams, useLocation, useSearch } from "wouter";
 import { useState, useCallback, useEffect, useRef } from "react";
@@ -292,9 +294,22 @@ function CommonMistakeCard({ card }: { card: CardItem }) {
 function ExerciseCard({ card, bookId }: { card: CardItem; bookId: string }) {
   const { toast } = useToast();
   const [journalText, setJournalText] = useState("");
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [showEnergyBurst, setShowEnergyBurst] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const d = card.data;
+
+  const exerciseChakra: ChakraType | null = d.powersUpChakra && d.powersUpChakra in CHAKRA_MAP
+    ? d.powersUpChakra as ChakraType
+    : "heart";
+
+  const updateChakraProgress = useMutation({
+    mutationFn: async (chakra: ChakraType) => {
+      await apiRequest("POST", "/api/chakra-progress", { chakra, points: 10 });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/chakra-progress"] });
+    },
+  });
 
   const saveJournalMutation = useMutation({
     mutationFn: async ({ exerciseId, content }: { exerciseId: string; content: string }) => {
@@ -302,8 +317,8 @@ function ExerciseCard({ card, bookId }: { card: CardItem; bookId: string }) {
       return res.json();
     },
     onSuccess: () => {
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 2000);
+      setShowEnergyBurst(true);
+      if (exerciseChakra) updateChakraProgress.mutate(exerciseChakra);
       toast({ title: "Saved!", description: "Your reflection has been saved to your journal." });
       setJournalText("");
       queryClient.invalidateQueries({ queryKey: ["/api/journal"] });
@@ -322,7 +337,12 @@ function ExerciseCard({ card, bookId }: { card: CardItem; bookId: string }) {
 
   return (
     <div data-testid={`card-exercise-${d.id}`} className="relative">
-      {showConfetti && <ConfettiOverlay />}
+      <ChakraEnergyBurst
+        chakra={exerciseChakra}
+        show={showEnergyBurst}
+        onComplete={() => setShowEnergyBurst(false)}
+        points={10}
+      />
 
       <div className="w-14 h-14 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
         <Dumbbell className="w-7 h-7 text-emerald-500" />
@@ -377,19 +397,25 @@ function ExerciseCard({ card, bookId }: { card: CardItem; bookId: string }) {
       {d.type === "quiz" && (() => {
         const content = d.content as any;
         const questions = content?.questions ?? [];
-        return <QuizContent questions={questions} exerciseId={d.id} />;
+        return <QuizContent questions={questions} exerciseId={d.id} onComplete={() => {
+          setShowEnergyBurst(true);
+          if (exerciseChakra) updateChakraProgress.mutate(exerciseChakra);
+        }} />;
       })()}
 
       {d.type === "action_plan" && (() => {
         const content = d.content as any;
         const steps = content?.steps ?? [];
-        return <ActionPlanContent steps={steps} exerciseId={d.id} />;
+        return <ActionPlanContent steps={steps} exerciseId={d.id} totalSteps={steps.length} onAllComplete={() => {
+          setShowEnergyBurst(true);
+          if (exerciseChakra) updateChakraProgress.mutate(exerciseChakra);
+        }} />;
       })()}
     </div>
   );
 }
 
-function QuizContent({ questions, exerciseId }: { questions: any[]; exerciseId: string }) {
+function QuizContent({ questions, exerciseId, onComplete }: { questions: any[]; exerciseId: string; onComplete?: () => void }) {
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [revealed, setRevealed] = useState(false);
 
@@ -427,7 +453,10 @@ function QuizContent({ questions, exerciseId }: { questions: any[]; exerciseId: 
         <Button
           className="w-full"
           disabled={Object.keys(answers).length < questions.length}
-          onClick={() => setRevealed(true)}
+          onClick={() => {
+            setRevealed(true);
+            onComplete?.();
+          }}
           data-testid="button-check-answers"
         >
           Check Answers
@@ -442,8 +471,9 @@ function QuizContent({ questions, exerciseId }: { questions: any[]; exerciseId: 
   );
 }
 
-function ActionPlanContent({ steps, exerciseId }: { steps: string[]; exerciseId: string }) {
+function ActionPlanContent({ steps, exerciseId, totalSteps, onAllComplete }: { steps: string[]; exerciseId: string; totalSteps: number; onAllComplete?: () => void }) {
   const [done, setDone] = useState<Set<number>>(new Set());
+  const [fired, setFired] = useState(false);
 
   return (
     <div className="space-y-2">
@@ -455,6 +485,10 @@ function ActionPlanContent({ steps, exerciseId }: { steps: string[]; exerciseId:
             setDone(prev => {
               const s = new Set(prev);
               s.has(i) ? s.delete(i) : s.add(i);
+              if (s.size === totalSteps && !fired) {
+                setFired(true);
+                onAllComplete?.();
+              }
               return s;
             });
           }}
@@ -602,6 +636,22 @@ function ActionItemsCard({ card }: { card: CardItem }) {
               }`}>
                 {item.type === "immediate" ? "Now" : "Later"}
               </Badge>
+              {item.type === "long_term" && (
+                <button
+                  className="flex-shrink-0 p-1 rounded-md hover:bg-sky-500/10 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const title = encodeURIComponent(item.text);
+                    const details = encodeURIComponent("MindSpark long-term habit");
+                    const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}`;
+                    window.open(url, "_blank");
+                  }}
+                  data-testid={`calendar-add-${item.id}`}
+                  title="Add to Calendar"
+                >
+                  <CalendarPlus className="w-4 h-4 text-sky-400" />
+                </button>
+              )}
             </button>
           );
         })}

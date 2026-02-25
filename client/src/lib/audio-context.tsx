@@ -99,6 +99,23 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [state.isPlaying, state.book, state.speed]);
 
+  useEffect(() => {
+    if (!("mediaSession" in navigator) || !state.book) return;
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: state.book.title,
+      artist: state.book.author,
+      album: "MindSpark",
+      artwork: state.book.coverImage
+        ? [{ src: state.book.coverImage, sizes: "256x256", type: "image/png" }]
+        : [],
+    });
+    navigator.mediaSession.setActionHandler("play", () => togglePlay());
+    navigator.mediaSession.setActionHandler("pause", () => togglePlay());
+    navigator.mediaSession.setActionHandler("seekbackward", () => skip(-15));
+    navigator.mediaSession.setActionHandler("seekforward", () => skip(15));
+    navigator.mediaSession.playbackState = state.isPlaying ? "playing" : "paused";
+  }, [state.book, state.isPlaying, togglePlay, skip]);
+
   return (
     <AudioContext.Provider value={{ ...state, play, togglePlay, seek, skip, setSpeed, setFullScreen, close }}>
       {children}

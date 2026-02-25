@@ -1,13 +1,15 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
-import type { UserStreak, JournalEntry, SavedHighlight, Exercise } from "@shared/schema";
+import type { UserStreak, JournalEntry, SavedHighlight, Exercise, ChakraProgress } from "@shared/schema";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Flame, Headphones, PenLine, BookOpen, LogOut, Settings, Calendar, Bookmark } from "lucide-react";
 import { useState } from "react";
+import { ChakraAvatar } from "@/components/chakra-avatar";
+import { CHAKRA_MAP, type ChakraType } from "@shared/schema";
 
 export default function Vault() {
   const { user, logout } = useAuth();
@@ -27,6 +29,13 @@ export default function Vault() {
     queryKey: ["/api/highlights"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
+
+  const { data: chakraProgress } = useQuery<ChakraProgress[]>({
+    queryKey: ["/api/chakra-progress"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+  });
+
+  const [selectedChakra, setSelectedChakra] = useState<ChakraType | null>(null);
 
   const initials = user
     ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase() || "U"
@@ -71,6 +80,32 @@ export default function Vault() {
             </Card>
           ))}
         </div>
+
+        <Card className="p-4 mb-5 bg-gradient-to-b from-primary/5 to-background border-primary/10">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-primary mb-3 text-center">My Personal Aura</h3>
+          <div className="flex justify-center mb-3">
+            <ChakraAvatar
+              activeChakra={selectedChakra}
+              onChakraSelect={setSelectedChakra}
+              progress={chakraProgress ?? []}
+              size="sm"
+            />
+          </div>
+          {selectedChakra ? (
+            <div className="text-center">
+              <p className="text-sm font-medium" style={{ color: CHAKRA_MAP[selectedChakra].color }}>
+                {CHAKRA_MAP[selectedChakra].name} Chakra
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                {chakraProgress?.find(p => p.chakra === selectedChakra)?.points ?? 0} points earned
+              </p>
+            </div>
+          ) : (
+            <p className="text-[11px] text-muted-foreground text-center">
+              Tap a chakra to see your progress
+            </p>
+          )}
+        </Card>
 
         <div className="flex items-center gap-1 bg-muted rounded-lg p-1 mb-5">
           {tabs.map((tab) => (

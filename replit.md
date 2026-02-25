@@ -10,7 +10,9 @@ MindSpark is a mobile-first web application that transforms dense psychology and
 - **Auth:** Replit Auth (OpenID Connect)
 - **Routing:** Wouter
 - **State:** TanStack React Query
-- **Audio:** Global AudioContext with simulated playback
+- **Audio:** Global AudioContext with simulated playback + Web Media Session API
+- **Animations:** Framer Motion (page transitions, chakra energy bursts)
+- **Security:** AES-256-GCM encrypted journal entries
 
 ## Content Architecture (Psychological Taxonomy)
 Every book follows this hierarchical structure:

@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
 import { registerAdminRoutes } from "./admin-routes";
 import { z } from "zod";
+import { encrypt, decrypt } from "./crypto";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -334,10 +335,11 @@ export async function registerRoutes(
         return res.status(400).json({ message: "content is required" });
       }
       const { exerciseId, content } = parsed.data;
-      const entry = await storage.createJournalEntry({ userId, exerciseId, content });
+      const encryptedContent = encrypt(content);
+      const entry = await storage.createJournalEntry({ userId, exerciseId, content: encryptedContent });
       await storage.incrementExercisesCompleted(userId);
       await storage.updateUserStreak(userId);
-      res.json(entry);
+      res.json({ ...entry, content });
     } catch (error) {
       console.error("Error creating journal entry:", error);
       res.status(500).json({ message: "Failed to create journal entry" });
@@ -348,7 +350,14 @@ export async function registerRoutes(
     try {
       const userId = req.user.claims.sub;
       const entries = await storage.getJournalEntries(userId);
-      res.json(entries);
+      const decryptedEntries = entries.map(entry => {
+        try {
+          return { ...entry, content: decrypt(entry.content) };
+        } catch {
+          return entry;
+        }
+      });
+      res.json(decryptedEntries);
     } catch (error) {
       console.error("Error fetching journal entries:", error);
       res.status(500).json({ message: "Failed to fetch journal entries" });
