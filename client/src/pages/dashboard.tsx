@@ -140,7 +140,7 @@ export default function Dashboard() {
 
       <section className="mb-6 px-5" data-testid="section-energy-map">
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-[#0f0a1e] via-[#1a1035] to-[#0d0820] p-5 pb-3">
-          <div className="absolute inset-0 opacity-20">
+          <div className="absolute inset-0 opacity-20 pointer-events-none">
             <div className="absolute top-4 left-8 w-1 h-1 rounded-full bg-white animate-pulse" />
             <div className="absolute top-12 right-12 w-0.5 h-0.5 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "0.5s" }} />
             <div className="absolute top-20 left-20 w-0.5 h-0.5 rounded-full bg-indigo-300 animate-pulse" style={{ animationDelay: "1s" }} />
@@ -198,13 +198,13 @@ export default function Dashboard() {
                 <p className="text-xs text-white/50 mb-3">{CHAKRA_MAP[activeChakra].theme}</p>
 
                 {chakraFilteredBooks.length > 0 ? (
-                  <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                  <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide relative" style={{ zIndex: 30 }}>
                     {chakraFilteredBooks.map((book) => (
                       <div
                         key={book.id}
-                        className="flex-shrink-0 w-28 cursor-pointer"
+                        className="flex-shrink-0 w-28 cursor-pointer active:scale-95 transition-transform"
                         data-testid={`chakra-book-${book.id}`}
-                        onClick={() => navigate(`/book/${book.id}`)}
+                        onClick={(e) => { e.stopPropagation(); navigate(`/book/${book.id}`); }}
                         role="button"
                         tabIndex={0}
                       >

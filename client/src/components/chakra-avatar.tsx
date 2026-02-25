@@ -135,7 +135,7 @@ export function ChakraAvatar({ activeChakra, onChakraSelect, progress, size = "m
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 5 }}
-            className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-center whitespace-nowrap"
+            className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-center whitespace-nowrap pointer-events-none"
           >
             {(() => {
               const c = activeChakra || hoveredChakra;
