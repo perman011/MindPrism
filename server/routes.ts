@@ -467,5 +467,48 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/chakra-progress", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const progress = await storage.getChakraProgress(userId);
+      res.json(progress);
+    } catch (error) {
+      console.error("Error fetching chakra progress:", error);
+      res.status(500).json({ message: "Failed to fetch chakra progress" });
+    }
+  });
+
+  app.post("/api/chakra-progress", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const schema = z.object({
+        chakra: z.string().min(1),
+        points: z.number().min(1),
+      });
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Invalid chakra data" });
+      const result = await storage.updateChakraProgress(userId, parsed.data.chakra, parsed.data.points);
+      res.json(result);
+    } catch (error) {
+      console.error("Error updating chakra progress:", error);
+      res.status(500).json({ message: "Failed to update chakra progress" });
+    }
+  });
+
+  app.get("/api/books/chakra/:chakra", async (req, res) => {
+    try {
+      const chakra = req.params.chakra;
+      const allBooks = await storage.getBooks();
+      const filtered = allBooks.filter(
+        b => (b.status === "published" || !b.status) &&
+          (b.primaryChakra === chakra || b.secondaryChakra === chakra)
+      );
+      res.json(filtered);
+    } catch (error) {
+      console.error("Error fetching books by chakra:", error);
+      res.status(500).json({ message: "Failed to fetch books by chakra" });
+    }
+  });
+
   return httpServer;
 }

@@ -16,9 +16,11 @@ import {
   type ActionItem, type InsertActionItem,
   type Infographic, type InsertInfographic,
   type Comment, type InsertComment,
+  type ChakraProgress, type InsertChakraProgress,
   books, principles, stories, exercises, userProgress, journalEntries, categories,
   userInterests, dailySparks, userStreaks, savedHighlights,
   chapterSummaries, mentalModels, commonMistakes, actionItems, infographics, comments,
+  chakraProgress,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, desc, asc, inArray } from "drizzle-orm";
@@ -118,6 +120,9 @@ export interface IStorage {
   createComment(comment: InsertComment): Promise<Comment>;
   updateComment(id: string, data: Partial<InsertComment & { resolved: boolean }>): Promise<Comment>;
   deleteComment(id: string): Promise<void>;
+
+  getChakraProgress(userId: string): Promise<ChakraProgress[]>;
+  updateChakraProgress(userId: string, chakra: string, points: number): Promise<ChakraProgress>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -577,6 +582,32 @@ export class DatabaseStorage implements IStorage {
 
   async deleteComment(id: string): Promise<void> {
     await db.delete(comments).where(eq(comments.id, id));
+  }
+
+  async getChakraProgress(userId: string): Promise<ChakraProgress[]> {
+    return db.select().from(chakraProgress).where(eq(chakraProgress.userId, userId));
+  }
+
+  async updateChakraProgress(userId: string, chakra: string, points: number): Promise<ChakraProgress> {
+    const existing = await db.select().from(chakraProgress)
+      .where(and(eq(chakraProgress.userId, userId), eq(chakraProgress.chakra, chakra)));
+
+    if (existing.length > 0) {
+      const [result] = await db.update(chakraProgress)
+        .set({
+          points: sql`${chakraProgress.points} + ${points}`,
+          exercisesCompleted: sql`${chakraProgress.exercisesCompleted} + 1`,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(chakraProgress.userId, userId), eq(chakraProgress.chakra, chakra)))
+        .returning();
+      return result;
+    } else {
+      const [result] = await db.insert(chakraProgress)
+        .values({ userId, chakra, points, exercisesCompleted: 1 })
+        .returning();
+      return result;
+    }
   }
 }
 

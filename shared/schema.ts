@@ -30,6 +30,8 @@ export const books = pgTable("books", {
   principleCount: integer("principle_count").default(0),
   storyCount: integer("story_count").default(0),
   exerciseCount: integer("exercise_count").default(0),
+  primaryChakra: text("primary_chakra"),
+  secondaryChakra: text("secondary_chakra"),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
@@ -62,6 +64,7 @@ export const exercises = pgTable("exercises", {
   type: text("type").notNull(),
   content: jsonb("content").notNull(),
   impact: text("impact").default("medium"),
+  powersUpChakra: text("powers_up_chakra"),
   orderIndex: integer("order_index").notNull(),
 });
 
@@ -105,6 +108,7 @@ export const actionItems = pgTable("action_items", {
   bookId: varchar("book_id").references(() => books.id).notNull(),
   text: text("text").notNull(),
   type: text("type").notNull(),
+  powersUpChakra: text("powers_up_chakra"),
   orderIndex: integer("order_index").notNull(),
 });
 
@@ -164,6 +168,15 @@ export const savedHighlights = pgTable("saved_highlights", {
   content: text("content").notNull(),
   type: text("type").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const chakraProgress = pgTable("chakra_progress", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  chakra: text("chakra").notNull(),
+  points: integer("points").default(0),
+  exercisesCompleted: integer("exercises_completed").default(0),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const comments = pgTable("comments", {
@@ -245,6 +258,10 @@ export const savedHighlightsRelations = relations(savedHighlights, ({ one }) => 
   book: one(books, { fields: [savedHighlights.bookId], references: [books.id] }),
 }));
 
+export const chakraProgressRelations = relations(chakraProgress, ({ one }) => ({
+  user: one(users, { fields: [chakraProgress.userId], references: [users.id] }),
+}));
+
 export const commentsRelations = relations(comments, ({ one }) => ({
   user: one(users, { fields: [comments.userId], references: [users.id] }),
   book: one(books, { fields: [comments.bookId], references: [books.id] }),
@@ -266,6 +283,7 @@ export const insertMentalModelSchema = createInsertSchema(mentalModels).omit({ i
 export const insertCommonMistakeSchema = createInsertSchema(commonMistakes).omit({ id: true });
 export const insertInfographicSchema = createInsertSchema(infographics).omit({ id: true });
 export const insertActionItemSchema = createInsertSchema(actionItems).omit({ id: true });
+export const insertChakraProgressSchema = createInsertSchema(chakraProgress).omit({ id: true });
 export const insertCommentSchema = createInsertSchema(comments).omit({ id: true });
 
 export type InsertBook = z.infer<typeof insertBookSchema>;
@@ -300,5 +318,19 @@ export type InsertInfographic = z.infer<typeof insertInfographicSchema>;
 export type Infographic = typeof infographics.$inferSelect;
 export type InsertActionItem = z.infer<typeof insertActionItemSchema>;
 export type ActionItem = typeof actionItems.$inferSelect;
+export type InsertChakraProgress = z.infer<typeof insertChakraProgressSchema>;
+export type ChakraProgress = typeof chakraProgress.$inferSelect;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
 export type Comment = typeof comments.$inferSelect;
+
+export const CHAKRA_MAP = {
+  root: { name: "Root", sanskrit: "Muladhara", color: "#EF4444", theme: "Foundation & Routine" },
+  sacral: { name: "Sacral", sanskrit: "Svadhisthana", color: "#F97316", theme: "Creativity & Emotion" },
+  solar_plexus: { name: "Solar Plexus", sanskrit: "Manipura", color: "#EAB308", theme: "Willpower & Action" },
+  heart: { name: "Heart", sanskrit: "Anahata", color: "#22C55E", theme: "Empathy & Connection" },
+  throat: { name: "Throat", sanskrit: "Vishuddha", color: "#3B82F6", theme: "Communication & Truth" },
+  third_eye: { name: "Third Eye", sanskrit: "Ajna", color: "#6366F1", theme: "Cognition & Intuition" },
+  crown: { name: "Crown", sanskrit: "Sahasrara", color: "#8B5CF6", theme: "Purpose & Meaning" },
+} as const;
+
+export type ChakraType = keyof typeof CHAKRA_MAP;

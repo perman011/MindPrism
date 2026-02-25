@@ -33,7 +33,7 @@ client/src/
   pages/
     landing.tsx          - Marketing landing page (unauthenticated) with auto-swiping carousel
     onboarding.tsx       - Interest selection & personalization flow
-    dashboard.tsx        - Home page with daily spark, streaks, carousels
+    dashboard.tsx        - Home page with chakra energy map, daily spark, streaks, carousels
     discover.tsx         - Book library with search, category pills, book grid
     audio.tsx            - Audio summaries listing page
     vault.tsx            - Growth vault: journal, highlights, stats, settings
@@ -62,6 +62,7 @@ client/src/
     bottom-nav.tsx       - Fixed bottom navigation (Home/Discover/Audio/Vault)
     mini-player.tsx      - Persistent mini audio player above bottom nav
     full-screen-player.tsx - Full-screen audio player with controls
+    chakra-avatar.tsx    - Interactive meditating figure SVG with 7 tappable chakra nodes
     category-icon.tsx    - Dynamic category icon mapper
     ui/                  - Shadcn components
   hooks/
@@ -90,22 +91,23 @@ shared/
 ```
 
 ## Database Tables
-- `books` - title, author, coreThesis, coverImage, readTime, listenTime, audioUrl, featured, status (draft/published), updatedAt
+- `books` - title, author, coreThesis, coverImage, readTime, listenTime, audioUrl, featured, status (draft/published), primaryChakra, secondaryChakra, updatedAt
 - `categories` - name, slug, icon, color
 - `chapter_summaries` - bookId, chapterNumber, chapterTitle, cards (jsonb array)
 - `mental_models` - bookId, title, description, steps (jsonb array), orderIndex
 - `principles` - bookId, title, content, orderIndex, icon
 - `stories` - bookId, principleId (nullable FK), title, content, moral, orderIndex
-- `exercises` - bookId, title, description, type, content (jsonb), impact (high/medium/low), orderIndex
+- `exercises` - bookId, title, description, type, content (jsonb), impact (high/medium/low), powersUpChakra, orderIndex
 - `common_mistakes` - bookId, mistake, correction, orderIndex
 - `infographics` - bookId, title, description, imageUrl, steps (jsonb array), orderIndex
-- `action_items` - bookId, text, type (immediate/long_term), orderIndex
+- `action_items` - bookId, text, type (immediate/long_term), powersUpChakra, orderIndex
 - `user_progress` - userId, bookId, completedPrinciples, bookmarked, currentCardIndex, currentSection
 - `journal_entries` - userId, exerciseId (optional), content
 - `user_interests` - userId, interests array, onboardingCompleted
 - `daily_sparks` - quote, author, bookId, category
 - `user_streaks` - userId, currentStreak, longestStreak, totalMinutesListened, etc.
 - `saved_highlights` - userId, bookId, content, type
+- `chakra_progress` - userId, chakra, points, exercisesCompleted, updatedAt
 - `comments` - bookId, blockType, blockId, userId, content, resolved, createdAt
 
 ## API Endpoints
@@ -138,6 +140,9 @@ shared/
 - `GET /api/highlights` - Get saved highlights (auth required)
 - `POST /api/highlights` - Save highlight (auth required)
 - `DELETE /api/highlights/:id` - Delete highlight (auth required)
+- `GET /api/chakra-progress` - Get user's chakra energy levels (auth required)
+- `POST /api/chakra-progress` - Update chakra points (auth required)
+- `GET /api/books/chakra/:chakra` - Get books filtered by chakra type
 
 ## Admin API Endpoints (role-gated: admin/editor/writer)
 - `POST /api/admin/books` - Create new book (draft)

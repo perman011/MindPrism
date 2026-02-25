@@ -1,16 +1,20 @@
+import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
-import type { Book, Category, DailySpark, UserStreak, UserProgress } from "@shared/schema";
+import type { Book, Category, DailySpark, UserStreak, UserProgress, ChakraProgress, ChakraType } from "@shared/schema";
+import { CHAKRA_MAP } from "@shared/schema";
 import { BookCard } from "@/components/book-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Brain, Flame, ArrowRight, Sparkles, BookOpen, ChevronRight } from "lucide-react";
+import { Brain, Flame, ArrowRight, Sparkles, BookOpen, ChevronRight, X } from "lucide-react";
 import { Link } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CategoryIcon } from "@/components/category-icon";
 import { useAudio } from "@/lib/audio-context";
+import { ChakraAvatar } from "@/components/chakra-avatar";
+import { AnimatePresence, motion } from "framer-motion";
 
 function ProgressRing({ progress, size = 40 }: { progress: number; size?: number }) {
   const stroke = 3;
@@ -59,6 +63,7 @@ function HorizontalScroll({ children, title, actionHref, actionLabel, testId }: 
 export default function Dashboard() {
   const { user } = useAuth();
   const { play } = useAudio();
+  const [activeChakra, setActiveChakra] = useState<ChakraType | null>(null);
 
   const { data: books, isLoading: booksLoading } = useQuery<Book[]>({
     queryKey: ["/api/books"],
@@ -85,9 +90,18 @@ export default function Dashboard() {
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
+  const { data: chakraProgressData } = useQuery<ChakraProgress[]>({
+    queryKey: ["/api/chakra-progress"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+  });
+
   const featuredBooks = books?.filter((b) => b.featured) ?? [];
   const allBooks = books ?? [];
   const inProgressBooks = allProgress?.filter(p => p.currentCardIndex && p.currentCardIndex > 0 && p.totalCards && p.currentCardIndex < p.totalCards) ?? [];
+
+  const chakraFilteredBooks = activeChakra
+    ? allBooks.filter(b => b.primaryChakra === activeChakra || b.secondaryChakra === activeChakra)
+    : [];
 
   const greeting = () => {
     const hour = new Date().getHours();
@@ -122,6 +136,102 @@ export default function Dashboard() {
           </Link>
         </div>
       </div>
+
+      <section className="mb-6 px-5" data-testid="section-energy-map">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-[#0f0a1e] via-[#1a1035] to-[#0d0820] p-5 pb-3">
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute top-4 left-8 w-1 h-1 rounded-full bg-white animate-pulse" />
+            <div className="absolute top-12 right-12 w-0.5 h-0.5 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "0.5s" }} />
+            <div className="absolute top-20 left-20 w-0.5 h-0.5 rounded-full bg-indigo-300 animate-pulse" style={{ animationDelay: "1s" }} />
+            <div className="absolute bottom-16 right-8 w-1 h-1 rounded-full bg-violet-300 animate-pulse" style={{ animationDelay: "1.5s" }} />
+            <div className="absolute bottom-24 left-16 w-0.5 h-0.5 rounded-full bg-blue-300 animate-pulse" style={{ animationDelay: "0.8s" }} />
+          </div>
+
+          <p className="text-center text-xs font-medium text-purple-300/80 uppercase tracking-widest mb-2">
+            My Energy Map
+          </p>
+          <h3 className="text-center font-serif text-sm text-white/70 mb-3">
+            Tap a chakra to explore
+          </h3>
+
+          <div className="flex justify-center">
+            <ChakraAvatar
+              activeChakra={activeChakra}
+              onChakraSelect={setActiveChakra}
+              progress={chakraProgressData ?? undefined}
+              size="md"
+            />
+          </div>
+
+          <AnimatePresence mode="wait">
+            {activeChakra && (
+              <motion.div
+                key={activeChakra}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="mt-3"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: CHAKRA_MAP[activeChakra].color }}
+                    />
+                    <span className="text-sm font-medium text-white">
+                      {CHAKRA_MAP[activeChakra].name} Chakra
+                    </span>
+                    <span className="text-[10px] text-white/40">
+                      {CHAKRA_MAP[activeChakra].sanskrit}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setActiveChakra(null)}
+                    className="p-1 rounded-full hover:bg-white/10 transition-colors"
+                    data-testid="button-close-chakra-filter"
+                  >
+                    <X className="w-3.5 h-3.5 text-white/50" />
+                  </button>
+                </div>
+                <p className="text-xs text-white/50 mb-3">{CHAKRA_MAP[activeChakra].theme}</p>
+
+                {chakraFilteredBooks.length > 0 ? (
+                  <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                    {chakraFilteredBooks.map((book) => (
+                      <Link key={book.id} href={`/book/${book.id}`}>
+                        <div
+                          className="flex-shrink-0 w-28 cursor-pointer"
+                          data-testid={`chakra-book-${book.id}`}
+                        >
+                          <div className="w-28 h-36 rounded-lg overflow-hidden mb-1.5 ring-1 ring-white/10">
+                            {book.coverImage ? (
+                              <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <div
+                                className="w-full h-full flex items-center justify-center"
+                                style={{ background: `linear-gradient(135deg, ${CHAKRA_MAP[activeChakra].color}33, ${CHAKRA_MAP[activeChakra].color}11)` }}
+                              >
+                                <span className="font-serif text-lg font-bold text-white/30">{book.title[0]}</span>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-[11px] font-medium text-white/80 truncate">{book.title}</p>
+                          <p className="text-[9px] text-white/40">{book.author}</p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-4 text-center">
+                    <p className="text-xs text-white/30">No books for this chakra yet</p>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </section>
 
       {dailySpark && (
         <div className="px-5 mb-6">
