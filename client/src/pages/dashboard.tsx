@@ -7,7 +7,7 @@ import { CHAKRA_MAP } from "@shared/schema";
 import { BookCard } from "@/components/book-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Brain, Flame, ArrowRight, Sparkles, BookOpen, ChevronRight, X } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -63,6 +63,7 @@ function HorizontalScroll({ children, title, actionHref, actionLabel, testId }: 
 export default function Dashboard() {
   const { user } = useAuth();
   const { play } = useAudio();
+  const [, navigate] = useLocation();
   const [activeChakra, setActiveChakra] = useState<ChakraType | null>(null);
 
   const { data: books, isLoading: booksLoading } = useQuery<Book[]>({
@@ -199,27 +200,29 @@ export default function Dashboard() {
                 {chakraFilteredBooks.length > 0 ? (
                   <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                     {chakraFilteredBooks.map((book) => (
-                      <Link key={book.id} href={`/book/${book.id}`}>
-                        <div
-                          className="flex-shrink-0 w-28 cursor-pointer"
-                          data-testid={`chakra-book-${book.id}`}
-                        >
-                          <div className="w-28 h-36 rounded-lg overflow-hidden mb-1.5 ring-1 ring-white/10">
-                            {book.coverImage ? (
-                              <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
-                            ) : (
-                              <div
-                                className="w-full h-full flex items-center justify-center"
-                                style={{ background: `linear-gradient(135deg, ${CHAKRA_MAP[activeChakra].color}33, ${CHAKRA_MAP[activeChakra].color}11)` }}
-                              >
-                                <span className="font-serif text-lg font-bold text-white/30">{book.title[0]}</span>
-                              </div>
-                            )}
-                          </div>
-                          <p className="text-[11px] font-medium text-white/80 truncate">{book.title}</p>
-                          <p className="text-[9px] text-white/40">{book.author}</p>
+                      <div
+                        key={book.id}
+                        className="flex-shrink-0 w-28 cursor-pointer"
+                        data-testid={`chakra-book-${book.id}`}
+                        onClick={() => navigate(`/book/${book.id}`)}
+                        role="button"
+                        tabIndex={0}
+                      >
+                        <div className="w-28 h-36 rounded-lg overflow-hidden mb-1.5 ring-1 ring-white/10">
+                          {book.coverImage ? (
+                            <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
+                          ) : (
+                            <div
+                              className="w-full h-full flex items-center justify-center"
+                              style={{ background: `linear-gradient(135deg, ${CHAKRA_MAP[activeChakra].color}33, ${CHAKRA_MAP[activeChakra].color}11)` }}
+                            >
+                              <span className="font-serif text-lg font-bold text-white/30">{book.title[0]}</span>
+                            </div>
+                          )}
                         </div>
-                      </Link>
+                        <p className="text-[11px] font-medium text-white/80 truncate">{book.title}</p>
+                        <p className="text-[9px] text-white/40">{book.author}</p>
+                      </div>
                     ))}
                   </div>
                 ) : (
