@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
@@ -6,7 +6,7 @@ import type { Book, Category, DailySpark, UserStreak, UserProgress, ChakraProgre
 import { CHAKRA_MAP } from "@shared/schema";
 import { BookCard } from "@/components/book-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Brain, Flame, ArrowRight, Sparkles, BookOpen, ChevronRight, X } from "lucide-react";
+import { Brain, Flame, ArrowRight, Sparkles, BookOpen, ChevronRight, ChevronLeft, X } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -55,6 +55,78 @@ function HorizontalScroll({ children, title, actionHref, actionLabel, testId }: 
       </div>
       <div className="flex gap-4 overflow-x-auto px-5 pb-2 scrollbar-hide">
         {children}
+      </div>
+    </section>
+  );
+}
+
+function BookSlider({ books, title, testId }: { books: Book[]; title: string; testId: string }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [scrollPos, setScrollPos] = useState(0);
+  const [maxScroll, setMaxScroll] = useState(0);
+
+  const updateScrollState = useCallback(() => {
+    if (!scrollRef.current) return;
+    const el = scrollRef.current;
+    setScrollPos(el.scrollLeft);
+    setMaxScroll(el.scrollWidth - el.clientWidth);
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(updateScrollState, 100);
+    window.addEventListener("resize", updateScrollState);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", updateScrollState);
+    };
+  }, [updateScrollState, books]);
+
+  const scroll = useCallback((direction: "left" | "right") => {
+    if (!scrollRef.current) return;
+    const el = scrollRef.current;
+    const cardWidth = 200;
+    const amount = direction === "left" ? -cardWidth : cardWidth;
+    el.scrollBy({ left: amount, behavior: "smooth" });
+  }, []);
+
+  const canScrollLeft = scrollPos > 5;
+  const canScrollRight = maxScroll > 0 && scrollPos < maxScroll - 5;
+
+  return (
+    <section className="mb-8" data-testid={testId}>
+      <div className="flex items-center justify-between px-5 mb-3">
+        <h2 className="font-serif text-lg font-bold">{title}</h2>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => scroll("left")}
+            disabled={!canScrollLeft}
+            data-testid={`${testId}-scroll-left`}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => scroll("right")}
+            disabled={!canScrollRight}
+            data-testid={`${testId}-scroll-right`}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+      <div
+        ref={scrollRef}
+        className="flex gap-4 overflow-x-auto px-5 pb-3 scrollbar-hide snap-x snap-mandatory"
+        onScroll={updateScrollState}
+      >
+        {books.map((book) => (
+          <div key={book.id} className="flex-shrink-0 w-[180px] snap-start">
+            <BookCard book={book} compact />
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -139,8 +211,8 @@ export default function Dashboard() {
       </div>
 
       <section className="mb-6 px-5" data-testid="section-energy-map">
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-[#0f0a1e] via-[#1a1035] to-[#0d0820] p-5 pb-3">
-          <div className="absolute inset-0 opacity-20 pointer-events-none">
+        <div className="relative rounded-2xl bg-gradient-to-b from-[#0f0a1e] via-[#1a1035] to-[#0d0820] p-5 pb-3">
+          <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden rounded-2xl">
             <div className="absolute top-4 left-8 w-1 h-1 rounded-full bg-white animate-pulse" />
             <div className="absolute top-12 right-12 w-0.5 h-0.5 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "0.5s" }} />
             <div className="absolute top-20 left-20 w-0.5 h-0.5 rounded-full bg-indigo-300 animate-pulse" style={{ animationDelay: "1s" }} />
@@ -155,7 +227,7 @@ export default function Dashboard() {
             Tap a chakra to explore
           </h3>
 
-          <div className="flex justify-center">
+          <div className="flex justify-center relative" style={{ zIndex: 10 }}>
             <ChakraAvatar
               activeChakra={activeChakra}
               onChakraSelect={setActiveChakra}
@@ -163,52 +235,59 @@ export default function Dashboard() {
               size="md"
             />
           </div>
+        </div>
+      </section>
 
-          <AnimatePresence mode="wait">
-            {activeChakra && (
-              <motion.div
-                key={activeChakra}
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-                className="mt-3"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: CHAKRA_MAP[activeChakra].color }}
-                    />
-                    <span className="text-sm font-medium text-white">
-                      {CHAKRA_MAP[activeChakra].name} Chakra
-                    </span>
-                    <span className="text-[10px] text-white/40">
-                      {CHAKRA_MAP[activeChakra].sanskrit}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => setActiveChakra(null)}
-                    className="p-1 rounded-full hover:bg-white/10 transition-colors"
-                    data-testid="button-close-chakra-filter"
-                  >
-                    <X className="w-3.5 h-3.5 text-white/50" />
-                  </button>
+      <AnimatePresence mode="wait">
+        {activeChakra && (
+          <motion.section
+            key={activeChakra}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="mb-6 px-5"
+            data-testid="section-chakra-filtered"
+          >
+            <div
+              className="rounded-2xl p-4 border"
+              style={{
+                borderColor: `${CHAKRA_MAP[activeChakra].color}30`,
+                background: `linear-gradient(135deg, ${CHAKRA_MAP[activeChakra].color}08 0%, transparent 100%)`,
+              }}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: CHAKRA_MAP[activeChakra].color }}
+                  />
+                  <span className="text-sm font-bold">
+                    {CHAKRA_MAP[activeChakra].name} Chakra
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {CHAKRA_MAP[activeChakra].sanskrit}
+                  </span>
                 </div>
-                <p className="text-xs text-white/50 mb-3">{CHAKRA_MAP[activeChakra].theme}</p>
+                <button
+                  onClick={() => setActiveChakra(null)}
+                  className="p-1.5 rounded-full bg-muted/50 transition-colors"
+                  data-testid="button-close-chakra-filter"
+                >
+                  <X className="w-3.5 h-3.5 text-muted-foreground" />
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground mb-4">{CHAKRA_MAP[activeChakra].theme}</p>
 
-                {chakraFilteredBooks.length > 0 ? (
-                  <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide relative" style={{ zIndex: 30 }}>
-                    {chakraFilteredBooks.map((book) => (
+              {chakraFilteredBooks.length > 0 ? (
+                <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                  {chakraFilteredBooks.map((book) => (
+                    <Link key={book.id} href={`/book/${book.id}`}>
                       <div
-                        key={book.id}
-                        className="flex-shrink-0 w-28 cursor-pointer active:scale-95 transition-transform"
+                        className="flex-shrink-0 w-32 cursor-pointer active:scale-95 transition-transform"
                         data-testid={`chakra-book-${book.id}`}
-                        onClick={(e) => { e.stopPropagation(); navigate(`/book/${book.id}`); }}
-                        role="button"
-                        tabIndex={0}
                       >
-                        <div className="w-28 h-36 rounded-lg overflow-hidden mb-1.5 ring-1 ring-white/10">
+                        <div className="w-32 h-40 rounded-xl overflow-hidden mb-2 ring-1 ring-border">
                           {book.coverImage ? (
                             <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
                           ) : (
@@ -216,41 +295,35 @@ export default function Dashboard() {
                               className="w-full h-full flex items-center justify-center"
                               style={{ background: `linear-gradient(135deg, ${CHAKRA_MAP[activeChakra].color}33, ${CHAKRA_MAP[activeChakra].color}11)` }}
                             >
-                              <span className="font-serif text-lg font-bold text-white/30">{book.title[0]}</span>
+                              <span className="font-serif text-lg font-bold text-muted-foreground/30">{book.title[0]}</span>
                             </div>
                           )}
                         </div>
-                        <p className="text-[11px] font-medium text-white/80 truncate">{book.title}</p>
-                        <p className="text-[9px] text-white/40">{book.author}</p>
+                        <p className="text-xs font-medium truncate">{book.title}</p>
+                        <p className="text-[10px] text-muted-foreground">{book.author}</p>
                       </div>
-                    ))}
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-6 flex flex-col items-center gap-3">
+                  <div
+                    className="w-12 h-12 rounded-full animate-pulse flex items-center justify-center"
+                    style={{
+                      background: `radial-gradient(circle, ${CHAKRA_MAP[activeChakra].color}30 0%, transparent 70%)`,
+                    }}
+                  >
+                    <Sparkles className="w-5 h-5" style={{ color: CHAKRA_MAP[activeChakra].color, opacity: 0.6 }} />
                   </div>
-                ) : (
-                  <div className="py-8 flex flex-col items-center gap-3">
-                    <div className="relative">
-                      <div
-                        className="w-16 h-16 rounded-full animate-pulse flex items-center justify-center"
-                        style={{
-                          background: `radial-gradient(circle, ${CHAKRA_MAP[activeChakra].color}30 0%, transparent 70%)`,
-                          boxShadow: `0 0 30px ${CHAKRA_MAP[activeChakra].color}15`,
-                        }}
-                      >
-                        <Sparkles className="w-7 h-7" style={{ color: CHAKRA_MAP[activeChakra].color, opacity: 0.6 }} />
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm font-medium text-white/50">Curating energy...</p>
-                      <p className="text-[11px] text-white/25 mt-1">
-                        {CHAKRA_MAP[activeChakra].name} content coming soon
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </section>
+                  <p className="text-sm text-muted-foreground">
+                    No {CHAKRA_MAP[activeChakra].name} books yet — content coming soon
+                  </p>
+                </div>
+              )}
+            </div>
+          </motion.section>
+        )}
+      </AnimatePresence>
 
       {dailySpark && (
         <div className="px-5 mb-6">
@@ -299,6 +372,10 @@ export default function Dashboard() {
             );
           })}
         </HorizontalScroll>
+      )}
+
+      {allBooks.length > 0 && (
+        <BookSlider books={allBooks} title="All Books" testId="section-all-books" />
       )}
 
       {featuredBooks.length > 0 && (
