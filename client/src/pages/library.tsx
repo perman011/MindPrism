@@ -6,7 +6,8 @@ import { BookCard } from "@/components/book-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Brain, BookOpen, Search, LogOut, Home, ArrowLeft } from "lucide-react";
+import { BookOpen, Search, LogOut, Home, ArrowLeft } from "lucide-react";
+import mindprismLogo from "@assets/IMG_5128_1772146157123.jpeg";
 import { Link, useSearch } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useMemo } from "react";
@@ -53,9 +54,7 @@ export default function Library() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           <Link href="/">
             <div className="flex items-center gap-2 cursor-pointer" data-testid="link-home">
-              <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
-                <Brain className="w-5 h-5 text-primary-foreground" />
-              </div>
+              <img src={mindprismLogo} alt="MindPrism" className="w-8 h-8 rounded-md object-cover" />
               <span className="font-serif text-xl font-bold">MindPrism</span>
             </div>
           </Link>
