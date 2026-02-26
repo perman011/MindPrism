@@ -1,8 +1,21 @@
 import { storage } from "./storage";
 import { db } from "./db";
 import { books, chapterSummaries, mentalModels, commonMistakes, actionItems, infographics } from "@shared/schema";
+import { users } from "@shared/models/auth";
+import { eq } from "drizzle-orm";
+
+async function ensureAdminRole() {
+  const ADMIN_USER_ID = "35323958";
+  const [existing] = await db.select().from(users).where(eq(users.id, ADMIN_USER_ID));
+  if (existing && existing.role !== "super_admin") {
+    await db.update(users).set({ role: "super_admin", updatedAt: new Date() }).where(eq(users.id, ADMIN_USER_ID));
+    console.log(`Promoted user ${ADMIN_USER_ID} to super_admin`);
+  }
+}
 
 export async function seedDatabase() {
+  await ensureAdminRole();
+
   const existingBooks = await db.select().from(books).limit(1);
   if (existingBooks.length > 0) {
     console.log("Database already seeded, skipping...");
