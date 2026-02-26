@@ -1,6 +1,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient, getQueryFn } from "@/lib/queryClient";
 import type { Book, Comment } from "@shared/schema";
+import { useAuth } from "@/hooks/use-auth";
+import { hasMinRole } from "@shared/models/auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, X, Rocket, AlertCircle, Globe, FileText } from "lucide-react";
@@ -13,6 +15,8 @@ interface PublishPanelProps {
 
 export function PublishPanel({ book, contentCounts }: PublishPanelProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const canPublish = hasMinRole(user?.role, "editor");
 
   const { data: comments } = useQuery<Comment[]>({
     queryKey: ["/api/admin/books", book.id, "comments"],
@@ -95,28 +99,32 @@ export function PublishPanel({ book, contentCounts }: PublishPanelProps) {
         </div>
       )}
 
-      {book.status === "published" ? (
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full"
-          onClick={() => unpublishMutation.mutate()}
-          disabled={unpublishMutation.isPending}
-          data-testid="button-unpublish"
-        >
-          Move to Draft
-        </Button>
+      {canPublish ? (
+        book.status === "published" ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={() => unpublishMutation.mutate()}
+            disabled={unpublishMutation.isPending}
+            data-testid="button-unpublish"
+          >
+            Move to Draft
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            className="w-full gap-1.5"
+            onClick={() => publishMutation.mutate()}
+            disabled={!allPassed || publishMutation.isPending}
+            data-testid="button-publish"
+          >
+            <Rocket className="w-3.5 h-3.5" />
+            Publish to App
+          </Button>
+        )
       ) : (
-        <Button
-          size="sm"
-          className="w-full gap-1.5"
-          onClick={() => publishMutation.mutate()}
-          disabled={!allPassed || publishMutation.isPending}
-          data-testid="button-publish"
-        >
-          <Rocket className="w-3.5 h-3.5" />
-          Publish to App
-        </Button>
+        <p className="text-[10px] text-muted-foreground text-center">Only editors and above can publish.</p>
       )}
     </div>
   );

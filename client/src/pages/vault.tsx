@@ -189,8 +189,35 @@ export default function Vault() {
                   <span className="text-muted-foreground">Member since</span>
                   <span>{user?.createdAt ? new Date(user.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "—"}</span>
                 </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Plan</span>
+                  <span className={user?.isPremium ? "text-amber-600 font-semibold" : ""}>
+                    {user?.isPremium ? "Premium" : "Free"}
+                  </span>
+                </div>
               </div>
             </Card>
+            {user?.isPremium && (
+              <Button
+                variant="outline"
+                className="w-full gap-2"
+                onClick={async () => {
+                  try {
+                    const res = await fetch("/api/stripe/create-portal-session", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      credentials: "include",
+                    });
+                    const data = await res.json();
+                    if (data.url) window.location.href = data.url;
+                  } catch {}
+                }}
+                data-testid="button-manage-subscription"
+              >
+                <Settings className="w-4 h-4" />
+                Manage Subscription
+              </Button>
+            )}
             <Button
               variant="outline"
               className="w-full gap-2"

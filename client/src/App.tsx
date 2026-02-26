@@ -20,6 +20,7 @@ import StoryEngine from "@/pages/story-engine";
 import NotFound from "@/pages/not-found";
 import AdminBooks from "@/pages/admin/admin-books";
 import AdminBookEditor from "@/pages/admin/admin-book-editor";
+import AdminUsers from "@/pages/admin/admin-users";
 import { getQueryFn } from "@/lib/queryClient";
 import type { UserInterest } from "@shared/schema";
 
@@ -92,6 +93,7 @@ function AppRouter() {
       <Switch>
         <Route path="/admin" component={AdminBooks} />
         <Route path="/admin/books/:id" component={AdminBookEditor} />
+        <Route path="/admin/users" component={AdminUsers} />
         <Route component={NotFound} />
       </Switch>
     );

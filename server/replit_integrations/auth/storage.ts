@@ -16,7 +16,7 @@ class AuthStorage implements IAuthStorage {
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
-    const { role, ...updateData } = userData as any;
+    const { role, isPremium, stripeCustomerId, stripeSubscriptionId, currentPeriodEnd, ...updateData } = userData as any;
     const [user] = await db
       .insert(users)
       .values(userData)

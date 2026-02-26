@@ -67,6 +67,18 @@ function PreviewBookDetail({ title, author, thesis }: { title?: string; author?:
 }
 
 function PreviewSection({ section, data }: { section: string; data?: any }) {
+  const renderContent = (item: any) => {
+    if (!item.content) return null;
+    if (typeof item.content === "string") {
+      return <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">{item.content}</p>;
+    }
+    if (typeof item.content === "object") {
+      const text = item.content.prompt || item.content.question || JSON.stringify(item.content).slice(0, 100);
+      return <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">{text}</p>;
+    }
+    return null;
+  };
+
   return (
     <div className="p-4">
       <Badge variant="secondary" className="text-[10px] mb-3">{section}</Badge>
@@ -75,7 +87,7 @@ function PreviewSection({ section, data }: { section: string; data?: any }) {
           data.slice(0, 5).map((item: any, i: number) => (
             <div key={i} className="p-3 bg-muted/20 rounded-lg">
               <p className="text-xs font-medium">{item.title || item.chapterTitle || item.mistake || item.text || `Item ${i + 1}`}</p>
-              {item.content && <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">{item.content}</p>}
+              {renderContent(item)}
               {item.description && <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">{item.description}</p>}
               {item.correction && <p className="text-[10px] text-emerald-600 mt-1 line-clamp-2">Fix: {item.correction}</p>}
             </div>

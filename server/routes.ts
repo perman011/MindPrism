@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
 import { registerAdminRoutes } from "./admin-routes";
+import { registerStripeRoutes } from "./stripe-routes";
 import { z } from "zod";
 import { encrypt, decrypt } from "./crypto";
 
@@ -13,6 +14,7 @@ export async function registerRoutes(
   await setupAuth(app);
   registerAuthRoutes(app);
   registerAdminRoutes(app);
+  registerStripeRoutes(app);
 
   app.get("/api/categories", async (_req, res) => {
     try {

@@ -1,17 +1,23 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import type { Book } from "@shared/schema";
+import { useAuth } from "@/hooks/use-auth";
+import { hasMinRole } from "@shared/models/auth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, BookOpen, Edit, Trash2, Globe, FileText } from "lucide-react";
+import { Plus, BookOpen, Edit, Trash2, Globe, FileText, Users } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 
 export default function AdminBooks() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const userRole = user?.role || "user";
+  const canDelete = hasMinRole(userRole, "admin");
+  const isSuperAdmin = hasMinRole(userRole, "super_admin");
 
   const { data: books, isLoading } = useQuery<Book[]>({
     queryKey: ["/api/books?includeAll=true"],
@@ -74,15 +80,25 @@ export default function AdminBooks() {
             <h1 className="text-3xl font-bold" data-testid="text-admin-title">Admin Portal</h1>
             <p className="text-muted-foreground mt-1">Manage book breakdowns</p>
           </div>
-          <Button
-            onClick={() => createBookMutation.mutate()}
-            disabled={createBookMutation.isPending}
-            className="gap-2"
-            data-testid="button-create-book"
-          >
-            <Plus className="w-4 h-4" />
-            Create New Book Breakdown
-          </Button>
+          <div className="flex items-center gap-3">
+            {isSuperAdmin && (
+              <Link href="/admin/users">
+                <Button variant="outline" className="gap-2" data-testid="button-admin-users">
+                  <Users className="w-4 h-4" />
+                  Team & Users
+                </Button>
+              </Link>
+            )}
+            <Button
+              onClick={() => createBookMutation.mutate()}
+              disabled={createBookMutation.isPending}
+              className="gap-2"
+              data-testid="button-create-book"
+            >
+              <Plus className="w-4 h-4" />
+              Create New Book Breakdown
+            </Button>
+          </div>
         </div>
 
         {(!books || books.length === 0) ? (
@@ -129,20 +145,22 @@ export default function AdminBooks() {
                         Edit
                       </Button>
                     </Link>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive hover:text-destructive"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (confirm(`Delete "${book.title}" and ALL its content? This cannot be undone.`)) {
-                          deleteBookMutation.mutate(book.id);
-                        }
-                      }}
-                      data-testid={`button-delete-${book.id}`}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
+                    {canDelete && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm(`Delete "${book.title}" and ALL its content? This cannot be undone.`)) {
+                            deleteBookMutation.mutate(book.id);
+                          }
+                        }}
+                        data-testid={`button-delete-${book.id}`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               </Card>

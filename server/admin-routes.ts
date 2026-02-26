@@ -14,6 +14,10 @@ import {
   insertActionItemSchema,
   insertCommentSchema,
 } from "@shared/schema";
+import { hasMinRole } from "@shared/models/auth";
+import { users } from "@shared/models/auth";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
@@ -22,11 +26,34 @@ const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
   const dbUser = await authStorage.getUser(user.claims.sub);
-  if (!dbUser || !["admin", "editor", "writer"].includes(dbUser.role ?? "")) {
+  if (!dbUser || !hasMinRole(dbUser.role, "writer")) {
     return res.status(403).json({ message: "Forbidden: insufficient role" });
   }
   (req as any).dbUser = dbUser;
   next();
+};
+
+const isSuperAdmin = async (req: Request, res: Response, next: NextFunction) => {
+  const user = req.user as any;
+  if (!user?.claims?.sub) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  const dbUser = await authStorage.getUser(user.claims.sub);
+  if (!dbUser || !hasMinRole(dbUser.role, "super_admin")) {
+    return res.status(403).json({ message: "Forbidden: super_admin required" });
+  }
+  (req as any).dbUser = dbUser;
+  next();
+};
+
+const requireRole = (minRole: "writer" | "editor" | "admin" | "super_admin") => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    const dbUser = (req as any).dbUser;
+    if (!dbUser || !hasMinRole(dbUser.role, minRole)) {
+      return res.status(403).json({ message: `Forbidden: ${minRole} role or above required` });
+    }
+    next();
+  };
 };
 
 export function registerAdminRoutes(app: Express) {
@@ -54,7 +81,7 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
-  app.delete("/api/admin/books/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.delete("/api/admin/books/:id", isAuthenticated, isAdmin, requireRole("admin"), async (req: any, res) => {
     try {
       await storage.deleteBookCascade(req.params.id);
       res.json({ success: true });
@@ -64,7 +91,7 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
-  app.post("/api/admin/books/:id/publish", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.post("/api/admin/books/:id/publish", isAuthenticated, isAdmin, requireRole("editor"), async (req: any, res) => {
     try {
       const book = await storage.updateBook(req.params.id, { status: "published" });
       res.json(book);
@@ -74,7 +101,7 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
-  app.post("/api/admin/books/:id/unpublish", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.post("/api/admin/books/:id/unpublish", isAuthenticated, isAdmin, requireRole("editor"), async (req: any, res) => {
     try {
       const book = await storage.updateBook(req.params.id, { status: "draft" });
       res.json(book);
@@ -423,6 +450,44 @@ export function registerAdminRoutes(app: Express) {
     } catch (error) {
       console.error("Error deleting comment:", error);
       res.status(500).json({ message: "Failed to delete comment" });
+    }
+  });
+
+  app.get("/api/admin/users", isAuthenticated, isSuperAdmin, async (_req: any, res) => {
+    try {
+      const allUsers = await db.select().from(users);
+      res.json(allUsers);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.patch("/api/admin/users/:id/role", isAuthenticated, isSuperAdmin, async (req: any, res) => {
+    try {
+      const schema = z.object({ role: z.enum(["user", "writer", "editor", "admin", "super_admin"]) });
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Invalid role", errors: parsed.error.errors });
+      const [updated] = await db.update(users).set({ role: parsed.data.role, updatedAt: new Date() }).where(eq(users.id, req.params.id)).returning();
+      if (!updated) return res.status(404).json({ message: "User not found" });
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating user role:", error);
+      res.status(500).json({ message: "Failed to update role" });
+    }
+  });
+
+  app.patch("/api/admin/users/:id/premium", isAuthenticated, isSuperAdmin, async (req: any, res) => {
+    try {
+      const schema = z.object({ isPremium: z.boolean() });
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
+      const [updated] = await db.update(users).set({ isPremium: parsed.data.isPremium, updatedAt: new Date() }).where(eq(users.id, req.params.id)).returning();
+      if (!updated) return res.status(404).json({ message: "User not found" });
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating premium status:", error);
+      res.status(500).json({ message: "Failed to update premium status" });
     }
   });
 }
