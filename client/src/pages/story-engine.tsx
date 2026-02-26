@@ -642,7 +642,7 @@ function ActionItemsCard({ card }: { card: CardItem }) {
                   onClick={(e) => {
                     e.stopPropagation();
                     const title = encodeURIComponent(item.text);
-                    const details = encodeURIComponent("MindSpark long-term habit");
+                    const details = encodeURIComponent("MindPrism long-term habit");
                     const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}`;
                     window.open(url, "_blank");
                   }}

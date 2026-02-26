@@ -67,7 +67,7 @@ export default function AdminUsers() {
 
   const handleCopyInviteLink = () => {
     const roleLabel = ROLE_BADGES[inviteRole]?.label || inviteRole;
-    const message = `You've been invited to join MindSpark as a ${roleLabel}. Sign in here: ${appUrl}`;
+    const message = `You've been invited to join MindPrism as a ${roleLabel}. Sign in here: ${appUrl}`;
     navigator.clipboard.writeText(message).then(() => {
       setCopied(true);
       toast({ title: "Copied!", description: `Invite link copied for ${roleLabel} role` });

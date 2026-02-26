@@ -1,13 +1,13 @@
-# MindSpark - Psychology Made Simple
+# MindPrism - Psychology Made Simple
 
 ## Overview
-MindSpark is a mobile-first web application designed to make psychology and self-help concepts accessible and engaging. It transforms extensive books into structured, interactive learning experiences by breaking down complex information into a psychological taxonomy. This includes core theses, chapter summaries, mental models, principles with real-world stories, common mistakes, interactive exercises, and actionable items. The project aims to provide users with a streamlined path to personal growth and psychological understanding.
+MindPrism is a mobile-first web application designed to make psychology and self-help concepts accessible and engaging. It transforms extensive books into structured, interactive learning experiences by breaking down complex information into a psychological taxonomy. This includes core theses, chapter summaries, mental models, principles with real-world stories, common mistakes, interactive exercises, and actionable items. The project aims to provide users with a streamlined path to personal growth and psychological understanding.
 
 ## User Preferences
 I prefer clear and concise communication. When making changes, please explain the rationale briefly. For development, prioritize mobile-first design principles. I value iterative development, so incremental updates with clear descriptions are preferred.
 
 ## System Architecture
-MindSpark utilizes a modern web stack with React, TypeScript, Vite, TailwindCSS, and Shadcn/UI for the frontend, and Express.js with TypeScript for the backend. PostgreSQL with Drizzle ORM handles data persistence, incorporating Row-Level Security for sensitive data like journal entries. Authentication is managed via Replit Auth (OpenID Connect).
+MindPrism utilizes a modern web stack with React, TypeScript, Vite, TailwindCSS, and Shadcn/UI for the frontend, and Express.js with TypeScript for the backend. PostgreSQL with Drizzle ORM handles data persistence, incorporating Row-Level Security for sensitive data like journal entries. Authentication is managed via Replit Auth (OpenID Connect).
 
 The content is organized into a hierarchical "Psychological Taxonomy" featuring a core thesis, chapter summaries, mental models, principles with supporting stories, common mistakes, infographics, exercises, and action items.
 

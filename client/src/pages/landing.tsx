@@ -61,7 +61,7 @@ export default function LandingPage() {
           <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
             <Brain className="w-5 h-5 text-white" />
           </div>
-          <span className="font-serif text-xl font-bold tracking-tight" data-testid="text-logo">MindSpark</span>
+          <span className="font-serif text-xl font-bold tracking-tight" data-testid="text-logo">MindPrism</span>
         </div>
         <a href="/api/login">
           <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10" data-testid="button-login">

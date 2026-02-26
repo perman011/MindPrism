@@ -104,7 +104,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: state.book.title,
       artist: state.book.author,
-      album: "MindSpark",
+      album: "MindPrism",
       artwork: state.book.coverImage
         ? [{ src: state.book.coverImage, sizes: "256x256", type: "image/png" }]
         : [],

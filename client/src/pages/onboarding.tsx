@@ -51,7 +51,7 @@ export default function Onboarding() {
           <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
             <Brain className="w-5 h-5 text-primary-foreground" />
           </div>
-          <span className="font-serif text-lg font-bold">MindSpark</span>
+          <span className="font-serif text-lg font-bold">MindPrism</span>
         </div>
 
         <div className="w-full bg-muted rounded-full h-1.5 mb-8">

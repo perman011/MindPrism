@@ -86,9 +86,10 @@ export default function BookDetail() {
   const { play } = useAudio();
   const [, navigate] = useLocation();
 
-  const { data: book, isLoading: bookLoading } = useQuery<Book>({
+  const { data: book, isLoading: bookLoading, isFetching: bookFetching } = useQuery<Book>({
     queryKey: ["/api/books", id],
     queryFn: getQueryFn({ on401: "throw" }),
+    enabled: !!id,
   });
 
   const { data: contentCounts } = useQuery<ContentCounts>({
@@ -125,7 +126,7 @@ export default function BookDetail() {
   const cardProgress = progress?.currentCardIndex && progress?.totalCards
     ? Math.round((progress.currentCardIndex / progress.totalCards) * 100) : 0;
 
-  if (bookLoading) {
+  if (bookLoading || bookFetching || !id) {
     return (
       <div className="min-h-screen bg-background px-5 pt-6">
         <Skeleton className="h-8 w-32 mb-4" />
