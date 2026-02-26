@@ -36,7 +36,7 @@ export default function AdminLogin() {
               </p>
             </div>
 
-            <a href="/api/login" className="block">
+            <a href="/api/login?returnTo=/admin" className="block">
               <Button
                 className="w-full gap-2 h-12 text-base font-semibold"
                 size="lg"
