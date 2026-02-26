@@ -15,6 +15,7 @@ import { Link, useParams, useLocation } from "wouter";
 import { useAudio } from "@/lib/audio-context";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/auth-utils";
+import { Home } from "lucide-react";
 
 interface ContentCounts {
   chapterSummaries: number;
@@ -162,11 +163,20 @@ export default function BookDetail() {
         </div>
 
         <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2">
-          <Link href="/">
-            <button className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center" data-testid="button-back">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => window.history.length > 1 ? window.history.back() : navigate("/")}
+              className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"
+              data-testid="button-back"
+            >
               <ArrowLeft className="w-5 h-5 text-white" />
             </button>
-          </Link>
+            <Link href="/">
+              <button className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center" data-testid="button-home">
+                <Home className="w-4 h-4 text-white" />
+              </button>
+            </Link>
+          </div>
           <button
             onClick={() => bookmarkMutation.mutate()}
             className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"

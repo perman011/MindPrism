@@ -805,13 +805,22 @@ export default function StoryEngine() {
           </Badge>
           <span className="text-[10px] text-muted-foreground">{currentIndex + 1} / {totalCards}</span>
         </div>
-        <button
-          onClick={() => setLocation(`/book/${id}`)}
-          className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center"
-          data-testid="button-exit-journey"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setLocation("/")}
+            className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center"
+            data-testid="button-home-journey"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setLocation(`/book/${id}`)}
+            className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center"
+            data-testid="button-exit-journey"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 flex items-center justify-center px-6 py-4 overflow-y-auto">

@@ -48,7 +48,7 @@ function AuthenticatedApp() {
 
   return (
     <AudioProvider>
-      <div className="pb-16">
+      <div className="max-w-2xl mx-auto pb-16">
         <PageTransition key={location}>
           <Switch>
             <Route path="/" component={Dashboard} />
