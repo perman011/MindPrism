@@ -5,11 +5,13 @@ import { users } from "@shared/models/auth";
 import { eq } from "drizzle-orm";
 
 async function ensureAdminRole() {
-  const ADMIN_USER_ID = "35323958";
-  const [existing] = await db.select().from(users).where(eq(users.id, ADMIN_USER_ID));
-  if (existing && existing.role !== "super_admin") {
-    await db.update(users).set({ role: "super_admin", updatedAt: new Date() }).where(eq(users.id, ADMIN_USER_ID));
-    console.log(`Promoted user ${ADMIN_USER_ID} to super_admin`);
+  const adminIds = (process.env.ADMIN_USER_IDS || "35323958").split(",").map(s => s.trim()).filter(Boolean);
+  for (const adminId of adminIds) {
+    const [existing] = await db.select().from(users).where(eq(users.id, adminId));
+    if (existing && existing.role !== "super_admin") {
+      await db.update(users).set({ role: "super_admin", updatedAt: new Date() }).where(eq(users.id, adminId));
+      console.log(`Promoted user ${adminId} to super_admin`);
+    }
   }
 }
 
