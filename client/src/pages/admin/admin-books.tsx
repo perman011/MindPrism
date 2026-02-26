@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, BookOpen, Edit, Trash2, Globe, FileText, Users } from "lucide-react";
+import { Plus, BookOpen, Edit, Trash2, Globe, FileText, Users, ExternalLink, Rocket, ArrowDownCircle } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,6 +17,7 @@ export default function AdminBooks() {
   const { user } = useAuth();
   const userRole = user?.role || "user";
   const canDelete = hasMinRole(userRole, "admin");
+  const canPublish = hasMinRole(userRole, "editor");
   const isSuperAdmin = hasMinRole(userRole, "super_admin");
 
   const { data: books, isLoading } = useQuery<Book[]>({
@@ -57,6 +58,32 @@ export default function AdminBooks() {
     },
   });
 
+  const publishMutation = useMutation({
+    mutationFn: async (bookId: string) => {
+      const res = await apiRequest("POST", `/api/admin/books/${bookId}/publish`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/books?includeAll=true"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/books"] });
+      toast({ title: "Published", description: "Book is now live in the app" });
+    },
+    onError: () => toast({ title: "Error", description: "Failed to publish book", variant: "destructive" }),
+  });
+
+  const unpublishMutation = useMutation({
+    mutationFn: async (bookId: string) => {
+      const res = await apiRequest("POST", `/api/admin/books/${bookId}/unpublish`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/books?includeAll=true"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/books"] });
+      toast({ title: "Unpublished", description: "Book moved to draft" });
+    },
+    onError: () => toast({ title: "Error", description: "Failed to unpublish book", variant: "destructive" }),
+  });
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-8">
@@ -81,6 +108,12 @@ export default function AdminBooks() {
             <p className="text-muted-foreground mt-1">Manage book breakdowns</p>
           </div>
           <div className="flex items-center gap-3">
+            <Link href="/">
+              <Button variant="ghost" className="gap-2 text-muted-foreground" data-testid="button-view-app">
+                <ExternalLink className="w-4 h-4" />
+                View App
+              </Button>
+            </Link>
             {isSuperAdmin && (
               <Link href="/admin/users">
                 <Button variant="outline" className="gap-2" data-testid="button-admin-users">
@@ -113,58 +146,86 @@ export default function AdminBooks() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {books.map((book) => (
-              <Card
-                key={book.id}
-                className="overflow-hidden hover:shadow-lg transition-shadow"
-                data-testid={`card-book-${book.id}`}
-              >
-                <div className="h-32 bg-gradient-to-br from-primary/20 to-primary/5 relative">
-                  {book.coverImage && (
-                    <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
-                  )}
-                  <Badge
-                    variant={book.status === "published" ? "default" : "secondary"}
-                    className="absolute top-3 right-3 text-[10px]"
-                    data-testid={`badge-status-${book.id}`}
-                  >
-                    {book.status === "published" ? (
-                      <><Globe className="w-3 h-3 mr-1" />Published</>
-                    ) : (
-                      <><FileText className="w-3 h-3 mr-1" />Draft</>
-                    )}
-                  </Badge>
-                </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-sm mb-1 truncate">{book.title}</h3>
-                  <p className="text-xs text-muted-foreground mb-3">by {book.author}</p>
-                  <div className="flex items-center gap-2">
-                    <Link href={`/admin/books/${book.id}`} className="flex-1">
-                      <Button variant="outline" size="sm" className="w-full gap-1.5" data-testid={`button-edit-${book.id}`}>
-                        <Edit className="w-3.5 h-3.5" />
-                        Edit
-                      </Button>
-                    </Link>
-                    {canDelete && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:text-destructive"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (confirm(`Delete "${book.title}" and ALL its content? This cannot be undone.`)) {
-                            deleteBookMutation.mutate(book.id);
-                          }
-                        }}
-                        data-testid={`button-delete-${book.id}`}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
+            {books.map((book) => {
+              const isPublished = book.status === "published";
+              return (
+                <Card
+                  key={book.id}
+                  className="overflow-hidden hover:shadow-lg transition-shadow"
+                  data-testid={`card-book-${book.id}`}
+                >
+                  <div className="h-32 bg-gradient-to-br from-primary/20 to-primary/5 relative">
+                    {book.coverImage && (
+                      <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
                     )}
                   </div>
-                </div>
-              </Card>
-            ))}
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-sm truncate flex-1">{book.title}</h3>
+                      <Badge
+                        variant={isPublished ? "default" : "secondary"}
+                        className={`text-[10px] flex-shrink-0 ${isPublished ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 hover:bg-emerald-100" : ""}`}
+                        data-testid={`badge-status-${book.id}`}
+                      >
+                        {isPublished ? (
+                          <><Globe className="w-3 h-3 mr-1" />Live</>
+                        ) : (
+                          <><FileText className="w-3 h-3 mr-1" />Draft</>
+                        )}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-3">by {book.author}</p>
+                    <div className="flex items-center gap-2">
+                      <Link href={`/admin/books/${book.id}`} className="flex-1">
+                        <Button variant="outline" size="sm" className="w-full gap-1.5" data-testid={`button-edit-${book.id}`}>
+                          <Edit className="w-3.5 h-3.5" />
+                          Edit
+                        </Button>
+                      </Link>
+                      {canPublish && (
+                        <Button
+                          variant={isPublished ? "outline" : "default"}
+                          size="sm"
+                          className={`gap-1 text-xs ${!isPublished ? "bg-emerald-600" : ""}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isPublished) {
+                              unpublishMutation.mutate(book.id);
+                            } else {
+                              publishMutation.mutate(book.id);
+                            }
+                          }}
+                          disabled={publishMutation.isPending || unpublishMutation.isPending}
+                          data-testid={`button-publish-${book.id}`}
+                        >
+                          {isPublished ? (
+                            <><ArrowDownCircle className="w-3.5 h-3.5" />Unpublish</>
+                          ) : (
+                            <><Rocket className="w-3.5 h-3.5" />Publish</>
+                          )}
+                        </Button>
+                      )}
+                      {canDelete && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm(`Delete "${book.title}" and ALL its content? This cannot be undone.`)) {
+                              deleteBookMutation.mutate(book.id);
+                            }
+                          }}
+                          data-testid={`button-delete-${book.id}`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>
