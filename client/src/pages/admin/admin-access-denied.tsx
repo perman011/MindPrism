@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShieldX, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
-import mindprismLogo from "@assets/IMG_5130_1772146863644.jpeg";
+import mindprismLogo from "@assets/mindprism-logo-transparent.png";
 
 export default function AdminAccessDenied() {
   return (

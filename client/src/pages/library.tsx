@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BookOpen, Search, LogOut, Home, ArrowLeft } from "lucide-react";
-import mindprismLogo from "@assets/IMG_5130_1772146863644.jpeg";
+import mindprismLogo from "@assets/mindprism-logo-transparent.png";
 import { Link, useSearch } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useMemo } from "react";

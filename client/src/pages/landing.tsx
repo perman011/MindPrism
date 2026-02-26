@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import mindprismLogo from "@assets/IMG_5130_1772146863644.jpeg";
+import mindprismLogo from "@assets/mindprism-logo-transparent.png";
 import { useState, useEffect, useCallback } from "react";
 const heroBg = "/images/hero-bg.png";
 
