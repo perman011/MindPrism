@@ -1,6 +1,18 @@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CHAKRA_MAP, type ChakraType } from "@shared/schema";
+
+const CHAKRA_OPTIONS: { value: ChakraType; label: string; color: string }[] = [
+  { value: "crown", label: "Crown — Spiritual Connection", color: CHAKRA_MAP.crown.color },
+  { value: "third_eye", label: "Third Eye — Intuition & Insight", color: CHAKRA_MAP.third_eye.color },
+  { value: "throat", label: "Throat — Communication", color: CHAKRA_MAP.throat.color },
+  { value: "heart", label: "Heart — Love & Compassion", color: CHAKRA_MAP.heart.color },
+  { value: "solar_plexus", label: "Solar Plexus — Willpower", color: CHAKRA_MAP.solar_plexus.color },
+  { value: "sacral", label: "Sacral — Creativity & Emotion", color: CHAKRA_MAP.sacral.color },
+  { value: "root", label: "Root — Survival & Stability", color: CHAKRA_MAP.root.color },
+];
 
 interface BookSetupEditorProps {
   title: string;
@@ -11,12 +23,14 @@ interface BookSetupEditorProps {
   audioUrl: string;
   readTime: number;
   listenTime: number;
+  primaryChakra: string;
+  secondaryChakra: string;
   onChange: (field: string, value: string | number) => void;
 }
 
 export function BookSetupEditor({
   title, author, description, coreThesis, coverImage, audioUrl,
-  readTime, listenTime, onChange,
+  readTime, listenTime, primaryChakra, secondaryChakra, onChange,
 }: BookSetupEditorProps) {
   const thesisLength = coreThesis?.length || 0;
   const thesisMax = 200;
@@ -58,6 +72,53 @@ export function BookSetupEditor({
             rows={2}
             data-testid="input-book-description"
           />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          <div>
+            <Label className="text-xs font-semibold">Primary Chakra</Label>
+            <Select
+              value={primaryChakra || "none"}
+              onValueChange={(val) => onChange("primaryChakra", val === "none" ? "" : val)}
+            >
+              <SelectTrigger data-testid="select-primary-chakra">
+                <SelectValue placeholder="Select chakra..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No Chakra</SelectItem>
+                {CHAKRA_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: opt.color }} />
+                      <span>{opt.label}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs font-semibold">Secondary Chakra</Label>
+            <Select
+              value={secondaryChakra || "none"}
+              onValueChange={(val) => onChange("secondaryChakra", val === "none" ? "" : val)}
+            >
+              <SelectTrigger data-testid="select-secondary-chakra">
+                <SelectValue placeholder="Select chakra..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {CHAKRA_OPTIONS.filter(opt => opt.value !== primaryChakra).map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: opt.color }} />
+                      <span>{opt.label}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mt-4">

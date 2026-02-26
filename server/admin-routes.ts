@@ -71,7 +71,10 @@ export function registerAdminRoutes(app: Express) {
 
   app.put("/api/admin/books/:id", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const partial = insertBookSchema.partial().safeParse(req.body);
+      const body = { ...req.body };
+      if (body.primaryChakra === "") body.primaryChakra = null;
+      if (body.secondaryChakra === "") body.secondaryChakra = null;
+      const partial = insertBookSchema.partial().safeParse(body);
       if (!partial.success) return res.status(400).json({ message: "Invalid data", errors: partial.error.errors });
       const book = await storage.updateBook(req.params.id, partial.data);
       res.json(book);

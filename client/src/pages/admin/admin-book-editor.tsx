@@ -232,6 +232,8 @@ export default function AdminBookEditor() {
             audioUrl={book.audioUrl || ""}
             readTime={book.readTime}
             listenTime={book.listenTime}
+            primaryChakra={book.primaryChakra || ""}
+            secondaryChakra={book.secondaryChakra || ""}
             onChange={handleBookFieldChange}
           />
 
