@@ -21,8 +21,11 @@ import NotFound from "@/pages/not-found";
 import AdminBooks from "@/pages/admin/admin-books";
 import AdminBookEditor from "@/pages/admin/admin-book-editor";
 import AdminUsers from "@/pages/admin/admin-users";
+import AdminLogin from "@/pages/admin/admin-login";
+import AdminAccessDenied from "@/pages/admin/admin-access-denied";
 import { getQueryFn } from "@/lib/queryClient";
 import type { UserInterest } from "@shared/schema";
+import { hasMinRole } from "@shared/models/auth";
 
 function AuthenticatedApp() {
   const [location] = useLocation();
@@ -85,10 +88,16 @@ function AppRouter() {
   }
 
   if (!user) {
+    if (location.startsWith("/admin")) {
+      return <AdminLogin />;
+    }
     return <LandingPage />;
   }
 
   if (location.startsWith("/admin")) {
+    if (!hasMinRole(user.role, "writer")) {
+      return <AdminAccessDenied />;
+    }
     return (
       <Switch>
         <Route path="/admin" component={AdminBooks} />
