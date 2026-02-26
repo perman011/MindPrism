@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Check, Sparkles } from "lucide-react";
 import { useState } from "react";
-import mindprismLogo from "@assets/IMG_5128_1772146157123.jpeg";
+import mindprismLogo from "@assets/IMG_5130_1772146863644.jpeg";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
@@ -48,9 +48,8 @@ export default function Onboarding() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <div className="px-6 pt-8 pb-4">
-        <div className="flex items-center gap-2 mb-6">
-          <img src={mindprismLogo} alt="MindPrism" className="w-8 h-8 rounded-md object-cover" />
-          <span className="font-serif text-lg font-bold">MindPrism</span>
+        <div className="flex items-center mb-6">
+          <img src={mindprismLogo} alt="MindPrism" className="h-10 w-auto object-contain" />
         </div>
 
         <div className="w-full bg-muted rounded-full h-1.5 mb-8">

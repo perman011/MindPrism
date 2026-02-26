@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Shield, Lock, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
-import mindprismLogo from "@assets/IMG_5128_1772146157123.jpeg";
+import mindprismLogo from "@assets/IMG_5130_1772146863644.jpeg";
 
 export default function AdminLogin() {
   return (
@@ -14,11 +14,11 @@ export default function AdminLogin() {
 
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl overflow-hidden mb-4">
-            <img src={mindprismLogo} alt="MindPrism" className="w-full h-full object-cover" />
+          <div className="inline-flex items-center justify-center mb-4">
+            <img src={mindprismLogo} alt="MindPrism" className="h-28 w-auto object-contain" />
           </div>
           <h1 className="font-serif text-2xl font-bold text-white mb-1" data-testid="text-admin-title">
-            MindPrism Admin
+            Admin Portal
           </h1>
           <p className="text-sm text-slate-400">
             Content Management Portal
