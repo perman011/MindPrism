@@ -8,6 +8,7 @@ import { authLimiter, apiLimiter } from "./middleware/rateLimiter";
 import { initErrorTracking, sentryErrorMiddleware, applySentryRequestHandler } from "./middleware/errorTracking";
 import { queryLoggerMiddleware } from "./middleware/queryLogger";
 import metricsRouter from "./routes/metrics";
+import sitemapRouter from "./routes/sitemap";
 
 initErrorTracking();
 
@@ -39,6 +40,7 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use(queryLoggerMiddleware);
 app.use("/api/metrics", metricsRouter);
+app.use("/sitemap.xml", sitemapRouter);
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
