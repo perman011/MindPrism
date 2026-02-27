@@ -17,6 +17,8 @@ router.get("/", async (_req: Request, res: Response) => {
 
   const staticPages = [
     { loc: "/", changefreq: "daily", priority: "1.0" },
+    { loc: "/discover", changefreq: "daily", priority: "0.9" },
+    { loc: "/audio", changefreq: "weekly", priority: "0.7" },
   ];
 
   const urls = staticPages
