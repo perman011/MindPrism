@@ -271,6 +271,7 @@ export default function AdminBookEditor() {
             coreThesis={editableBook?.coreThesis || book.coreThesis || ""}
             coverImage={editableBook?.coverImage || book.coverImage || ""}
             audioUrl={editableBook?.audioUrl || book.audioUrl || ""}
+            affiliateUrl={editableBook?.affiliateUrl || book.affiliateUrl || ""}
             readTime={editableBook?.readTime ?? book.readTime}
             listenTime={editableBook?.listenTime ?? book.listenTime}
             primaryChakra={editableBook?.primaryChakra || book.primaryChakra || ""}

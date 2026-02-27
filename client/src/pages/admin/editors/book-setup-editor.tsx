@@ -23,6 +23,7 @@ interface BookSetupEditorProps {
   coreThesis: string;
   coverImage: string;
   audioUrl: string;
+  affiliateUrl: string;
   readTime: number;
   listenTime: number;
   primaryChakra: string;
@@ -32,7 +33,7 @@ interface BookSetupEditorProps {
 }
 
 export function BookSetupEditor({
-  title, author, description, coreThesis, coverImage, audioUrl,
+  title, author, description, coreThesis, coverImage, audioUrl, affiliateUrl,
   readTime, listenTime, primaryChakra, secondaryChakra, categoryId, onChange,
 }: BookSetupEditorProps) {
   const { data: categories } = useQuery<Category[]>({
@@ -169,6 +170,18 @@ export function BookSetupEditor({
               data-testid="input-audio-url"
             />
           </div>
+        </div>
+
+        <div className="mt-4">
+          <Label htmlFor="affiliateUrl" className="text-xs font-semibold">Affiliate Buy Link</Label>
+          <Input
+            id="affiliateUrl"
+            value={affiliateUrl}
+            onChange={(e) => onChange("affiliateUrl", e.target.value)}
+            placeholder="https://www.amazon.com/dp/..."
+            data-testid="input-affiliate-url"
+          />
+          <p className="text-[10px] text-muted-foreground mt-1">Amazon or other affiliate link. Shows "Buy This Book" button on book detail page when set.</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mt-4">
