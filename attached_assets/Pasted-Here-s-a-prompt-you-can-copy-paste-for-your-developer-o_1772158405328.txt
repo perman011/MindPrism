@@ -1,0 +1,92 @@
+Here’s a prompt you can copy-paste for your developer (or app-building AI):
+
+⸻
+
+Prompt for App Styling (Black & Gold Theme)
+
+I’m happy with all existing functionality in the app. Do not change or remove any functionality, flows, logic, or navigation. Your job is only to update the visual styling.
+
+Goal
+
+Apply a new visual theme so the app matches a black + gold brand, consistent with a simple golden feather/pen logo.
+
+1. Global Theme
+	•	Background
+	•	Set the main app background to pure or near-pure black (#000000 or very close).
+	•	All main screens, menus, and modals should use a black background unless otherwise noted for contrast.
+	•	Primary Color – Gold
+	•	Use a rich gold color for all primary UI elements. Example: #FFD700 or #DAA520 (pick one and use it consistently).
+	•	This gold should visually match a metallic golden pen/feather logo.
+	•	Secondary/Accent Gold
+	•	For subtle accents (borders, dividers, less important icons), you can use a slightly softer/darker gold variant (e.g., #B8860B) so there’s a clear hierarchy between primary and secondary elements.
+
+2. Text & Typography
+	•	Body Text
+	•	Main text on black background: off-white or light gray (e.g., #F5F5F5 or #E0E0E0) for readability.
+	•	Do not use pure gold for long paragraphs; reserve gold for emphasis.
+	•	Headings / Important Labels
+	•	Use gold for headings, section titles, key labels, and important numbers/metrics.
+	•	Make sure font weight/size clearly differentiates headings from body text.
+	•	Links, Highlights, and Emphasis
+	•	Any clickable text links, highlighted values, or key status labels should use gold text.
+
+3. Buttons & Interactive Elements
+	•	Primary Buttons
+	•	Background: gold
+	•	Text: black or very dark gray for contrast.
+	•	On hover/press: slightly darker gold or subtle glow effect.
+	•	Secondary / Outline Buttons
+	•	Transparent or black background.
+	•	Gold border and gold text.
+	•	On hover/press: light gold fill or stronger gold border.
+	•	Icons
+	•	All icons should be gold on black background wherever possible.
+	•	If an icon is inside a gold button, the icon can be black/dark to maintain contrast.
+
+4. Inputs, Cards, and Components
+	•	Input Fields (text fields, dropdowns, etc.)
+	•	Background: black or very dark gray.
+	•	Border: thin gold outline (or gold on focus).
+	•	Placeholder text: muted gray.
+	•	Active/focused state: stronger gold border or subtle gold glow.
+	•	Cards / Panels
+	•	Background: very dark gray/black with gold borders or gold top lines.
+	•	Titles in gold, content text in off-white.
+	•	Dividers & Lines
+	•	Use thin gold lines/dividers instead of gray.
+
+5. States & Feedback
+	•	Success, Error, Warning
+	•	Keep existing logic and behavior exactly the same.
+	•	You may:
+	•	Keep standard colors (green/red/orange) but integrate small gold accents (icons, borders, or titles), or
+	•	Use gold as the base with subtle colored icons.
+	•	Make sure messages are still clearly distinguishable (success vs error).
+	•	Hover/Active/Disabled
+	•	Hover/active states should use variations of gold (brighter or darker).
+	•	Disabled elements should be dimmed/desaturated but still aligned to the gold/black palette.
+
+6. Logo Integration
+	•	Place the golden feather/pen logo on a black background where appropriate (e.g., splash screen, top bar, or main header).
+	•	Ensure its gold matches or is very close to the primary gold color used in the theme.
+
+7. Constraints (Very Important)
+	•	Do not change any existing business logic, data flows, or app functionalities.
+	•	Do not remove or rearrange screens or features.
+	•	This task is styling-only:
+	•	Update colors, fonts, and spacing as needed.
+	•	Adjust only CSS/theme variables, design tokens, or styling files.
+	•	After changes, confirm:
+	•	All buttons, links, and interactions still work exactly as before.
+	•	No functional regression has been introduced.
+
+⸻
+
+You can give them this as-is, or tweak the gold hex code you like best.
+
+⸻
+
+Confidence: 0.9
+Key caveats:
+	•	Your developer may need to slightly adjust gold shades for readability/accessibility on different screens.
+	•	If your app uses a design system (e.g., themes or tokens), they should map these instructions into that system rather than hard-coding colors in many places.
