@@ -1,9 +1,69 @@
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import mindprismLogo from "@assets/77531E8D-B1EB-4D23-A577-C8EC54A4B63C_1772158344341.png";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 const heroBg = "/images/hero-bg.png";
+
+function FeatherRain() {
+  const feathers = useMemo(() =>
+    Array.from({ length: 18 }, (_, i) => ({
+      id: i,
+      left: `${Math.random() * 100}%`,
+      size: 18 + Math.random() * 16,
+      delay: Math.random() * 12,
+      duration: 8 + Math.random() * 7,
+      startRotate: -30 + Math.random() * 60,
+      endRotate: -15 + Math.random() * 30,
+      swayAmount: 30 + Math.random() * 50,
+      opacity: 0.08 + Math.random() * 0.12,
+    })),
+  []);
+
+  return (
+    <div className="absolute inset-0 z-[1] pointer-events-none overflow-hidden">
+      {feathers.map((f) => (
+        <motion.img
+          key={f.id}
+          src={mindprismLogo}
+          alt=""
+          className="absolute select-none mix-blend-screen"
+          style={{
+            left: f.left,
+            width: f.size,
+            height: f.size,
+            opacity: f.opacity,
+            filter: "blur(0.5px)",
+          }}
+          initial={{ y: -60, rotate: f.startRotate, x: 0 }}
+          animate={{
+            y: ["calc(-60px)", "calc(100vh + 60px)"],
+            rotate: [f.startRotate, f.endRotate, f.startRotate * 0.5, f.endRotate],
+            x: [0, f.swayAmount, -f.swayAmount * 0.6, f.swayAmount * 0.3, 0],
+          }}
+          transition={{
+            duration: f.duration,
+            delay: f.delay,
+            repeat: Infinity,
+            ease: "linear",
+            x: {
+              duration: f.duration,
+              delay: f.delay,
+              repeat: Infinity,
+              ease: "easeInOut",
+            },
+            rotate: {
+              duration: f.duration,
+              delay: f.delay,
+              repeat: Infinity,
+              ease: "easeInOut",
+            },
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
 const slides = [
   {
@@ -57,6 +117,8 @@ export default function LandingPage() {
         <img src={heroBg} alt="" className="w-full h-full object-cover opacity-10" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/80 to-black" />
       </div>
+
+      <FeatherRain />
 
       <nav className="relative z-10 px-6 py-5 flex items-center justify-between">
         <motion.div
