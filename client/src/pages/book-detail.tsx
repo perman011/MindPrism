@@ -10,15 +10,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   ArrowLeft, BookOpen, Lightbulb, Brain, AlertTriangle,
   Dumbbell, ListChecks, Layers, Bookmark, BookmarkCheck,
-  Clock, Headphones, ChevronRight, BarChart3, ShoppingCart,
+  Clock, Headphones, ChevronRight, BarChart3, ShoppingCart, Share2,
 } from "lucide-react";
 import { Link, useParams, useLocation } from "wouter";
 import { useAudio } from "@/lib/audio-context";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/auth-utils";
 import { Home } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { trackBookOpen } from "@/lib/analytics";
+import { ShareModal } from "@/components/share-modal";
 
 interface ContentCounts {
   chapterSummaries: number;
@@ -88,6 +89,7 @@ export default function BookDetail() {
   const { toast } = useToast();
   const { play } = useAudio();
   const [, navigate] = useLocation();
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const { data: book, isLoading: bookLoading, isFetching: bookFetching } = useQuery<Book>({
     queryKey: ["/api/books", id],
@@ -134,6 +136,19 @@ export default function BookDetail() {
   const isBookmarked = progress?.bookmarked ?? false;
   const cardProgress = progress?.currentCardIndex && progress?.totalCards
     ? Math.round((progress.currentCardIndex / progress.totalCards) * 100) : 0;
+
+  const handleShare = useCallback(async () => {
+    if (!book) return;
+    const shareUrl = `https://mindprism.io/book/${book.id}`;
+    const shareText = `I'm learning "${book.title}" by ${book.author} on MindPrism`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: book.title, text: shareText, url: shareUrl });
+        return;
+      } catch {}
+    }
+    setShowShareModal(true);
+  }, [book]);
 
   if (bookLoading || bookFetching || !id) {
     return (
@@ -195,16 +210,25 @@ export default function BookDetail() {
               </button>
             </Link>
           </div>
-          <button
-            onClick={() => bookmarkMutation.mutate()}
-            className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"
-            data-testid="button-bookmark"
-          >
-            {isBookmarked
-              ? <BookmarkCheck className="w-5 h-5 text-primary" />
-              : <Bookmark className="w-5 h-5 text-white" />
-            }
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleShare}
+              className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"
+              data-testid="button-share"
+            >
+              <Share2 className="w-4.5 h-4.5 text-white" />
+            </button>
+            <button
+              onClick={() => bookmarkMutation.mutate()}
+              className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"
+              data-testid="button-bookmark"
+            >
+              {isBookmarked
+                ? <BookmarkCheck className="w-5 h-5 text-primary" />
+                : <Bookmark className="w-5 h-5 text-white" />
+              }
+            </button>
+          </div>
         </div>
 
         <div className="pt-20 pb-6 flex flex-col items-center bg-black">
@@ -346,6 +370,16 @@ export default function BookDetail() {
           })}
         </div>
       </div>
+
+      {book && (
+        <ShareModal
+          open={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          bookTitle={book.title}
+          bookAuthor={book.author}
+          bookId={book.id}
+        />
+      )}
     </div>
   );
 }

@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 import {
   BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell,
 } from "recharts";
+import { ProgressShareCard } from "./progress-share-card";
 
 interface UserStats {
   booksStarted: number;
@@ -150,6 +151,8 @@ export function PersonalStats() {
           </motion.div>
         ))}
       </div>
+
+      <ProgressShareCard />
     </div>
   );
 }

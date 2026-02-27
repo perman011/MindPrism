@@ -80,6 +80,13 @@ Security is paramount, with AES-256-GCM encryption for journal entries, RLS poli
 - **Meta Tags** (`client/index.html`): apple-mobile-web-app-capable, apple-mobile-web-app-status-bar-style (black-translucent), theme-color, manifest link, apple-touch-icon.
 - **Background Sync**: Queued offline actions synced when back online via `sync` event.
 
+### Affiliate Buy Button & Social Sharing
+- **Affiliate URL**: `affiliate_url` column on `books` table (VARCHAR 500). Admin-editable via Book Setup Editor (`input-affiliate-url`).
+- **Buy Button** (`client/src/pages/book-detail.tsx`): Gold-outlined "Buy This Book" button with shopping cart icon, shown below Read/Listen when `affiliateUrl` is set. Opens in new tab, tracks `affiliate_click` event via activity log.
+- **Share Modal** (`client/src/components/share-modal.tsx`): Reusable share component with Copy Link, Twitter/X, LinkedIn, WhatsApp options. Uses Web Share API on mobile, falls back to modal on desktop. Black/gold themed.
+- **Share Button**: Added to book detail page top-right action bar alongside bookmark button.
+- **Progress Share Card** (`client/src/components/progress-share-card.tsx`): Canvas-generated branded PNG showing user stats (books, streak, principles, minutes). Uses Web Share API with file sharing or falls back to download. Placed at bottom of PersonalStats in Vault > Stats tab.
+
 ## External Dependencies
 - **Authentication:** Replit Auth (OpenID Connect)
 - **Database:** PostgreSQL
