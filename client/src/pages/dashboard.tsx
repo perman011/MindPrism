@@ -15,6 +15,7 @@ import { Card } from "@/components/ui/card";
 import { CategoryIcon } from "@/components/category-icon";
 import { useAudio } from "@/lib/audio-context";
 import { ChakraAvatar } from "@/components/chakra-avatar";
+import { trackPageView } from "@/lib/analytics";
 import { AnimatePresence, motion } from "framer-motion";
 
 function HorizontalScroll({ children, title, accentLabel, actionHref, actionLabel, testId }: {
@@ -127,6 +128,10 @@ export default function Dashboard() {
   const { play } = useAudio();
   const [, navigate] = useLocation();
   const [activeChakra, setActiveChakra] = useState<ChakraType | null>(null);
+
+  useEffect(() => {
+    trackPageView("dashboard");
+  }, []);
 
   const { data: books, isLoading: booksLoading } = useQuery<Book[]>({
     queryKey: ["/api/books"],

@@ -10,6 +10,7 @@ import { queryLoggerMiddleware } from "./middleware/queryLogger";
 import metricsRouter from "./routes/metrics";
 import sitemapRouter from "./routes/sitemap";
 import backupRouter from "./routes/backup";
+import analyticsRouter from "./routes/analytics";
 import { startBackupScheduler, stopBackupScheduler } from "./services/backupScheduler";
 
 initErrorTracking();
@@ -94,6 +95,7 @@ app.use((req, res, next) => {
   await registerRoutes(httpServer, app);
 
   app.use("/api/admin/backups", backupRouter);
+  app.use("/api/analytics", analyticsRouter);
 
   await seedDatabase().catch((err) => {
     console.error("Failed to seed database:", err);

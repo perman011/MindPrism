@@ -190,6 +190,24 @@ export const comments = pgTable("comments", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const analyticsEvents = pgTable("analytics_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  eventType: text("event_type").notNull(),
+  eventData: jsonb("event_data"),
+  pageUrl: text("page_url"),
+  sessionId: text("session_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const analyticsEventsRelations = relations(analyticsEvents, ({ one }) => ({
+  user: one(users, { fields: [analyticsEvents.userId], references: [users.id] }),
+}));
+
+export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).omit({ id: true, createdAt: true });
+export type InsertAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
+export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
+
 export const booksRelations = relations(books, ({ one, many }) => ({
   category: one(categories, { fields: [books.categoryId], references: [categories.id] }),
   principles: many(principles),
