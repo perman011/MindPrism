@@ -7,8 +7,8 @@ import { registerStripeRoutes } from "./stripe-routes";
 import { z } from "zod";
 import { encrypt, decrypt } from "./crypto";
 import { db } from "./db";
-import { userActivityLog, userProgress, books, categories, journalEntries } from "@shared/schema";
-import { eq, and, sql as dsql, desc, gte, count } from "drizzle-orm";
+import { userActivityLog, userProgress, books, categories, journalEntries, flashcardProgress, quizResults, principles, chapterSummaries, stories } from "@shared/schema";
+import { eq, and, sql as dsql, desc, gte, count, lte, asc } from "drizzle-orm";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -710,5 +710,233 @@ export async function registerRoutes(
     }
   });
 
+  // ===== FLASHCARD ROUTES =====
+
+  app.get("/api/books/:bookId/flashcards", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { bookId } = req.params;
+
+      const bookPrinciples = await db.select().from(principles)
+        .where(eq(principles.bookId, bookId));
+
+      const progress = await db.select().from(flashcardProgress)
+        .where(and(eq(flashcardProgress.userId, userId), eq(flashcardProgress.bookId, bookId)));
+
+      const progressMap = new Map(progress.map(p => [p.principleId, p]));
+
+      const cards = bookPrinciples.map(p => ({
+        principle: p,
+        progress: progressMap.get(p.id) || null,
+      }));
+
+      const dueCount = progress.filter(p => p.nextReviewDate && new Date(p.nextReviewDate) <= new Date()).length;
+      const masteredCount = progress.filter(p => p.status === "mastered").length;
+
+      res.json({ cards, dueCount, masteredCount, total: bookPrinciples.length });
+    } catch (error) {
+      console.error("Error fetching flashcards:", error);
+      res.status(500).json({ message: "Failed to fetch flashcards" });
+    }
+  });
+
+  app.post("/api/books/:bookId/flashcards/:principleId/review", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { bookId, principleId } = req.params;
+      const schema = z.object({ quality: z.number().min(0).max(5) });
+      const { quality } = schema.parse(req.body);
+
+      const [existing] = await db.select().from(flashcardProgress)
+        .where(and(
+          eq(flashcardProgress.userId, userId),
+          eq(flashcardProgress.bookId, bookId),
+          eq(flashcardProgress.principleId, principleId),
+        ));
+
+      let easeFactor = existing?.easeFactor ?? 2.5;
+      let interval = existing?.interval ?? 0;
+      let repetitions = existing?.repetitions ?? 0;
+
+      if (quality < 3) {
+        repetitions = 0;
+        interval = 1;
+      } else {
+        if (repetitions === 0) interval = 1;
+        else if (repetitions === 1) interval = 6;
+        else interval = Math.round(interval * easeFactor);
+        repetitions += 1;
+      }
+
+      easeFactor = Math.max(1.3, easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)));
+
+      const nextReviewDate = new Date();
+      nextReviewDate.setDate(nextReviewDate.getDate() + interval);
+
+      const status = quality >= 4 && repetitions >= 3 ? "mastered" : quality < 3 ? "needs_review" : "learning";
+
+      if (existing) {
+        await db.update(flashcardProgress)
+          .set({ easeFactor, interval, repetitions, nextReviewDate, status, updatedAt: new Date() })
+          .where(eq(flashcardProgress.id, existing.id));
+      } else {
+        await db.insert(flashcardProgress).values({
+          userId, bookId, principleId, easeFactor, interval, repetitions, nextReviewDate, status,
+        });
+      }
+
+      res.json({ status, easeFactor, interval, nextReviewDate, repetitions });
+    } catch (error) {
+      console.error("Error reviewing flashcard:", error);
+      res.status(500).json({ message: "Failed to review flashcard" });
+    }
+  });
+
+  // ===== QUIZ ROUTES =====
+
+  app.get("/api/books/:bookId/quiz", isAuthenticated, async (req: any, res) => {
+    try {
+      const { bookId } = req.params;
+
+      const chapters = await db.select().from(chapterSummaries)
+        .where(eq(chapterSummaries.bookId, bookId))
+        .orderBy(asc(chapterSummaries.chapterNumber));
+
+      const bookPrinciples = await db.select().from(principles)
+        .where(eq(principles.bookId, bookId));
+
+      const bookStories = await db.select().from(stories)
+        .where(eq(stories.bookId, bookId));
+
+      const getChapterSummary = (ch: any): string | null => {
+        const cardsArr = Array.isArray(ch.cards) ? ch.cards : [];
+        if (cardsArr.length === 0) return null;
+        const firstCard = cardsArr[0];
+        return firstCard?.body || firstCard?.content || firstCard?.text || (typeof firstCard === "string" ? firstCard : null);
+      };
+
+      const questions = chapters.flatMap(ch => {
+        const chapterQuestions: any[] = [];
+        const summary = getChapterSummary(ch);
+
+        if (summary && ch.chapterTitle) {
+          const distractors = chapters
+            .filter(c => c.id !== ch.id && getChapterSummary(c))
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 3)
+            .map(c => (getChapterSummary(c) || "").substring(0, 80) + "...");
+
+          while (distractors.length < 3) {
+            distractors.push("This concept is not discussed in the book.");
+          }
+
+          chapterQuestions.push({
+            id: `ch-${ch.id}`,
+            chapterId: ch.id,
+            question: `What is the main idea of "${ch.chapterTitle}"?`,
+            options: shuffleArray([
+              { text: summary.substring(0, 80) + "...", correct: true },
+              ...distractors.map(d => ({ text: d, correct: false })),
+            ]),
+            explanation: summary.substring(0, 150),
+          });
+        }
+
+        return chapterQuestions;
+      });
+
+      bookPrinciples.forEach(p => {
+        if (p.description) {
+          const otherPrinciples = bookPrinciples
+            .filter(op => op.id !== p.id && op.description)
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 3);
+
+          const distractors = otherPrinciples.map(op => op.title);
+          while (distractors.length < 3) {
+            distractors.push("None of the above");
+          }
+
+          questions.push({
+            id: `pr-${p.id}`,
+            chapterId: chapters[0]?.id || bookId,
+            question: `Which principle states: "${p.description.substring(0, 100)}..."?`,
+            options: shuffleArray([
+              { text: p.title, correct: true },
+              ...distractors.map(d => ({ text: d, correct: false })),
+            ]),
+            explanation: `${p.title}: ${p.description.substring(0, 120)}`,
+          });
+        }
+      });
+
+      res.json({
+        bookId,
+        questions: questions.sort(() => Math.random() - 0.5).slice(0, 10),
+        totalAvailable: questions.length,
+      });
+    } catch (error) {
+      console.error("Error generating quiz:", error);
+      res.status(500).json({ message: "Failed to generate quiz" });
+    }
+  });
+
+  app.post("/api/books/:bookId/quiz/submit", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { bookId } = req.params;
+      const schema = z.object({
+        chapterId: z.string(),
+        score: z.number().min(0),
+        totalQuestions: z.number().min(1),
+        answers: z.array(z.any()),
+      });
+      const data = schema.parse(req.body);
+
+      const [result] = await db.insert(quizResults).values({
+        userId,
+        bookId,
+        chapterId: data.chapterId,
+        score: data.score,
+        totalQuestions: data.totalQuestions,
+        answers: data.answers,
+      }).returning();
+
+      res.json({ result, percentage: Math.round((data.score / data.totalQuestions) * 100) });
+    } catch (error) {
+      console.error("Error submitting quiz:", error);
+      res.status(500).json({ message: "Failed to submit quiz" });
+    }
+  });
+
+  app.get("/api/books/:bookId/quiz/results", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { bookId } = req.params;
+
+      const results = await db.select().from(quizResults)
+        .where(and(eq(quizResults.userId, userId), eq(quizResults.bookId, bookId)))
+        .orderBy(desc(quizResults.completedAt));
+
+      const bestScore = results.length > 0
+        ? Math.max(...results.map(r => Math.round((r.score / r.totalQuestions) * 100)))
+        : 0;
+
+      res.json({ results, bestScore, attempts: results.length });
+    } catch (error) {
+      console.error("Error fetching quiz results:", error);
+      res.status(500).json({ message: "Failed to fetch quiz results" });
+    }
+  });
+
   return httpServer;
+}
+
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
 }

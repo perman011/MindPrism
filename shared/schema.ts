@@ -1,5 +1,5 @@
 import { sql, relations } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, date } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, date, real } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -402,6 +402,49 @@ export const userActivityLogRelations = relations(userActivityLog, ({ one }) => 
 export const insertUserActivityLogSchema = createInsertSchema(userActivityLog).omit({ id: true, createdAt: true });
 export type InsertUserActivityLog = z.infer<typeof insertUserActivityLogSchema>;
 export type UserActivityLog = typeof userActivityLog.$inferSelect;
+
+export const flashcardProgress = pgTable("flashcard_progress", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  bookId: varchar("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
+  principleId: varchar("principle_id").notNull().references(() => principles.id, { onDelete: "cascade" }),
+  status: varchar("status").notNull().default("new"),
+  nextReviewDate: timestamp("next_review_date").defaultNow(),
+  easeFactor: real("ease_factor").default(2.5),
+  interval: integer("interval").default(0),
+  repetitions: integer("repetitions").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const flashcardProgressRelations = relations(flashcardProgress, ({ one }) => ({
+  book: one(books, { fields: [flashcardProgress.bookId], references: [books.id] }),
+  principle: one(principles, { fields: [flashcardProgress.principleId], references: [principles.id] }),
+}));
+
+export const insertFlashcardProgressSchema = createInsertSchema(flashcardProgress).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertFlashcardProgress = z.infer<typeof insertFlashcardProgressSchema>;
+export type FlashcardProgress = typeof flashcardProgress.$inferSelect;
+
+export const quizResults = pgTable("quiz_results", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  bookId: varchar("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
+  chapterId: varchar("chapter_id").notNull().references(() => chapterSummaries.id, { onDelete: "cascade" }),
+  score: integer("score").notNull(),
+  totalQuestions: integer("total_questions").notNull(),
+  answers: jsonb("answers").default([]),
+  completedAt: timestamp("completed_at").defaultNow(),
+});
+
+export const quizResultsRelations = relations(quizResults, ({ one }) => ({
+  book: one(books, { fields: [quizResults.bookId], references: [books.id] }),
+  chapter: one(chapterSummaries, { fields: [quizResults.chapterId], references: [chapterSummaries.id] }),
+}));
+
+export const insertQuizResultSchema = createInsertSchema(quizResults).omit({ id: true, completedAt: true });
+export type InsertQuizResult = z.infer<typeof insertQuizResultSchema>;
+export type QuizResult = typeof quizResults.$inferSelect;
 
 export const CHAKRA_MAP = {
   root: { name: "Root", sanskrit: "Muladhara", color: "#EF4444", theme: "Foundation & Routine" },

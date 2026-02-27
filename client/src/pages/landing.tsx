@@ -139,11 +139,15 @@ export default function LandingPage() {
         >
           <img src={mindprismLogo} alt="MindPrism" className="h-16 object-contain" style={{ aspectRatio: '1.618' }} />
         </motion.div>
-        <a href="/api/login">
-          <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10" data-testid="button-login">
-            I already have an account
-          </Button>
-        </a>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-white/70 hover:text-white hover:bg-white/10"
+          onClick={() => { window.location.href = "/api/login"; }}
+          data-testid="button-login"
+        >
+          I already have an account
+        </Button>
       </nav>
 
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6">
@@ -206,25 +210,23 @@ export default function LandingPage() {
       </div>
 
       <div className="relative z-10 px-6 pb-10 flex flex-col items-center gap-3 w-full max-w-sm mx-auto">
-        <a href="/api/login" className="w-full">
-          <Button
-            size="lg"
-            className="w-full rounded-full text-base font-semibold h-14 bg-primary hover:bg-primary/90"
-            data-testid="button-get-started"
-          >
-            Get Started
-          </Button>
-        </a>
-        <a href="/api/login" className="w-full">
-          <Button
-            variant="ghost"
-            size="lg"
-            className="w-full rounded-full text-base font-medium h-14 text-white/60 hover:text-white hover:bg-white/10"
-            data-testid="button-hero-cta"
-          >
-            I already have an account
-          </Button>
-        </a>
+        <Button
+          size="lg"
+          className="w-full rounded-full text-base font-semibold h-14 bg-primary hover:bg-primary/90"
+          onClick={() => { window.location.href = "/api/login"; }}
+          data-testid="button-get-started"
+        >
+          Get Started
+        </Button>
+        <Button
+          variant="ghost"
+          size="lg"
+          className="w-full rounded-full text-base font-medium h-14 text-white/60 hover:text-white hover:bg-white/10"
+          onClick={() => { window.location.href = "/api/login"; }}
+          data-testid="button-hero-cta"
+        >
+          I already have an account
+        </Button>
       </div>
 
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-primary/5 to-transparent pointer-events-none" />

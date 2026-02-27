@@ -11,6 +11,7 @@ import {
   ArrowLeft, BookOpen, Lightbulb, Brain, AlertTriangle,
   Dumbbell, ListChecks, Layers, Bookmark, BookmarkCheck,
   Clock, Headphones, ChevronRight, BarChart3, ShoppingCart, Share2,
+  GraduationCap, HelpCircle,
 } from "lucide-react";
 import { Link, useParams, useLocation } from "wouter";
 import { useAudio } from "@/lib/audio-context";
@@ -20,6 +21,9 @@ import { Home } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { trackBookOpen } from "@/lib/analytics";
 import { ShareModal } from "@/components/share-modal";
+import { FlashcardPractice } from "@/components/flashcard-practice";
+import { BookQuiz } from "@/components/book-quiz";
+import confetti from "canvas-confetti";
 
 interface ContentCounts {
   chapterSummaries: number;
@@ -90,6 +94,13 @@ export default function BookDetail() {
   const { play } = useAudio();
   const [, navigate] = useLocation();
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showFlashcards, setShowFlashcards] = useState(false);
+  const [showQuiz, setShowQuiz] = useState(false);
+
+  const triggerCelebration = useCallback(() => {
+    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ["#d4a017", "#fbbf24", "#f59e0b", "#ffffff"] });
+    setTimeout(() => confetti({ particleCount: 50, spread: 60, origin: { y: 0.5 } }), 200);
+  }, []);
 
   const { data: book, isLoading: bookLoading, isFetching: bookFetching } = useQuery<Book>({
     queryKey: ["/api/books", id],
@@ -172,6 +183,27 @@ export default function BookDetail() {
           </Link>
         </div>
       </div>
+    );
+  }
+
+  if (showFlashcards && book) {
+    return (
+      <FlashcardPractice
+        bookId={book.id}
+        bookTitle={book.title}
+        onClose={() => setShowFlashcards(false)}
+      />
+    );
+  }
+
+  if (showQuiz && book) {
+    return (
+      <BookQuiz
+        bookId={book.id}
+        bookTitle={book.title}
+        onClose={() => setShowQuiz(false)}
+        onCelebrate={triggerCelebration}
+      />
     );
   }
 
@@ -302,6 +334,26 @@ export default function BookDetail() {
               </a>
             </div>
           )}
+          <div className="flex gap-3 w-full px-6 mt-3">
+            <Button
+              variant="outline"
+              className="flex-1 gap-2 border-violet-500/30 text-violet-400"
+              onClick={() => setShowFlashcards(true)}
+              data-testid="button-practice"
+            >
+              <GraduationCap className="w-4 h-4" />
+              Practice
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 gap-2 border-emerald-500/30 text-emerald-400"
+              onClick={() => setShowQuiz(true)}
+              data-testid="button-quiz"
+            >
+              <HelpCircle className="w-4 h-4" />
+              Quiz
+            </Button>
+          </div>
         </div>
       </div>
 
