@@ -42,6 +42,15 @@ app.use(queryLoggerMiddleware);
 app.use("/api/metrics", metricsRouter);
 app.use("/sitemap.xml", sitemapRouter);
 
+app.get("/robots.txt", (_req, res) => {
+  const sitemapUrl = process.env.REPLIT_DOMAINS
+    ? `https://${process.env.REPLIT_DOMAINS.split(",")[0]}/sitemap.xml`
+    : "https://mindprism.io/sitemap.xml";
+  res.type("text/plain").send(
+    `User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /vault\nDisallow: /api/\n\nSitemap: ${sitemapUrl}\n`
+  );
+});
+
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
     hour: "numeric",
