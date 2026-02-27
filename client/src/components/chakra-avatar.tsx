@@ -11,13 +11,13 @@ interface ChakraAvatarProps {
 }
 
 const chakraPositions: Record<ChakraType, { top: string; left: string }> = {
-  crown:        { top: "8%",  left: "50%" },
-  third_eye:    { top: "18%", left: "50%" },
-  throat:       { top: "30%", left: "50%" },
+  crown:        { top: "13%", left: "50%" },
+  third_eye:    { top: "22%", left: "50%" },
+  throat:       { top: "31%", left: "50%" },
   heart:        { top: "40%", left: "50%" },
-  solar_plexus: { top: "50%", left: "50%" },
-  sacral:       { top: "59%", left: "50%" },
-  root:         { top: "68%", left: "50%" },
+  solar_plexus: { top: "49%", left: "50%" },
+  sacral:       { top: "57%", left: "50%" },
+  root:         { top: "65%", left: "50%" },
 };
 
 const chakraOrder: ChakraType[] = [
@@ -35,9 +35,9 @@ function getChakraIntensity(chakra: ChakraType, progress?: ChakraProgress[]): nu
 export function ChakraAvatar({ activeChakra, onChakraSelect, progress, size = "md" }: ChakraAvatarProps) {
   const [hoveredChakra, setHoveredChakra] = useState<ChakraType | null>(null);
 
-  const sizeMap = { sm: 200, md: 280, lg: 340 };
+  const sizeMap = { sm: 240, md: 320, lg: 400 };
   const containerWidth = sizeMap[size];
-  const containerHeight = containerWidth * 1.33;
+  const containerHeight = containerWidth;
 
   return (
     <div
@@ -65,7 +65,7 @@ export function ChakraAvatar({ activeChakra, onChakraSelect, progress, size = "m
           const isActive = activeChakra === chakra;
           const isHovered = hoveredChakra === chakra;
           const dimmed = activeChakra && !isActive;
-          const hitSize = size === "sm" ? 28 : size === "md" ? 36 : 44;
+          const hitSize = size === "sm" ? 36 : size === "md" ? 44 : 52;
 
           return (
             <div
