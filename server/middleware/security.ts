@@ -28,8 +28,8 @@ export function applySecurityMiddleware(app: Express) {
           styleSrc: ["'self'", "'unsafe-inline'", "fonts.googleapis.com"],
           imgSrc: ["'self'", "data:", "blob:", "https:"],
           connectSrc: isDev
-            ? ["'self'", "ws:", "wss:", "https://api.stripe.com"]
-            : ["'self'", "https://api.stripe.com"],
+            ? ["'self'", "ws:", "wss:", "https://api.stripe.com", "https://*.ingest.sentry.io"]
+            : ["'self'", "https://api.stripe.com", "https://*.ingest.sentry.io"],
           fontSrc: ["'self'", "data:", "fonts.gstatic.com"],
           frameSrc: ["'self'", "js.stripe.com"],
           objectSrc: ["'none'"],

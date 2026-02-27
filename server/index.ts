@@ -5,6 +5,9 @@ import { createServer } from "http";
 import { seedDatabase } from "./seed";
 import { applySecurityMiddleware } from "./middleware/security";
 import { authLimiter, apiLimiter } from "./middleware/rateLimiter";
+import { initErrorTracking, sentryErrorMiddleware, applySentryRequestHandler } from "./middleware/errorTracking";
+
+initErrorTracking();
 
 const app = express();
 const httpServer = createServer(app);
@@ -75,6 +78,10 @@ app.use((req, res, next) => {
   await seedDatabase().catch((err) => {
     console.error("Failed to seed database:", err);
   });
+
+  applySentryRequestHandler(app);
+
+  app.use(sentryErrorMiddleware);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

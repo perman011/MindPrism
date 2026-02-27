@@ -28,3 +28,4 @@ Security is paramount, with AES-256-GCM encryption for journal entries, RLS poli
 - **ORM:** Drizzle ORM
 - **Payments:** Stripe (for premium subscriptions and billing portal)
 - **Security:** Helmet.js (security headers), express-rate-limit (rate limiting)
+- **Error Monitoring:** Sentry (`@sentry/react` client, `@sentry/node` server) — requires `SENTRY_DSN` secret and `VITE_SENTRY_DSN` env var; gracefully disabled when DSN absent
