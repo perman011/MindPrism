@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Users, BookOpen, Activity, BarChart3, TrendingUp, Eye } from "lucide-react";
 import { Link } from "wouter";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 interface AnalyticsOverview {
   totalUsers: number;
@@ -16,7 +16,7 @@ interface AnalyticsOverview {
   dailyActiveUsers: { date: string; count: number }[];
   signupTrend: { date: string; count: number }[];
   eventBreakdown: { eventType: string; count: number }[];
-  popularBooks: { bookId: unknown; count: number }[];
+  popularBooks: { bookTitle: string; count: number }[];
 }
 
 interface AnalyticsEventsResponse {
@@ -139,6 +139,26 @@ export default function AnalyticsDashboard() {
                 )}
               </Card>
             </div>
+
+            {overview.popularBooks.length > 0 && (
+              <Card className="p-4 bg-zinc-900 border-zinc-800">
+                <h3 className="text-sm font-medium text-zinc-400 mb-3 flex items-center gap-2">
+                  <BookOpen className="w-4 h-4" />
+                  Most Popular Books
+                </h3>
+                <div className="h-48" data-testid="chart-popular-books">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={overview.popularBooks} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" stroke="#27272a" horizontal={false} />
+                      <XAxis type="number" tick={{ fill: "#71717a", fontSize: 11 }} axisLine={{ stroke: "#3f3f46" }} tickLine={false} allowDecimals={false} />
+                      <YAxis type="category" dataKey="bookTitle" tick={{ fill: "#a1a1aa", fontSize: 11 }} axisLine={{ stroke: "#3f3f46" }} tickLine={false} width={120} />
+                      <Tooltip contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, color: "#fff", fontSize: 12 }} />
+                      <Bar dataKey="count" fill="hsl(43, 75%, 49%)" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </Card>
+            )}
 
             {overview.eventBreakdown.length > 0 && (
               <Card className="p-4 bg-zinc-900 border-zinc-800">

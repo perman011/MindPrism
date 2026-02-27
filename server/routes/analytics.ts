@@ -86,12 +86,12 @@ router.get("/overview", isAuthenticated, requireAdmin, async (_req: Request, res
 
     const popularBooks = await db
       .select({
-        bookId: analyticsEvents.eventData,
+        bookTitle: sql<string>`${analyticsEvents.eventData}->>'bookTitle'`,
         count: sql<number>`count(*)`,
       })
       .from(analyticsEvents)
       .where(sql`${analyticsEvents.eventType} = 'book_open'`)
-      .groupBy(analyticsEvents.eventData)
+      .groupBy(sql`${analyticsEvents.eventData}->>'bookTitle'`)
       .orderBy(sql`count(*) desc`)
       .limit(10);
 
