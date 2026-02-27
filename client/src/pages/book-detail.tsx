@@ -17,6 +17,8 @@ import { useAudio } from "@/lib/audio-context";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/auth-utils";
 import { Home } from "lucide-react";
+import { useEffect } from "react";
+import { trackBookOpen } from "@/lib/analytics";
 
 interface ContentCounts {
   chapterSummaries: number;
@@ -92,6 +94,12 @@ export default function BookDetail() {
     queryFn: getQueryFn({ on401: "throw" }),
     enabled: !!id,
   });
+
+  useEffect(() => {
+    if (book) {
+      trackBookOpen(book.id, book.title);
+    }
+  }, [book]);
 
   const { data: contentCounts } = useQuery<ContentCounts>({
     queryKey: ["/api/books", id, "content-counts"],
