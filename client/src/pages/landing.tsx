@@ -10,7 +10,7 @@ function FeatherRain() {
     Array.from({ length: 18 }, (_, i) => ({
       id: i,
       left: `${5 + Math.random() * 90}%`,
-      size: 18 + Math.random() * 16,
+      size: 32 + Math.random() * 28,
       delay: -(Math.random() * 15),
       duration: 8 + Math.random() * 7,
       swayAmount: 30 + Math.random() * 50,
