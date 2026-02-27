@@ -6,6 +6,8 @@ import { seedDatabase } from "./seed";
 import { applySecurityMiddleware } from "./middleware/security";
 import { authLimiter, apiLimiter } from "./middleware/rateLimiter";
 import { initErrorTracking, sentryErrorMiddleware, applySentryRequestHandler } from "./middleware/errorTracking";
+import { queryLoggerMiddleware } from "./middleware/queryLogger";
+import metricsRouter from "./routes/metrics";
 
 initErrorTracking();
 
@@ -34,6 +36,9 @@ app.use(
 );
 
 app.use(express.urlencoded({ extended: false }));
+
+app.use(queryLoggerMiddleware);
+app.use("/api/metrics", metricsRouter);
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {

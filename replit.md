@@ -20,6 +20,9 @@ Security is paramount, with AES-256-GCM encryption for journal entries, RLS poli
 ### Security Middleware (`server/middleware/`)
 - **Helmet.js** (`security.ts`): CSP headers (dev mode allows `unsafe-inline`/`unsafe-eval` for Vite, production is strict), HSTS, X-Frame-Options DENY, noSniff, referrer-policy. CORS configured for `.replit.app`, `.repl.co`, `mindprism.io`, `localhost`.
 - **Rate Limiting** (`rateLimiter.ts`): `authLimiter` (5/min) on `/api/login`, `/api/callback`, `/api/auth`; `apiLimiter` (100/min) on all `/api/*`; `publicLimiter` (20/min) available for unauthenticated endpoints.
+- **Query Logger** (`queryLogger.ts`): Per-request query count/avg tracking via WeakMap; logs slow queries (>500ms) as warnings.
+- **Web Vitals** (`client/src/lib/performance.ts`): Tracks LCP, FID, CLS, TTFB, INP; logs to console in dev, sends to `POST /api/metrics` in production.
+- **Metrics Endpoint** (`server/routes/metrics.ts`): Receives Web Vitals data; rate-limited to 30/min; logs metrics server-side.
 - Applied in `server/index.ts` before body parsing and route registration.
 
 ## External Dependencies
