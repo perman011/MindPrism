@@ -17,7 +17,7 @@ const ROLE_BADGES: Record<string, { label: string; className: string }> = {
   admin: { label: "Admin", className: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
   editor: { label: "Editor", className: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
   writer: { label: "Writer", className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" },
-  user: { label: "Customer", className: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400" },
+  user: { label: "Customer", className: "bg-gray-800 text-gray-400" },
 };
 
 const ROLE_DESCRIPTIONS: Record<string, string> = {
@@ -91,7 +91,7 @@ export default function AdminUsers() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-8">
+      <div className="min-h-screen bg-black p-8">
         <div className="max-w-5xl mx-auto">
           <Skeleton className="h-10 w-64 mb-8" />
           {Array.from({ length: 5 }).map((_, i) => (
@@ -103,7 +103,7 @@ export default function AdminUsers() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-6 md:p-8" data-testid="admin-users-page">
+    <div className="min-h-screen bg-black p-6 md:p-8" data-testid="admin-users-page">
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <Link href="/admin">

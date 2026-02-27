@@ -68,7 +68,7 @@ export function MindTree({ counts, activeSection, onSectionClick, bookTitle }: M
   };
 
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-gray-900 border-r" data-testid="mind-tree">
+    <div className="h-full flex flex-col bg-black border-r border-border" data-testid="mind-tree">
       <div className="p-4 border-b">
         <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Mind Tree</p>
         {bookTitle && (

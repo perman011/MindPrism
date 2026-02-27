@@ -141,7 +141,7 @@ export default function AdminBookEditor() {
 
   if (bookLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex">
+      <div className="min-h-screen bg-black flex">
         <div className="w-[280px] border-r p-4">
           <Skeleton className="h-6 w-32 mb-4" />
           {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-8 w-full mb-2" />)}
@@ -157,7 +157,7 @@ export default function AdminBookEditor() {
 
   if (!book) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
           <p className="text-lg font-semibold mb-2">Book not found</p>
@@ -173,8 +173,8 @@ export default function AdminBookEditor() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-950" data-testid="admin-book-editor">
-      <header className="h-14 bg-white dark:bg-gray-900 border-b flex items-center px-4 gap-3 flex-shrink-0">
+    <div className="h-screen flex flex-col bg-black" data-testid="admin-book-editor">
+      <header className="h-14 bg-black border-b border-border flex items-center px-4 gap-3 flex-shrink-0">
         <Link href="/admin">
           <Button variant="ghost" size="icon" className="h-8 w-8" data-testid="button-back-admin">
             <ArrowLeft className="w-4 h-4" />
