@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import { useLocation } from "wouter";
 
 interface SEOHeadProps {
   title?: string;
@@ -19,7 +20,9 @@ export function SEOHead({
   ogType = "website",
   noIndex = false,
 }: SEOHeadProps) {
+  const [location] = useLocation();
   const fullTitle = title ? `${title} | ${SITE_NAME} - Psychology Made Simple` : `${SITE_NAME} - Psychology Made Simple`;
+  const canonicalUrl = `${window.location.origin}${location}`;
 
   return (
     <Helmet>
@@ -29,6 +32,7 @@ export function SEOHead({
       <meta property="og:description" content={description} />
       <meta property="og:type" content={ogType} />
       <meta property="og:site_name" content={SITE_NAME} />
+      <meta property="og:url" content={canonicalUrl} />
       {ogImage && <meta property="og:image" content={ogImage} />}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
