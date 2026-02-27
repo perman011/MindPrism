@@ -17,6 +17,11 @@ UI/UX emphasizes a **black & gold** color scheme (primary gold: HSL 43 75% 49%, 
 
 Security is paramount, with AES-256-GCM encryption for journal entries, RLS policies, and a Role-Based Access Control (RBAC) system (super_admin > admin > editor > writer > user) governing access to features and content within both the consumer and admin applications.
 
+### Recommendation Algorithm (`server/routes.ts`, `client/src/pages/dashboard.tsx`)
+- **Endpoint**: `GET /api/books/recommended` (authenticated) reads user onboarding interests from `user_interests` table, maps them to category slugs via `INTEREST_TO_CATEGORY_SLUGS`, filters published books by matching `categoryId`, excludes books the user has started (via `user_progress.currentCardIndex > 0`), falls back to featured then remaining books if < 3 matches, returns up to 10 books.
+- **Dashboard Carousel**: "Recommended For You" section with gold "Based on your interests" label, positioned between "Jump Back In" and "All Books". Hidden if user has no onboarding preferences.
+- **Interest-to-Category Mapping**: 12 onboarding interest IDs (anxiety, productivity, body-language, leadership, mindfulness, habits, relationships, decision-making, confidence, stoicism, creativity, emotional-iq) mapped to 5 category slugs (habits, mindset, mindfulness, emotions, meaning).
+
 ### Security Middleware (`server/middleware/`)
 - **Helmet.js** (`security.ts`): CSP headers (dev mode allows `unsafe-inline`/`unsafe-eval` for Vite, production is strict), HSTS, X-Frame-Options DENY, noSniff, referrer-policy. CORS configured for `.replit.app`, `.repl.co`, `mindprism.io`, `localhost`.
 - **Rate Limiting** (`rateLimiter.ts`): `authLimiter` (5/min) on `/api/login`, `/api/callback`, `/api/auth`; `apiLimiter` (100/min) on all `/api/*`; `publicLimiter` (20/min) available for unauthenticated endpoints.

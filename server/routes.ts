@@ -38,6 +38,80 @@ export async function registerRoutes(
     }
   });
 
+  const INTEREST_TO_CATEGORY_SLUGS: Record<string, string[]> = {
+    "anxiety": ["mindfulness", "emotions"],
+    "productivity": ["habits", "mindset"],
+    "body-language": ["emotions", "mindset"],
+    "leadership": ["mindset", "meaning"],
+    "mindfulness": ["mindfulness"],
+    "habits": ["habits"],
+    "relationships": ["emotions", "mindfulness"],
+    "decision-making": ["mindset", "habits"],
+    "confidence": ["mindset", "meaning"],
+    "stoicism": ["mindfulness", "meaning"],
+    "creativity": ["mindset", "meaning"],
+    "emotional-iq": ["emotions", "mindfulness"],
+  };
+
+  app.get("/api/books/recommended", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const userInterestData = await storage.getUserInterests(userId);
+
+      if (!userInterestData?.interests?.length || !userInterestData.onboardingCompleted) {
+        return res.json([]);
+      }
+
+      const allCategories = await storage.getCategories();
+      const matchedSlugs = new Set<string>();
+      for (const interest of userInterestData.interests) {
+        const slugs = INTEREST_TO_CATEGORY_SLUGS[interest];
+        if (slugs) {
+          slugs.forEach(s => matchedSlugs.add(s));
+        }
+      }
+
+      const matchedCategoryIds = allCategories
+        .filter(c => matchedSlugs.has(c.slug))
+        .map(c => c.id);
+
+      const allBooks = await storage.getBooks();
+      const publishedBooks = allBooks.filter(b => b.status === "published" || !b.status);
+
+      const allUserProgress = await storage.getAllUserProgress(userId);
+      const startedBookIds = new Set(
+        allUserProgress
+          .filter(p => p.currentCardIndex && p.currentCardIndex > 0)
+          .map(p => p.bookId)
+      );
+
+      let recommended = publishedBooks.filter(
+        b => b.categoryId && matchedCategoryIds.includes(b.categoryId) && !startedBookIds.has(b.id)
+      );
+
+      if (recommended.length < 3) {
+        const recIds = new Set(recommended.map(b => b.id));
+        const featured = publishedBooks.filter(
+          b => b.featured && !startedBookIds.has(b.id) && !recIds.has(b.id)
+        );
+        recommended = [...recommended, ...featured];
+      }
+
+      if (recommended.length < 3) {
+        const recIds = new Set(recommended.map(b => b.id));
+        const remaining = publishedBooks.filter(
+          b => !startedBookIds.has(b.id) && !recIds.has(b.id)
+        );
+        recommended = [...recommended, ...remaining];
+      }
+
+      res.json(recommended.slice(0, 10));
+    } catch (error) {
+      console.error("Error fetching recommended books:", error);
+      res.status(500).json({ message: "Failed to fetch recommendations" });
+    }
+  });
+
   app.get("/api/books/:id", async (req, res) => {
     try {
       const book = await storage.getBook(req.params.id);

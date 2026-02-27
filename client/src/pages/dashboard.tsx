@@ -163,6 +163,11 @@ export default function Dashboard() {
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
+  const { data: recommendedBooks } = useQuery<Book[]>({
+    queryKey: ["/api/books/recommended"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+  });
+
   const featuredBooks = books?.filter((b) => b.featured) ?? [];
   const allBooks = books ?? [];
   const inProgressBooks = allProgress?.filter(p => p.currentCardIndex && p.currentCardIndex > 0 && p.totalCards && p.currentCardIndex < p.totalCards) ?? [];
@@ -374,6 +379,16 @@ export default function Dashboard() {
               </Link>
             );
           })}
+        </HorizontalScroll>
+      )}
+
+      {recommendedBooks && recommendedBooks.length > 0 && (
+        <HorizontalScroll title="Recommended For You" accentLabel="Based on your interests" actionHref="/discover" actionLabel="See All" testId="section-recommended">
+          {recommendedBooks.map((book) => (
+            <div key={book.id} className="flex-shrink-0 w-44" data-testid={`recommended-book-${book.id}`}>
+              <BookCard book={book} compact />
+            </div>
+          ))}
         </HorizontalScroll>
       )}
 
