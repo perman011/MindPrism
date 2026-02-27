@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import mindprismLogo from "@assets/mindprism-logo-transparent.png";
+import mindprismLogo from "@assets/IMG_5130_1772146863644.jpeg";
 import { useState, useEffect, useCallback } from "react";
 const heroBg = "/images/hero-bg.png";
 
@@ -58,7 +58,7 @@ export default function LandingPage() {
       </div>
 
       <nav className="relative z-10 px-6 py-5 flex items-center justify-between">
-        <div className="flex items-center" data-testid="text-logo">
+        <div className="flex items-center mix-blend-screen" data-testid="text-logo">
           <img src={mindprismLogo} alt="MindPrism" className="h-12 w-auto object-contain" />
         </div>
         <a href="/api/login">

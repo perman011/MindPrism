@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BookOpen, Search, LogOut, Home, ArrowLeft } from "lucide-react";
-import mindprismLogo from "@assets/mindprism-logo-transparent.png";
+import mindprismLogo from "@assets/IMG_5130_1772146863644.jpeg";
 import { Link, useSearch } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useMemo } from "react";
@@ -53,7 +53,7 @@ export default function Library() {
       <nav className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           <Link href="/">
-            <div className="flex items-center cursor-pointer" data-testid="link-home">
+            <div className="flex items-center cursor-pointer mix-blend-screen" data-testid="link-home">
               <img src={mindprismLogo} alt="MindPrism" className="h-10 w-auto object-contain" />
             </div>
           </Link>

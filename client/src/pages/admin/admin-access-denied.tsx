@@ -2,14 +2,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShieldX, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
-import mindprismLogo from "@assets/mindprism-logo-transparent.png";
+import mindprismLogo from "@assets/IMG_5130_1772146863644.jpeg";
 
 export default function AdminAccessDenied() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center mb-4">
+          <div className="inline-flex items-center justify-center mb-4 mix-blend-screen">
             <img src={mindprismLogo} alt="MindPrism" className="h-24 w-auto object-contain opacity-60" />
           </div>
           <h1 className="font-serif text-2xl font-bold text-white mb-1" data-testid="text-access-denied">

@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Shield, Lock, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
-import mindprismLogo from "@assets/mindprism-logo-transparent.png";
+import mindprismLogo from "@assets/IMG_5130_1772146863644.jpeg";
 
 export default function AdminLogin() {
   return (
@@ -12,9 +12,9 @@ export default function AdminLogin() {
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="w-full max-w-md relative z-10">
+      <div className="w-full max-w-md relative">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center mb-4">
+          <div className="inline-flex items-center justify-center mb-4 mix-blend-screen">
             <img src={mindprismLogo} alt="MindPrism" className="h-28 w-auto object-contain" />
           </div>
           <h1 className="font-serif text-2xl font-bold text-white mb-1" data-testid="text-admin-title">
