@@ -19,21 +19,17 @@ export function applySecurityMiddleware(app: Express) {
 
   app.use(
     helmet({
-      contentSecurityPolicy: {
+      contentSecurityPolicy: isDev ? false : {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: isDev
-            ? ["'self'", "'unsafe-inline'", "'unsafe-eval'", "cdnjs.cloudflare.com", "js.stripe.com"]
-            : ["'self'", "cdnjs.cloudflare.com", "js.stripe.com"],
+          scriptSrc: ["'self'", "cdnjs.cloudflare.com", "js.stripe.com"],
           styleSrc: ["'self'", "'unsafe-inline'", "fonts.googleapis.com"],
           imgSrc: ["'self'", "data:", "blob:", "https:"],
-          connectSrc: isDev
-            ? ["'self'", "ws:", "wss:", "https://api.stripe.com", "https://*.ingest.sentry.io"]
-            : ["'self'", "https://api.stripe.com", "https://*.ingest.sentry.io"],
+          connectSrc: ["'self'", "https://api.stripe.com", "https://*.ingest.sentry.io"],
           fontSrc: ["'self'", "data:", "fonts.gstatic.com"],
           frameSrc: ["'self'", "js.stripe.com"],
           objectSrc: ["'none'"],
-          frameAncestors: isDev ? ["'self'", "https://*.replit.dev", "https://*.repl.co"] : ["'none'"],
+          frameAncestors: ["'none'"],
         },
       },
       hsts: isDev ? false : {
