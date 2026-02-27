@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import mindprismLogo from "@assets/77531E8D-B1EB-4D23-A577-C8EC54A4B63C_1772158344341.png";
 import { useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
 const heroBg = "/images/hero-bg.png";
 
 const slides = [
@@ -58,9 +59,21 @@ export default function LandingPage() {
       </div>
 
       <nav className="relative z-10 px-6 py-5 flex items-center justify-between">
-        <div className="flex items-center mix-blend-screen" data-testid="text-logo">
+        <motion.div
+          className="flex items-center mix-blend-screen"
+          data-testid="text-logo"
+          initial={{ y: -80, opacity: 0, rotate: -8 }}
+          animate={{ y: 0, opacity: 1, rotate: 0 }}
+          transition={{
+            duration: 1.8,
+            ease: [0.25, 0.46, 0.45, 0.94],
+            y: { duration: 1.8, ease: [0.22, 0.68, 0.36, 1] },
+            rotate: { duration: 2.2, ease: "easeOut" },
+            opacity: { duration: 1.2 },
+          }}
+        >
           <img src={mindprismLogo} alt="MindPrism" className="h-16 object-contain" style={{ aspectRatio: '1.618' }} />
-        </div>
+        </motion.div>
         <a href="/api/login">
           <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10" data-testid="button-login">
             I already have an account
