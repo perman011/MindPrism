@@ -160,6 +160,16 @@ export default function BookDetail() {
         ogType="article"
         ogImage={book?.coverImage || undefined}
         noIndex
+        jsonLd={book ? {
+          "@context": "https://schema.org",
+          "@type": "Book",
+          name: book.title,
+          author: { "@type": "Person", name: book.author },
+          description: book.description || undefined,
+          image: book.coverImage || undefined,
+          url: window.location.href,
+          publisher: { "@type": "Organization", name: "MindPrism" },
+        } : undefined}
       />
       <div className="relative">
         <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2 z-20">

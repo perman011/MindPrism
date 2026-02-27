@@ -7,6 +7,7 @@ interface SEOHeadProps {
   ogImage?: string;
   ogType?: string;
   noIndex?: boolean;
+  jsonLd?: Record<string, unknown>;
 }
 
 const SITE_NAME = "MindPrism";
@@ -19,6 +20,7 @@ export function SEOHead({
   ogImage,
   ogType = "website",
   noIndex = false,
+  jsonLd,
 }: SEOHeadProps) {
   const [location] = useLocation();
   const fullTitle = title ? `${title} | ${SITE_NAME} - Psychology Made Simple` : `${SITE_NAME} - Psychology Made Simple`;
@@ -40,6 +42,11 @@ export function SEOHead({
       <meta name="twitter:description" content={description} />
       {ogImage && <meta name="twitter:image" content={ogImage} />}
       {noIndex && <meta name="robots" content="noindex, nofollow" />}
+      {jsonLd && (
+        <script type="application/ld+json">
+          {JSON.stringify(jsonLd)}
+        </script>
+      )}
     </Helmet>
   );
 }
