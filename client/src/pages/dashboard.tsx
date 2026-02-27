@@ -410,7 +410,7 @@ export default function Dashboard() {
                   <div className="w-9 h-9 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <CategoryIcon name={cat.icon} className="w-4.5 h-4.5 text-primary" />
                   </div>
-                  <span className="font-semibold text-sm truncate">{cat.name}</span>
+                  <span className="font-semibold text-sm leading-tight line-clamp-2">{cat.name}</span>
                 </div>
               </Link>
             ))}

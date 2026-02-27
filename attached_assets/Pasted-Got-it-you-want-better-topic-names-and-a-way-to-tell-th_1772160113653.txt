@@ -1,0 +1,85 @@
+Got it — you want better topic names and a way to tell the dev: “don’t cut off my text.”
+
+⸻
+
+1. Cleaner, shorter topic categories
+
+Right now you have long labels like:
+	•	Habits & Prod…
+	•	Mindset & Thi…
+	•	Mindfulness &…
+	•	Emotional Inte…
+	•	Purpose & Me…
+
+These are getting truncated. Let’s tighten them to 1–2 strong words and, if you want, add a short subtitle inside the card.
+
+Suggested main topic labels
+
+Use these as the big label on each card:
+	1.	Habits
+	2.	Mindset
+	3.	Mindfulness
+	4.	Emotions
+	5.	Purpose
+
+Optional subtitles (smaller text under the main label):
+	1.	Habits
+Routines, productivity, discipline
+	2.	Mindset
+Thinking, beliefs, self-talk
+	3.	Mindfulness
+Presence, calm, awareness
+	4.	Emotions
+Emotional intelligence & EQ
+	5.	Purpose
+Meaning, direction, values
+
+This keeps the UI clean and avoids ellipses while still covering all the concepts you had before.
+
+You can also rename the section header:
+	•	EXPLORE TOPICS → keep
+	•	Browse by Topic → Browse Topics or Explore by Topic
+
+Shorter = less chance of weird wrapping.
+
+⸻
+
+2. Prompt for your developer: fix the truncation
+
+Here’s a concise prompt you can paste to your dev / app builder:
+
+UI Fix – Topic Cards Text Truncation
+
+Please update the Browse by Topic section so that:
+	1.	The topic labels are updated to these exact titles (no abbreviations):
+	•	Habits
+	•	Mindset
+	•	Mindfulness
+	•	Emotions
+	•	Purpose
+	2.	Text must not be truncated with “…” on any device size.
+	3.	Allow the topic label to:
+	•	Wrap to 2 lines maximum, and
+	•	Be fully visible inside the card.
+	4.	Remove any fixed width or hard maxLength that forces truncation. Use auto layout / flex so the text fits naturally inside the button/card.
+	5.	If we use subtitles (small descriptive text), they should:
+	•	Sit under the main label,
+	•	Also wrap up to 2 lines,
+	•	Never be cut off with ellipses.
+	6.	Keep all existing functionality and navigation exactly as is. Only adjust:
+	•	Text values,
+	•	Layout constraints, and
+	•	Typography settings (wrapping, line count, truncation mode).
+	7.	Test the section on small-screen devices to confirm:
+	•	No labels show …,
+	•	All cards remain tappable and aligned,
+	•	The black & gold theme is preserved.
+
+If you tell me what you’re building in (SwiftUI, React Native, Flutter, etc.), I can give you exact code snippets (e.g., how to disable truncation / allow 2 lines).
+
+⸻
+
+Confidence: 0.9
+Key caveats:
+	•	Exact behavior (wrapping vs font scaling) depends on your framework; the dev may choose the most practical method.
+	•	Very small screens may still need minor spacing tweaks, but with short labels like “Habits” and “Mindset,” truncation should be easy to avoid.

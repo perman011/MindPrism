@@ -26,11 +26,11 @@ export async function seedDatabase() {
 
   console.log("Seeding database with psychology book content...");
 
-  const catHabits = await storage.createCategory({ name: "Habits & Productivity", slug: "habits", icon: "target", color: "amber" });
-  const catMindset = await storage.createCategory({ name: "Mindset & Thinking", slug: "mindset", icon: "brain", color: "purple" });
-  const catMindfulness = await storage.createCategory({ name: "Mindfulness & Presence", slug: "mindfulness", icon: "eye", color: "teal" });
-  const catEmotions = await storage.createCategory({ name: "Emotional Intelligence", slug: "emotions", icon: "lightbulb", color: "rose" });
-  const catMeaning = await storage.createCategory({ name: "Purpose & Meaning", slug: "meaning", icon: "sparkles", color: "indigo" });
+  const catHabits = await storage.createCategory({ name: "Habits", slug: "habits", icon: "target", color: "amber" });
+  const catMindset = await storage.createCategory({ name: "Mindset", slug: "mindset", icon: "brain", color: "purple" });
+  const catMindfulness = await storage.createCategory({ name: "Mindfulness", slug: "mindfulness", icon: "eye", color: "teal" });
+  const catEmotions = await storage.createCategory({ name: "Emotions", slug: "emotions", icon: "lightbulb", color: "rose" });
+  const catMeaning = await storage.createCategory({ name: "Purpose", slug: "meaning", icon: "sparkles", color: "indigo" });
 
   // ===================== BOOK 1: Atomic Habits =====================
   const book1 = await storage.createBook({
