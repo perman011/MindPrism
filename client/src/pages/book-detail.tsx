@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   ArrowLeft, BookOpen, Lightbulb, Brain, AlertTriangle,
   Dumbbell, ListChecks, Layers, Bookmark, BookmarkCheck,
-  Clock, Headphones, Play, ChevronRight, BarChart3,
+  Clock, Headphones, ChevronRight, BarChart3,
 } from "lucide-react";
 import { Link, useParams, useLocation } from "wouter";
 import { useAudio } from "@/lib/audio-context";
@@ -154,16 +154,7 @@ export default function BookDetail() {
   return (
     <div className="min-h-screen bg-background">
       <div className="relative">
-        <div className="h-56 overflow-hidden">
-          {book.coverImage ? (
-            <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary/30 to-primary/5" />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-        </div>
-
-        <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2">
+        <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2 z-20">
           <div className="flex items-center gap-2">
             <button
               onClick={() => window.history.length > 1 ? window.history.back() : navigate("/")}
@@ -190,41 +181,55 @@ export default function BookDetail() {
           </button>
         </div>
 
-        <div className="px-5 -mt-16 relative z-10">
-          <h1 className="font-serif text-2xl font-bold mb-1" data-testid="text-book-title">{book.title}</h1>
-          <p className="text-sm text-muted-foreground mb-3" data-testid="text-book-author">by {book.author}</p>
-
-          <div className="flex items-center gap-3 mb-4 flex-wrap">
-            <Badge variant="secondary" className="gap-1 text-[10px]">
-              <Clock className="w-3 h-3" />{book.readTime} min read
-            </Badge>
-            <Badge variant="secondary" className="gap-1 text-[10px]">
-              <Headphones className="w-3 h-3" />{book.listenTime} min listen
-            </Badge>
+        <div className="pt-20 pb-6 flex flex-col items-center bg-gradient-to-b from-primary/5 to-background">
+          <div className="w-40 h-56 rounded-md overflow-hidden shadow-lg shadow-black/20 mb-6">
+            {book.coverImage ? (
+              <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center">
+                <BookOpen className="w-10 h-10 text-primary/40" />
+              </div>
+            )}
           </div>
 
-          <div className="flex gap-3 mb-5">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-primary font-semibold mb-1.5" data-testid="text-summary-label">Summary</p>
+          <h1 className="font-serif text-2xl font-bold mb-1 text-center px-6 leading-tight" data-testid="text-book-title">{book.title}</h1>
+          <p className="text-sm text-muted-foreground mb-4" data-testid="text-book-author">by {book.author}</p>
+
+          <div className="flex items-center gap-1.5 mb-6 flex-wrap justify-center">
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Clock className="w-3 h-3" />
+              {book.readTime} min read
+            </span>
+            <span className="text-muted-foreground/40 text-xs">·</span>
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Headphones className="w-3 h-3" />
+              {book.listenTime} min listen
+            </span>
+          </div>
+
+          <div className="flex gap-3 w-full px-6">
             <Link href={`/book/${id}/journey`} className="flex-1">
-              <Button className="w-full gap-2" data-testid="button-start-journey">
-                <Play className="w-4 h-4" />
-                {cardProgress > 0 ? `Resume (${cardProgress}%)` : "Start Journey"}
+              <Button variant="outline" className="w-full gap-2" data-testid="button-start-journey">
+                <BookOpen className="w-4 h-4" />
+                {cardProgress > 0 ? `Resume (${cardProgress}%)` : "Read"}
               </Button>
             </Link>
             {book.audioUrl && (
               <Button
-                variant="outline"
-                size="icon"
+                className="flex-1 gap-2"
                 onClick={() => play(book)}
                 data-testid="button-play-audio"
               >
                 <Headphones className="w-4 h-4" />
+                Listen
               </Button>
             )}
           </div>
         </div>
       </div>
 
-      <div className="px-5 pb-8">
+      <div className="px-5 pt-6 pb-8">
         {book.coreThesis && (
           <Card className="p-4 mb-6 bg-primary/5 border-primary/20" data-testid="card-core-thesis">
             <div className="flex items-start gap-3">
@@ -239,7 +244,8 @@ export default function BookDetail() {
           </Card>
         )}
 
-        <h2 className="font-serif text-lg font-bold mb-3" data-testid="text-blueprint-heading">Blueprint</h2>
+        <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-1">Explore the book</p>
+        <h2 className="font-serif text-xl font-bold mb-4" data-testid="text-blueprint-heading">Blueprint</h2>
 
         <div className="grid grid-cols-2 gap-3" data-testid="grid-blueprint">
           {BLUEPRINT_TILES.map((tile) => {
@@ -255,15 +261,15 @@ export default function BookDetail() {
                   data-testid={`tile-${tile.key}`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <div className="flex-shrink-0 w-11 h-11 rounded-md bg-primary/10 flex items-center justify-center">
                       <Icon className="w-5 h-5 text-primary" />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm">{tile.label}</p>
-                      <p className="text-xs text-muted-foreground">Tap through key insights chapter by chapter</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Tap through key insights chapter by chapter</p>
                     </div>
                     <Badge variant="secondary" className="text-[10px] font-semibold">{count}</Badge>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   </div>
                 </Card>
               );
@@ -276,8 +282,8 @@ export default function BookDetail() {
                 onClick={() => navigate(`/book/${id}/journey?section=${tile.key}`)}
                 data-testid={`tile-${tile.key}`}
               >
-                <div className="flex flex-col items-center justify-center text-center gap-2 min-h-[100px]">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <div className="flex flex-col items-center justify-center text-center gap-2.5 min-h-[110px]">
+                  <div className="w-11 h-11 rounded-md bg-primary/10 flex items-center justify-center">
                     <Icon className="w-5 h-5 text-primary" />
                   </div>
                   <p className="font-semibold text-xs leading-tight">{tile.label}</p>

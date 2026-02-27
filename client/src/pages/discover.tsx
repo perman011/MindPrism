@@ -51,37 +51,40 @@ export default function Discover() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="px-5 pt-6 pb-3">
-        <h1 className="font-serif text-2xl font-bold mb-4" data-testid="text-discover-title">Discover</h1>
+      <div className="px-5 pt-6 pb-4">
+        <h1 className="font-serif text-2xl font-bold mb-1" data-testid="text-discover-title">Discover</h1>
+        <p className="text-sm text-muted-foreground mb-5">Find your next great read</p>
 
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <div className="relative mb-2">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
           <Input
             type="search"
             placeholder="Search books, authors, principles..."
-            className="pl-9 h-11 rounded-xl"
+            className="w-full pl-10 pr-4 bg-muted/50 border-transparent focus:border-border rounded-full text-sm"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             data-testid="input-search"
           />
           {suggestions.length > 0 && searchQuery.length >= 2 && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg z-10 overflow-hidden" data-testid="search-suggestions">
+            <div className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-md shadow-lg z-10 overflow-hidden" data-testid="search-suggestions">
               {suggestions.map((book) => (
                 <a
                   key={book.id}
                   href={`/book/${book.id}`}
-                  className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/50 transition-colors"
+                  className="flex items-center gap-3 px-4 py-2.5 hover-elevate transition-colors"
                   data-testid={`suggestion-${book.id}`}
                 >
-                  <div className="w-8 h-10 rounded overflow-hidden flex-shrink-0">
+                  <div className="w-8 h-11 rounded-md overflow-hidden flex-shrink-0">
                     {book.coverImage ? (
                       <img src={book.coverImage} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full bg-primary/10" />
+                      <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                        <span className="text-[10px] font-bold text-primary/40">{book.title[0]}</span>
+                      </div>
                     )}
                   </div>
-                  <div>
-                    <p className="text-sm font-medium">{book.title}</p>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{book.title}</p>
                     <p className="text-xs text-muted-foreground">{book.author}</p>
                   </div>
                 </a>
@@ -92,12 +95,12 @@ export default function Discover() {
       </div>
 
       {categories && categories.length > 0 && (
-        <div className="flex items-center gap-2 px-5 mb-5 overflow-x-auto pb-1 scrollbar-hide" data-testid="category-pills">
+        <div className="flex items-center gap-2.5 px-5 mb-6 overflow-x-auto pb-2 scrollbar-hide" data-testid="category-pills">
           <button
-            className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors ${
+            className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all ${
               activeCategory === null
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-muted/70 text-muted-foreground"
             }`}
             onClick={() => setActiveCategory(null)}
             data-testid="filter-all"
@@ -107,15 +110,15 @@ export default function Discover() {
           {categories.map((cat) => (
             <button
               key={cat.id}
-              className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 transition-colors ${
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-2 transition-all ${
                 activeCategory === cat.slug
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "bg-muted/70 text-muted-foreground"
               }`}
               onClick={() => setActiveCategory(activeCategory === cat.slug ? null : cat.slug)}
               data-testid={`filter-${cat.slug}`}
             >
-              <CategoryIcon name={cat.icon} className="w-3 h-3" />
+              <CategoryIcon name={cat.icon} className="w-3.5 h-3.5" />
               {cat.name}
             </button>
           ))}
@@ -123,19 +126,32 @@ export default function Discover() {
       )}
 
       <div className="px-5 pb-8">
+        {activeCategory && (
+          <p className="text-xs text-muted-foreground mb-3" data-testid="text-filter-label">
+            Showing {filteredBooks.length} {filteredBooks.length === 1 ? "book" : "books"}
+            {categories?.find(c => c.slug === activeCategory)
+              ? ` in ${categories.find(c => c.slug === activeCategory)!.name}`
+              : ""}
+          </p>
+        )}
         {booksLoading ? (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="aspect-[3/4] rounded-xl" />
+              <div key={i} className="space-y-2">
+                <Skeleton className="aspect-[3/4] rounded-md" />
+                <Skeleton className="h-3 w-3/4 rounded-md" />
+                <Skeleton className="h-2.5 w-1/2 rounded-md" />
+              </div>
             ))}
           </div>
         ) : filteredBooks.length === 0 ? (
-          <div className="text-center py-16">
-            <BookOpen className="w-12 h-12 text-muted-foreground/20 mx-auto mb-4" />
-            <p className="text-muted-foreground text-sm">No books found</p>
+          <div className="text-center py-20">
+            <BookOpen className="w-12 h-12 text-muted-foreground/15 mx-auto mb-4" />
+            <p className="text-muted-foreground text-sm font-medium">No books found</p>
+            <p className="text-muted-foreground/60 text-xs mt-1">Try a different search or category</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3" data-testid="book-grid">
+          <div className="grid grid-cols-2 gap-4" data-testid="book-grid">
             {filteredBooks.map((book) => (
               <BookCard key={book.id} book={book} compact />
             ))}
