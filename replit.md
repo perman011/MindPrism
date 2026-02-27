@@ -17,6 +17,12 @@ UI/UX emphasizes a **black & gold** color scheme (primary gold: HSL 43 75% 49%, 
 
 Security is paramount, with AES-256-GCM encryption for journal entries, RLS policies, and a Role-Based Access Control (RBAC) system (super_admin > admin > editor > writer > user) governing access to features and content within both the consumer and admin applications.
 
+### Admin Book Management (`server/admin-routes.ts`)
+- **Book Listing**: `GET /api/admin/books` (authenticated, admin+) returns ALL books including drafts. Customer `/api/books` only returns published/published_with_changes books.
+- **Draft Workflow**: Published books edited via draft layer (`book_versions` table). Endpoints: GET/PUT `/api/admin/books/:id/draft`, POST `publish-draft`, POST `discard-draft`, GET `diff`, GET `versions`.
+- **Book Statuses**: `draft` (admin-only), `published` (customer-visible), `published_with_changes` (customer sees live version, admin sees pending draft).
+- **Data Isolation**: Public `/api/books/:id` blocks access to draft-status books. No `includeAll` parameter on public endpoints.
+
 ### Recommendation Algorithm (`server/routes.ts`, `client/src/pages/dashboard.tsx`)
 - **Endpoint**: `GET /api/books/recommended` (authenticated) reads user onboarding interests from `user_interests` table, maps them to category slugs via `INTEREST_TO_CATEGORY_SLUGS`, filters published books by matching `categoryId`, excludes books the user has started (via `user_progress.currentCardIndex > 0`), falls back to featured then remaining books if < 3 matches, returns up to 10 books.
 - **Dashboard Carousel**: "Recommended For You" section with gold "Based on your interests" label, positioned between "Jump Back In" and "All Books". Hidden if user has no onboarding preferences.

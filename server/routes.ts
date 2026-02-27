@@ -29,8 +29,7 @@ export async function registerRoutes(
   app.get("/api/books", async (req, res) => {
     try {
       const allBooks = await storage.getBooks();
-      const isAdminRequest = req.query.includeAll === "true";
-      const result = isAdminRequest ? allBooks : allBooks.filter(b => b.status === "published" || !b.status);
+      const result = allBooks.filter(b => b.status === "published" || b.status === "published_with_changes" || !b.status);
       res.json(result);
     } catch (error) {
       console.error("Error fetching books:", error);
@@ -76,7 +75,7 @@ export async function registerRoutes(
         .map(c => c.id);
 
       const allBooks = await storage.getBooks();
-      const publishedBooks = allBooks.filter(b => b.status === "published" || !b.status);
+      const publishedBooks = allBooks.filter(b => b.status === "published" || b.status === "published_with_changes" || !b.status);
 
       const allUserProgress = await storage.getAllUserProgress(userId);
       const startedBookIds = new Set(
@@ -116,6 +115,7 @@ export async function registerRoutes(
     try {
       const book = await storage.getBook(req.params.id);
       if (!book) return res.status(404).json({ message: "Book not found" });
+      if (book.status === "draft") return res.status(404).json({ message: "Book not found" });
       res.json(book);
     } catch (error) {
       console.error("Error fetching book:", error);
@@ -585,7 +585,7 @@ export async function registerRoutes(
       const chakra = req.params.chakra;
       const allBooks = await storage.getBooks();
       const filtered = allBooks.filter(
-        b => (b.status === "published" || !b.status) &&
+        b => (b.status === "published" || b.status === "published_with_changes" || !b.status) &&
           (b.primaryChakra === chakra || b.secondaryChakra === chakra)
       );
       res.json(filtered);

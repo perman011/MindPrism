@@ -22,7 +22,7 @@ export default function AdminBooks() {
   const isSuperAdmin = hasMinRole(userRole, "super_admin");
 
   const { data: books, isLoading } = useQuery<Book[]>({
-    queryKey: ["/api/books?includeAll=true"],
+    queryKey: ["/api/admin/books"],
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
@@ -38,7 +38,7 @@ export default function AdminBooks() {
       return res.json();
     },
     onSuccess: (newBook: Book) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/books?includeAll=true"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
       navigate(`/admin/books/${newBook.id}`);
     },
     onError: () => {
@@ -51,7 +51,7 @@ export default function AdminBooks() {
       await apiRequest("DELETE", `/api/admin/books/${bookId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/books?includeAll=true"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
       toast({ title: "Deleted", description: "Book and all content removed" });
     },
     onError: () => {
@@ -65,7 +65,7 @@ export default function AdminBooks() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/books?includeAll=true"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
       queryClient.invalidateQueries({ queryKey: ["/api/books"] });
       toast({ title: "Published", description: "Book is now live in the app" });
     },
@@ -78,7 +78,7 @@ export default function AdminBooks() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/books?includeAll=true"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
       queryClient.invalidateQueries({ queryKey: ["/api/books"] });
       toast({ title: "Unpublished", description: "Book moved to draft" });
     },
@@ -157,7 +157,7 @@ export default function AdminBooks() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {books.map((book) => {
-              const isPublished = book.status === "published";
+              const isPublished = book.status === "published" || book.status === "published_with_changes";
               return (
                 <Card
                   key={book.id}

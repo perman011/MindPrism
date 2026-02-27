@@ -33,6 +33,18 @@ export const books = pgTable("books", {
   primaryChakra: text("primary_chakra"),
   secondaryChakra: text("secondary_chakra"),
   updatedAt: timestamp("updated_at").defaultNow(),
+  currentDraftVersionId: varchar("current_draft_version_id"),
+  currentPublishedVersionId: varchar("current_published_version_id"),
+});
+
+export const bookVersions = pgTable("book_versions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bookId: varchar("book_id").references(() => books.id, { onDelete: "cascade" }).notNull(),
+  versionType: varchar("version_type").notNull().default("draft"),
+  content: jsonb("content").notNull().default({}),
+  createdAt: timestamp("created_at").defaultNow(),
+  createdBy: varchar("created_by"),
+  publishedAt: timestamp("published_at"),
 });
 
 export const principles = pgTable("principles", {
@@ -218,6 +230,11 @@ export const booksRelations = relations(books, ({ one, many }) => ({
   commonMistakes: many(commonMistakes),
   actionItems: many(actionItems),
   infographics: many(infographics),
+  versions: many(bookVersions),
+}));
+
+export const bookVersionsRelations = relations(bookVersions, ({ one }) => ({
+  book: one(books, { fields: [bookVersions.bookId], references: [books.id] }),
 }));
 
 export const principlesRelations = relations(principles, ({ one, many }) => ({
@@ -285,7 +302,8 @@ export const commentsRelations = relations(comments, ({ one }) => ({
   book: one(books, { fields: [comments.bookId], references: [books.id] }),
 }));
 
-export const insertBookSchema = createInsertSchema(books).omit({ id: true });
+export const insertBookSchema = createInsertSchema(books).omit({ id: true, currentDraftVersionId: true, currentPublishedVersionId: true });
+export const insertBookVersionSchema = createInsertSchema(bookVersions).omit({ id: true });
 export const insertPrincipleSchema = createInsertSchema(principles).omit({ id: true });
 export const insertStorySchema = createInsertSchema(stories).omit({ id: true });
 export const insertExerciseSchema = createInsertSchema(exercises).omit({ id: true });
@@ -306,6 +324,8 @@ export const insertCommentSchema = createInsertSchema(comments).omit({ id: true 
 
 export type InsertBook = z.infer<typeof insertBookSchema>;
 export type Book = typeof books.$inferSelect;
+export type InsertBookVersion = z.infer<typeof insertBookVersionSchema>;
+export type BookVersion = typeof bookVersions.$inferSelect;
 export type InsertPrinciple = z.infer<typeof insertPrincipleSchema>;
 export type Principle = typeof principles.$inferSelect;
 export type InsertStory = z.infer<typeof insertStorySchema>;

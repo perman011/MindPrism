@@ -13,11 +13,13 @@ import {
   insertInfographicSchema,
   insertActionItemSchema,
   insertCommentSchema,
+  bookVersions,
+  books,
 } from "@shared/schema";
 import { hasMinRole } from "@shared/models/auth";
 import { users } from "@shared/models/auth";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { z } from "zod";
 
 const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
@@ -57,6 +59,16 @@ const requireRole = (minRole: "writer" | "editor" | "admin" | "super_admin") => 
 };
 
 export function registerAdminRoutes(app: Express) {
+  app.get("/api/admin/books", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const allBooks = await storage.getBooks();
+      res.json(allBooks);
+    } catch (error) {
+      console.error("Error fetching admin books:", error);
+      res.status(500).json({ message: "Failed to fetch books" });
+    }
+  });
+
   app.post("/api/admin/books", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const parsed = insertBookSchema.safeParse(req.body);
@@ -112,6 +124,192 @@ export function registerAdminRoutes(app: Express) {
     } catch (error) {
       console.error("Error unpublishing book:", error);
       res.status(500).json({ message: "Failed to unpublish book" });
+    }
+  });
+
+  app.get("/api/admin/books/:id/draft", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const bookId = req.params.id;
+      const [draft] = await db.select().from(bookVersions)
+        .where(and(eq(bookVersions.bookId, bookId), eq(bookVersions.versionType, "draft")))
+        .orderBy(desc(bookVersions.createdAt))
+        .limit(1);
+      res.json(draft ?? null);
+    } catch (error) {
+      console.error("Error fetching draft:", error);
+      res.status(500).json({ message: "Failed to fetch draft" });
+    }
+  });
+
+  app.put("/api/admin/books/:id/draft", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const bookId = req.params.id;
+      const userId = req.user.claims.sub;
+      const book = await storage.getBook(bookId);
+      if (!book) return res.status(404).json({ message: "Book not found" });
+
+      const draftContent = req.body;
+
+      const [existingDraft] = await db.select().from(bookVersions)
+        .where(and(eq(bookVersions.bookId, bookId), eq(bookVersions.versionType, "draft")))
+        .orderBy(desc(bookVersions.createdAt))
+        .limit(1);
+
+      let draft;
+      if (existingDraft) {
+        const mergedContent = { ...(existingDraft.content as object), ...draftContent };
+        [draft] = await db.update(bookVersions)
+          .set({ content: mergedContent, createdBy: userId })
+          .where(eq(bookVersions.id, existingDraft.id))
+          .returning();
+      } else {
+        const publishedSnapshot: Record<string, any> = {};
+        const snapshotFields = ["title", "author", "coverImage", "description", "coreThesis",
+          "categoryId", "readTime", "listenTime", "audioUrl", "featured",
+          "primaryChakra", "secondaryChakra"] as const;
+        for (const f of snapshotFields) {
+          publishedSnapshot[f] = book[f];
+        }
+        const mergedContent = { ...publishedSnapshot, ...draftContent };
+        [draft] = await db.insert(bookVersions)
+          .values({ bookId, versionType: "draft", content: mergedContent, createdBy: userId })
+          .returning();
+      }
+
+      await db.update(books)
+        .set({
+          currentDraftVersionId: draft.id,
+          status: book.status === "published" || book.status === "published_with_changes"
+            ? "published_with_changes" : book.status,
+          updatedAt: new Date(),
+        })
+        .where(eq(books.id, bookId));
+
+      if (book.status !== "draft") {
+        res.json(draft);
+      } else {
+        await storage.updateBook(bookId, draftContent);
+        res.json(draft);
+      }
+    } catch (error) {
+      console.error("Error saving draft:", error);
+      res.status(500).json({ message: "Failed to save draft" });
+    }
+  });
+
+  app.post("/api/admin/books/:id/publish-draft", isAuthenticated, isAdmin, requireRole("editor"), async (req: any, res) => {
+    try {
+      const bookId = req.params.id;
+      const userId = req.user.claims.sub;
+      const book = await storage.getBook(bookId);
+      if (!book) return res.status(404).json({ message: "Book not found" });
+
+      const [draft] = await db.select().from(bookVersions)
+        .where(and(eq(bookVersions.bookId, bookId), eq(bookVersions.versionType, "draft")))
+        .orderBy(desc(bookVersions.createdAt))
+        .limit(1);
+
+      if (!draft) return res.status(400).json({ message: "No draft to publish" });
+
+      const draftContent = draft.content as Record<string, any>;
+
+      const updateData: Record<string, any> = {};
+      const allowedFields = ["title", "author", "coverImage", "description", "coreThesis",
+        "categoryId", "readTime", "listenTime", "audioUrl", "featured",
+        "primaryChakra", "secondaryChakra"];
+      for (const field of allowedFields) {
+        if (field in draftContent) {
+          updateData[field] = draftContent[field];
+        }
+      }
+
+      await storage.updateBook(bookId, { ...updateData, status: "published" });
+
+      await db.update(bookVersions)
+        .set({ versionType: "published", publishedAt: new Date(), createdBy: userId })
+        .where(eq(bookVersions.id, draft.id));
+
+      await db.update(books)
+        .set({
+          currentPublishedVersionId: draft.id,
+          currentDraftVersionId: null,
+        })
+        .where(eq(books.id, bookId));
+
+      const updatedBook = await storage.getBook(bookId);
+      res.json(updatedBook);
+    } catch (error) {
+      console.error("Error publishing draft:", error);
+      res.status(500).json({ message: "Failed to publish draft" });
+    }
+  });
+
+  app.post("/api/admin/books/:id/discard-draft", isAuthenticated, isAdmin, requireRole("editor"), async (req: any, res) => {
+    try {
+      const bookId = req.params.id;
+      const book = await storage.getBook(bookId);
+      if (!book) return res.status(404).json({ message: "Book not found" });
+
+      await db.delete(bookVersions)
+        .where(and(eq(bookVersions.bookId, bookId), eq(bookVersions.versionType, "draft")));
+
+      const revertStatus = book.status === "published_with_changes" ? "published" : book.status;
+      await db.update(books)
+        .set({ currentDraftVersionId: null, status: revertStatus, updatedAt: new Date() })
+        .where(eq(books.id, bookId));
+
+      const updatedBook = await storage.getBook(bookId);
+      res.json(updatedBook);
+    } catch (error) {
+      console.error("Error discarding draft:", error);
+      res.status(500).json({ message: "Failed to discard draft" });
+    }
+  });
+
+  app.get("/api/admin/books/:id/diff", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const bookId = req.params.id;
+      const book = await storage.getBook(bookId);
+      if (!book) return res.status(404).json({ message: "Book not found" });
+
+      const [draft] = await db.select().from(bookVersions)
+        .where(and(eq(bookVersions.bookId, bookId), eq(bookVersions.versionType, "draft")))
+        .orderBy(desc(bookVersions.createdAt))
+        .limit(1);
+
+      if (!draft) return res.json({ hasDraft: false, changes: [] });
+
+      const draftContent = draft.content as Record<string, any>;
+      const changes: Array<{ field: string; published: any; draft: any }> = [];
+
+      const compareFields = ["title", "author", "coverImage", "description", "coreThesis",
+        "categoryId", "readTime", "listenTime", "audioUrl", "featured",
+        "primaryChakra", "secondaryChakra"];
+
+      for (const field of compareFields) {
+        const pubVal = book[field as keyof typeof book];
+        const draftVal = draftContent[field];
+        if (draftVal !== undefined && JSON.stringify(pubVal) !== JSON.stringify(draftVal)) {
+          changes.push({ field, published: pubVal, draft: draftVal });
+        }
+      }
+
+      res.json({ hasDraft: true, draftId: draft.id, changes });
+    } catch (error) {
+      console.error("Error fetching diff:", error);
+      res.status(500).json({ message: "Failed to fetch diff" });
+    }
+  });
+
+  app.get("/api/admin/books/:id/versions", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const versions = await db.select().from(bookVersions)
+        .where(eq(bookVersions.bookId, req.params.id))
+        .orderBy(desc(bookVersions.createdAt));
+      res.json(versions);
+    } catch (error) {
+      console.error("Error fetching versions:", error);
+      res.status(500).json({ message: "Failed to fetch versions" });
     }
   });
 

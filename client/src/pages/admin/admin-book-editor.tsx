@@ -1,11 +1,11 @@
 import { SEOHead } from "@/components/SEOHead";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import { useRoute, Link } from "wouter";
 import type {
   Book, ChapterSummary, MentalModel, Principle, Story,
-  CommonMistake, Infographic, Exercise, ActionItem,
+  CommonMistake, Infographic, Exercise, ActionItem, BookVersion,
 } from "@shared/schema";
 import { MindTree } from "./mind-tree";
 import { MobilePreview } from "./mobile-preview";
@@ -21,7 +21,7 @@ import { ActionItemEditor } from "./editors/action-item-editor";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Save, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Save, Loader2, CheckCircle2, AlertCircle, GitBranch } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function AdminBookEditor() {
@@ -93,14 +93,38 @@ export default function AdminBookEditor() {
     enabled: !!bookId,
   });
 
+  const { data: draftVersion } = useQuery<BookVersion | null>({
+    queryKey: ["/api/admin/books", bookId, "draft"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: !!bookId,
+  });
+
+  const isPublishedBook = book?.status === "published" || book?.status === "published_with_changes";
+  const hasDraft = book?.status === "published_with_changes" && !!draftVersion;
+
+  const editableBook = useMemo(() => {
+    if (!book) return null;
+    if (hasDraft && draftVersion?.content) {
+      const dc = draftVersion.content as Record<string, any>;
+      return { ...book, ...dc } as Book;
+    }
+    return book;
+  }, [book, hasDraft, draftVersion]);
+
   const updateBookMutation = useMutation({
     mutationFn: async (data: any) => {
+      if (isPublishedBook) {
+        const res = await apiRequest("PUT", `/api/admin/books/${bookId}/draft`, data);
+        return res.json();
+      }
       const res = await apiRequest("PUT", `/api/admin/books/${bookId}`, data);
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/books", bookId] });
       queryClient.invalidateQueries({ queryKey: ["/api/books"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/books", bookId, "draft"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/books", bookId, "diff"] });
     },
     onError: () => toast({ title: "Error", description: "Failed to save book", variant: "destructive" }),
   });
@@ -117,7 +141,7 @@ export default function AdminBookEditor() {
         setSaveStatus("error");
       }
     }, 1500);
-  }, [bookId]);
+  }, [bookId, isPublishedBook]);
 
   const handleSectionClick = (section: string) => {
     setActiveSection(section);
@@ -205,11 +229,26 @@ export default function AdminBookEditor() {
               Error
             </Badge>
           )}
-          <Badge variant={book.status === "published" ? "default" : "secondary"} className="text-[10px]">
-            {book.status === "published" ? "Published" : "Draft"}
-          </Badge>
+          {book.status === "published_with_changes" ? (
+            <Badge className="text-[10px] bg-primary/20 text-primary border-primary/30">
+              <GitBranch className="w-3 h-3 mr-1" />Draft Changes
+            </Badge>
+          ) : (
+            <Badge variant={book.status === "published" ? "default" : "secondary"} className="text-[10px]">
+              {book.status === "published" ? "Published" : "Draft"}
+            </Badge>
+          )}
         </div>
       </header>
+
+      {book.status === "published_with_changes" && (
+        <div className="bg-primary/10 border-b border-primary/20 px-4 py-2.5 flex items-center gap-2" data-testid="banner-editing-published">
+          <AlertCircle className="w-4 h-4 text-primary flex-shrink-0" />
+          <p className="text-xs text-primary">
+            You have unpublished changes. Customers still see the previous version.
+          </p>
+        </div>
+      )}
 
       <div className="flex flex-1 overflow-hidden">
         <div className="w-[280px] flex-shrink-0 overflow-y-auto">
@@ -217,7 +256,7 @@ export default function AdminBookEditor() {
             counts={contentCounts}
             activeSection={activeSection}
             onSectionClick={handleSectionClick}
-            bookTitle={book.title}
+            bookTitle={editableBook?.title || book.title}
           />
           <div className="p-3 border-t">
             <PublishPanel book={book} contentCounts={contentCounts} />
@@ -226,17 +265,17 @@ export default function AdminBookEditor() {
 
         <div ref={centerRef} className="flex-1 overflow-y-auto p-6 space-y-10" data-testid="block-builder">
           <BookSetupEditor
-            title={book.title}
-            author={book.author}
-            description={book.description || ""}
-            coreThesis={book.coreThesis || ""}
-            coverImage={book.coverImage || ""}
-            audioUrl={book.audioUrl || ""}
-            readTime={book.readTime}
-            listenTime={book.listenTime}
-            primaryChakra={book.primaryChakra || ""}
-            secondaryChakra={book.secondaryChakra || ""}
-            categoryId={book.categoryId || ""}
+            title={editableBook?.title || book.title}
+            author={editableBook?.author || book.author}
+            description={editableBook?.description || book.description || ""}
+            coreThesis={editableBook?.coreThesis || book.coreThesis || ""}
+            coverImage={editableBook?.coverImage || book.coverImage || ""}
+            audioUrl={editableBook?.audioUrl || book.audioUrl || ""}
+            readTime={editableBook?.readTime ?? book.readTime}
+            listenTime={editableBook?.listenTime ?? book.listenTime}
+            primaryChakra={editableBook?.primaryChakra || book.primaryChakra || ""}
+            secondaryChakra={editableBook?.secondaryChakra || book.secondaryChakra || ""}
+            categoryId={editableBook?.categoryId || book.categoryId || ""}
             onChange={handleBookFieldChange}
           />
 
@@ -251,9 +290,9 @@ export default function AdminBookEditor() {
 
         <div className="w-[375px] flex-shrink-0 overflow-hidden">
           <MobilePreview
-            bookTitle={book.title}
-            bookAuthor={book.author}
-            coreThesis={book.coreThesis || ""}
+            bookTitle={editableBook?.title || book.title}
+            bookAuthor={editableBook?.author || book.author}
+            coreThesis={editableBook?.coreThesis || book.coreThesis || ""}
             activeSection={activeSection}
             sectionData={getPreviewData()}
           />
