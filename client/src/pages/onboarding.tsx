@@ -49,7 +49,7 @@ export default function Onboarding() {
     <div className="min-h-screen bg-background flex flex-col">
       <div className="px-6 pt-8 pb-4">
         <div className="flex items-center mb-6 mix-blend-screen">
-          <img src={mindprismLogo} alt="MindPrism" className="h-10 w-auto object-contain" />
+          <img src={mindprismLogo} alt="MindPrism" className="h-14 object-contain" style={{ aspectRatio: '1.618' }} />
         </div>
 
         <div className="w-full bg-muted rounded-full h-1.5 mb-8">

@@ -10,7 +10,7 @@ export default function AdminAccessDenied() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-4 mix-blend-screen">
-            <img src={mindprismLogo} alt="MindPrism" className="h-24 w-auto object-contain opacity-60" />
+            <img src={mindprismLogo} alt="MindPrism" className="h-32 object-contain opacity-60" style={{ aspectRatio: '1.618' }} />
           </div>
           <h1 className="font-serif text-2xl font-bold text-white mb-1" data-testid="text-access-denied">
             Access Denied

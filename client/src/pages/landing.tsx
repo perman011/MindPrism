@@ -59,7 +59,7 @@ export default function LandingPage() {
 
       <nav className="relative z-10 px-6 py-5 flex items-center justify-between">
         <div className="flex items-center mix-blend-screen" data-testid="text-logo">
-          <img src={mindprismLogo} alt="MindPrism" className="h-12 w-auto object-contain" />
+          <img src={mindprismLogo} alt="MindPrism" className="h-16 object-contain" style={{ aspectRatio: '1.618' }} />
         </div>
         <a href="/api/login">
           <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10" data-testid="button-login">
