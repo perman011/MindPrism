@@ -1,3 +1,4 @@
+import { SEOHead } from "@/components/SEOHead";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
@@ -55,6 +56,11 @@ export default function Vault() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Growth Vault"
+        description="Your personal growth vault. Track streaks, journal entries, saved highlights, and monitor your learning progress."
+        noIndex
+      />
       <div className="px-5 pt-8 pb-6">
         <div className="flex items-center gap-4 mb-8">
           <Avatar className="h-16 w-16">

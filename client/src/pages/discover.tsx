@@ -1,3 +1,4 @@
+import { SEOHead } from "@/components/SEOHead";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
 import type { Book, Category } from "@shared/schema";
@@ -51,6 +52,11 @@ export default function Discover() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Discover"
+        description="Browse psychology and self-help book summaries. Find insights on habits, mindset, relationships, and personal growth."
+        noIndex
+      />
       <div className="px-5 pt-6 pb-4">
         <h1 className="font-serif text-2xl font-bold mb-1" data-testid="text-discover-title">Discover</h1>
         <p className="text-sm text-muted-foreground mb-5">Find your next great read</p>

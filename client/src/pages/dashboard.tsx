@@ -1,3 +1,4 @@
+import { SEOHead } from "@/components/SEOHead";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
@@ -178,6 +179,11 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Dashboard"
+        description="Your personalized psychology learning dashboard. Track your streaks, explore daily sparks, and continue your growth journey."
+        noIndex
+      />
       <div className="px-5 pt-8 pb-5 flex items-center justify-between gap-3">
         <div className="flex-1">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{greeting()}</p>

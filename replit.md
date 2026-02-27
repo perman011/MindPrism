@@ -25,6 +25,12 @@ Security is paramount, with AES-256-GCM encryption for journal entries, RLS poli
 - **Metrics Endpoint** (`server/routes/metrics.ts`): Receives Web Vitals data; rate-limited to 30/min; logs metrics server-side.
 - Applied in `server/index.ts` before body parsing and route registration.
 
+### SEO (`client/src/components/SEOHead.tsx`)
+- Reusable `<SEOHead>` component using `react-helmet-async` for dynamic per-page `<title>`, `<meta description>`, Open Graph, and Twitter Card tags.
+- `HelmetProvider` wraps the app in `App.tsx`.
+- All consumer pages (landing, dashboard, discover, vault, audio, book-detail, onboarding, not-found) and admin pages have `SEOHead`.
+- Only the landing page is indexable; all authenticated and admin pages use `noIndex`.
+
 ## External Dependencies
 - **Authentication:** Replit Auth (OpenID Connect)
 - **Database:** PostgreSQL

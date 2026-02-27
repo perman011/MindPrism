@@ -1,3 +1,4 @@
+import { SEOHead } from "@/components/SEOHead";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
 import type { Book } from "@shared/schema";
@@ -17,6 +18,11 @@ export default function AudioPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Audio Summaries"
+        description="Listen to psychology book summaries on the go. Bite-sized audio insights for personal growth."
+        noIndex
+      />
       <div className="px-5 pt-6 pb-3">
         <h1 className="font-serif text-2xl font-bold mb-1" data-testid="text-audio-title">Audio Summaries</h1>
         <p className="text-sm text-muted-foreground mb-6">Listen and learn on the go</p>

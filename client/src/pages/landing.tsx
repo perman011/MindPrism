@@ -1,3 +1,4 @@
+import { SEOHead } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import mindprismLogo from "@assets/77531E8D-B1EB-4D23-A577-C8EC54A4B63C_1772158344341.png";
@@ -111,6 +112,10 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col relative overflow-hidden">
+      <SEOHead
+        title="Welcome"
+        description="Transform dense psychology books into bite-sized principles, interactive exercises, stories, and audio summaries. Start your personal growth journey today."
+      />
       <div className="absolute inset-0 z-0">
         <img src={heroBg} alt="" className="w-full h-full object-cover opacity-10" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/80 to-black" />

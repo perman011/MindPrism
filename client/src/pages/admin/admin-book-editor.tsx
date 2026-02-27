@@ -1,3 +1,4 @@
+import { SEOHead } from "@/components/SEOHead";
 import { useState, useRef, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
@@ -174,6 +175,7 @@ export default function AdminBookEditor() {
 
   return (
     <div className="h-screen flex flex-col bg-black" data-testid="admin-book-editor">
+      <SEOHead title={`Edit - ${book.title}`} noIndex />
       <header className="h-14 bg-black border-b border-border flex items-center px-4 gap-3 flex-shrink-0">
         <Link href="/admin">
           <Button variant="ghost" size="icon" className="h-8 w-8" data-testid="button-back-admin">

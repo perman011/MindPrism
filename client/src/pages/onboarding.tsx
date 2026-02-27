@@ -1,3 +1,4 @@
+import { SEOHead } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Check, Sparkles } from "lucide-react";
 import { useState } from "react";
@@ -47,6 +48,7 @@ export default function Onboarding() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEOHead title="Personalize Your Experience" description="Choose your interests to build a personalized psychology learning library." noIndex />
       <div className="px-6 pt-8 pb-4">
         <div className="flex items-center mb-6 mix-blend-screen">
           <img src={mindprismLogo} alt="MindPrism" className="h-14 object-contain" style={{ aspectRatio: '1.618' }} />

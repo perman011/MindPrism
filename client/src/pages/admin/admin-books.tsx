@@ -1,3 +1,4 @@
+import { SEOHead } from "@/components/SEOHead";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import type { Book } from "@shared/schema";
@@ -101,6 +102,7 @@ export default function AdminBooks() {
 
   return (
     <div className="min-h-screen bg-black p-8" data-testid="admin-books-page">
+      <SEOHead title="Admin - Books" noIndex />
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>

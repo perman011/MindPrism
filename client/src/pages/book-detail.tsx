@@ -1,3 +1,4 @@
+import { SEOHead } from "@/components/SEOHead";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
@@ -153,6 +154,13 @@ export default function BookDetail() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={book?.title ? `${book.title} by ${book.author}` : "Book Detail"}
+        description={book?.description || "Explore interactive psychology book breakdowns with principles, stories, exercises, and audio summaries."}
+        ogType="article"
+        ogImage={book?.coverImage || undefined}
+        noIndex
+      />
       <div className="relative">
         <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2 z-20">
           <div className="flex items-center gap-2">

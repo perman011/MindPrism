@@ -1,3 +1,4 @@
+import { SEOHead } from "@/components/SEOHead";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import type { User } from "@shared/models/auth";
@@ -92,6 +93,7 @@ export default function AdminUsers() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black p-8">
+        <SEOHead title="Admin - Users" noIndex />
         <div className="max-w-5xl mx-auto">
           <Skeleton className="h-10 w-64 mb-8" />
           {Array.from({ length: 5 }).map((_, i) => (
