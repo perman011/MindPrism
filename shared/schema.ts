@@ -383,6 +383,25 @@ export const insertNotificationPreferencesSchema = createInsertSchema(notificati
 export type InsertNotificationPreferences = z.infer<typeof insertNotificationPreferencesSchema>;
 export type NotificationPreference = typeof notificationPreferences.$inferSelect;
 
+export const userActivityLog = pgTable("user_activity_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  eventType: text("event_type").notNull(),
+  eventData: jsonb("event_data").default({}),
+  bookId: varchar("book_id").references(() => books.id),
+  sessionDuration: integer("session_duration"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const userActivityLogRelations = relations(userActivityLog, ({ one }) => ({
+  user: one(users, { fields: [userActivityLog.userId], references: [users.id] }),
+  book: one(books, { fields: [userActivityLog.bookId], references: [books.id] }),
+}));
+
+export const insertUserActivityLogSchema = createInsertSchema(userActivityLog).omit({ id: true, createdAt: true });
+export type InsertUserActivityLog = z.infer<typeof insertUserActivityLogSchema>;
+export type UserActivityLog = typeof userActivityLog.$inferSelect;
+
 export const CHAKRA_MAP = {
   root: { name: "Root", sanskrit: "Muladhara", color: "#EF4444", theme: "Foundation & Routine" },
   sacral: { name: "Sacral", sanskrit: "Svadhisthana", color: "#F97316", theme: "Creativity & Emotion" },

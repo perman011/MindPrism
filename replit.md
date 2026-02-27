@@ -48,6 +48,12 @@ Security is paramount, with AES-256-GCM encryption for journal entries, RLS poli
 - **Backup Routes** (`server/routes/backup.ts`): GET/POST/DELETE at `/api/admin/backups` (admin/super_admin only).
 - Graceful shutdown on SIGTERM/SIGINT stops scheduler.
 
+### User Activity & Personal Stats (`server/routes.ts`, `client/src/components/personal-stats.tsx`)
+- **Activity Log**: `user_activity_log` table tracks timestamped events: book_opened, chapter_completed, section_viewed, audio_played, exercise_completed, journal_entry_created, book_completed, session_start, session_end.
+- **Log Endpoint**: `POST /api/user/activity` (authenticated) accepts eventType, eventData (JSON), bookId, sessionDuration.
+- **Stats Endpoint**: `GET /api/user/stats` (authenticated) returns aggregated stats: booksStarted, booksCompleted, principlesMastered, exercisesDone, categoriesExplored, totalTimeInvested, avgTimePerBook, streaks, journalEntries, weeklyActivity (7-day bar chart data).
+- **Vault Integration**: Stats tab added as first tab in Vault page (My Vault > Stats). Shows 6 stat cards, weekly activity Recharts bar chart, and 4 highlight cards.
+
 ### Analytics (`server/routes/analytics.ts`, `client/src/lib/analytics.ts`)
 - **Event Tracking**: `POST /api/analytics/events` ingests events (authenticated users). Schema: eventType, eventData (JSON), pageUrl, sessionId.
 - **Frontend Tracker** (`client/src/lib/analytics.ts`): `trackEvent()`, `trackPageView()`, `trackBookOpen()`, `trackAudioPlay()`, etc. Debounced, sessionId via sessionStorage, `sendBeacon` in production.

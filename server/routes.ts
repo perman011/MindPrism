@@ -6,6 +6,9 @@ import { registerAdminRoutes } from "./admin-routes";
 import { registerStripeRoutes } from "./stripe-routes";
 import { z } from "zod";
 import { encrypt, decrypt } from "./crypto";
+import { db } from "./db";
+import { userActivityLog, userProgress, books, categories, journalEntries } from "@shared/schema";
+import { eq, and, sql as dsql, desc, gte, count } from "drizzle-orm";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -592,6 +595,118 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching books by chakra:", error);
       res.status(500).json({ message: "Failed to fetch books by chakra" });
+    }
+  });
+
+  app.post("/api/user/activity", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const schema = z.object({
+        eventType: z.enum([
+          "book_opened", "chapter_completed", "section_viewed",
+          "audio_played", "exercise_completed", "journal_entry_created",
+          "book_completed", "session_start", "session_end"
+        ]),
+        eventData: z.record(z.any()).optional(),
+        bookId: z.string().optional(),
+        sessionDuration: z.number().optional(),
+      });
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Invalid activity data" });
+
+      const [entry] = await db.insert(userActivityLog).values({
+        userId,
+        eventType: parsed.data.eventType,
+        eventData: parsed.data.eventData ?? {},
+        bookId: parsed.data.bookId ?? null,
+        sessionDuration: parsed.data.sessionDuration ?? null,
+      }).returning();
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error logging activity:", error);
+      res.status(500).json({ message: "Failed to log activity" });
+    }
+  });
+
+  app.get("/api/user/stats", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+
+      const allProgress = await storage.getAllUserProgress(userId);
+      const streak = await storage.getUserStreak(userId);
+      const allBooks = await storage.getBooks();
+      const publishedBooks = allBooks.filter(b => b.status === "published" || b.status === "published_with_changes" || !b.status);
+
+      const booksStarted = allProgress.filter(p => (p.currentCardIndex ?? 0) > 0).length;
+      const booksCompleted = allProgress.filter(p => {
+        const total = p.totalCards ?? 1;
+        return total > 0 && (p.currentCardIndex ?? 0) >= total;
+      }).length;
+
+      const principlesMastered = allProgress.reduce((sum, p) => sum + (p.completedPrinciples?.length ?? 0), 0);
+      const exercisesDone = allProgress.reduce((sum, p) => sum + (p.completedExercises?.length ?? 0), 0);
+
+      const startedBookIds = new Set(allProgress.filter(p => (p.currentCardIndex ?? 0) > 0).map(p => p.bookId));
+      const categoriesExplored = new Set(
+        publishedBooks.filter(b => startedBookIds.has(b.id) && b.categoryId).map(b => b.categoryId)
+      ).size;
+
+      const totalReadTime = publishedBooks
+        .filter(b => startedBookIds.has(b.id))
+        .reduce((sum, b) => sum + (b.readTime ?? 0), 0);
+      const totalListenTime = streak?.totalMinutesListened ?? 0;
+      const totalTimeInvested = totalReadTime + totalListenTime;
+
+      const avgTimePerBook = booksStarted > 0 ? Math.round(totalTimeInvested / booksStarted) : 0;
+
+      const [journalCount] = await db
+        .select({ count: count() })
+        .from(journalEntries)
+        .where(eq(journalEntries.userId, userId));
+
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const weeklyActivity = await db
+        .select({
+          date: dsql<string>`DATE(${userActivityLog.createdAt})`,
+          count: count(),
+        })
+        .from(userActivityLog)
+        .where(and(
+          eq(userActivityLog.userId, userId),
+          gte(userActivityLog.createdAt, sevenDaysAgo)
+        ))
+        .groupBy(dsql`DATE(${userActivityLog.createdAt})`)
+        .orderBy(dsql`DATE(${userActivityLog.createdAt})`);
+
+      const weekDays = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toISOString().split("T")[0];
+        const dayName = d.toLocaleDateString("en-US", { weekday: "short" });
+        const found = weeklyActivity.find(w => w.date === dateStr);
+        weekDays.push({ day: dayName, date: dateStr, activities: found ? Number(found.count) : 0 });
+      }
+
+      res.json({
+        booksStarted,
+        booksCompleted,
+        principlesMastered,
+        exercisesDone,
+        categoriesExplored,
+        totalTimeInvested,
+        avgTimePerBook,
+        currentStreak: streak?.currentStreak ?? 0,
+        longestStreak: streak?.longestStreak ?? 0,
+        totalMinutesListened: totalListenTime,
+        totalExercisesCompleted: streak?.totalExercisesCompleted ?? 0,
+        journalEntries: journalCount?.count ? Number(journalCount.count) : 0,
+        weeklyActivity: weekDays,
+      });
+    } catch (error) {
+      console.error("Error fetching user stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats" });
     }
   });
 

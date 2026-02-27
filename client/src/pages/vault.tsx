@@ -7,15 +7,16 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Flame, Headphones, PenLine, BookOpen, LogOut, Settings, Calendar, Bookmark } from "lucide-react";
+import { Flame, Headphones, PenLine, BookOpen, LogOut, Settings, Calendar, Bookmark, BarChart3 } from "lucide-react";
 import { useState } from "react";
 import { ChakraAvatar } from "@/components/chakra-avatar";
 import { CHAKRA_MAP, type ChakraType } from "@shared/schema";
 import { NotificationSettings } from "@/components/notification-settings";
+import { PersonalStats } from "@/components/personal-stats";
 
 export default function Vault() {
   const { user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState<"journal" | "highlights" | "settings">("journal");
+  const [activeTab, setActiveTab] = useState<"stats" | "journal" | "highlights" | "settings">("stats");
 
   const { data: streak } = useQuery<UserStreak | null>({
     queryKey: ["/api/streak"],
@@ -50,7 +51,8 @@ export default function Vault() {
   ];
 
   const tabs = [
-    { id: "journal" as const, label: "My Journal", icon: PenLine },
+    { id: "stats" as const, label: "Stats", icon: BarChart3 },
+    { id: "journal" as const, label: "Journal", icon: PenLine },
     { id: "highlights" as const, label: "Saved", icon: Bookmark },
     { id: "settings" as const, label: "Settings", icon: Settings },
   ];
@@ -147,6 +149,10 @@ export default function Vault() {
       </div>
 
       <div className="px-5 pb-8">
+        {activeTab === "stats" && (
+          <PersonalStats />
+        )}
+
         {activeTab === "journal" && (
           <div data-testid="journal-list">
             <h2 className="font-serif text-lg font-bold mb-1">Journal Entries</h2>
