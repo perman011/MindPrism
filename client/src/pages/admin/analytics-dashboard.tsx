@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Users, BookOpen, Activity, BarChart3, TrendingUp, Eye } from "lucide-react";
 import { Link } from "wouter";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 interface AnalyticsOverview {
   totalUsers: number;
@@ -47,20 +48,23 @@ function StatCard({ label, value, icon: Icon, color }: { label: string; value: s
   );
 }
 
-function MiniBarChart({ data, maxBars = 30 }: { data: { date: string; count: number }[]; maxBars?: number }) {
-  const sliced = data.slice(-maxBars);
-  const maxVal = Math.max(...sliced.map(d => d.count), 1);
+function TrendLineChart({ data, color = "hsl(43, 75%, 49%)", testId }: { data: { date: string; count: number }[]; color?: string; testId?: string }) {
+  const formatted = data.slice(-30).map(d => ({
+    ...d,
+    label: d.date.slice(5),
+  }));
 
   return (
-    <div className="flex items-end gap-[2px] h-24" data-testid="chart-daily-active">
-      {sliced.map((d, i) => (
-        <div
-          key={i}
-          className="flex-1 bg-primary/80 rounded-t-sm min-w-[3px] transition-all hover:bg-primary"
-          style={{ height: `${(d.count / maxVal) * 100}%` }}
-          title={`${d.date}: ${d.count} users`}
-        />
-      ))}
+    <div data-testid={testId} className="h-48">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={formatted}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+          <XAxis dataKey="label" tick={{ fill: "#71717a", fontSize: 11 }} axisLine={{ stroke: "#3f3f46" }} tickLine={false} />
+          <YAxis tick={{ fill: "#71717a", fontSize: 11 }} axisLine={{ stroke: "#3f3f46" }} tickLine={false} allowDecimals={false} width={30} />
+          <Tooltip contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, color: "#fff", fontSize: 12 }} labelStyle={{ color: "#a1a1aa" }} />
+          <Line type="monotone" dataKey="count" stroke={color} strokeWidth={2} dot={{ r: 3, fill: color }} activeDot={{ r: 5, fill: color }} />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   );
 }
@@ -117,7 +121,7 @@ export default function AnalyticsDashboard() {
                   Daily Active Users (30 days)
                 </h3>
                 {overview.dailyActiveUsers.length > 0 ? (
-                  <MiniBarChart data={overview.dailyActiveUsers} />
+                  <TrendLineChart data={overview.dailyActiveUsers} testId="chart-daily-active" />
                 ) : (
                   <p className="text-xs text-zinc-500 text-center py-8">No data yet</p>
                 )}
@@ -129,7 +133,7 @@ export default function AnalyticsDashboard() {
                   Signup Trend (30 days)
                 </h3>
                 {overview.signupTrend.length > 0 ? (
-                  <MiniBarChart data={overview.signupTrend} />
+                  <TrendLineChart data={overview.signupTrend} color="#3b82f6" testId="chart-signup-trend" />
                 ) : (
                   <p className="text-xs text-zinc-500 text-center py-8">No data yet</p>
                 )}
