@@ -207,7 +207,7 @@ export default function BookDetail() {
           </button>
         </div>
 
-        <div className="pt-20 pb-6 flex flex-col items-center bg-gradient-to-b from-primary/5 to-black">
+        <div className="pt-20 pb-6 flex flex-col items-center bg-black">
           <div className="w-40 h-56 rounded-md overflow-hidden shadow-lg shadow-black/20 mb-6">
             {book.coverImage ? (
               <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
