@@ -94,7 +94,7 @@ export default function Vault() {
           })}
         </div>
 
-        <Card className="p-5 mb-8 bg-gradient-to-b from-primary/5 to-background border-primary/10">
+        <Card className="p-5 mb-8 bg-black border-primary/10">
           <h3 className="text-[11px] font-semibold uppercase tracking-widest text-primary mb-4 text-center">My Personal Aura</h3>
           <div className="flex justify-center mb-3">
             <ChakraAvatar
