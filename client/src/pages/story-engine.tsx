@@ -16,6 +16,7 @@ import {
 import { useParams, useLocation, useSearch } from "wouter";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { trackEvent } from "@/lib/analytics";
 
 type SectionType = "chapter-summaries" | "mental-models" | "principles" | "common-mistakes" | "infographics" | "exercises" | "action-items";
 
@@ -726,6 +727,18 @@ export default function StoryEngine() {
   useEffect(() => {
     setCurrentIndex(0);
   }, [section]);
+
+  useEffect(() => {
+    if (book && section) {
+      trackEvent("chapter_start", { bookId: id, bookTitle: book.title, section });
+    }
+  }, [book, section]);
+
+  useEffect(() => {
+    if (book && totalCards > 0 && currentIndex === totalCards - 1) {
+      trackEvent("chapter_complete", { bookId: id, bookTitle: book.title, section });
+    }
+  }, [currentIndex, totalCards, book, section]);
 
   const card = cards?.[currentIndex];
   const shouldSkipCard = section === "principles" && card?.type === "story" && currentIndex > 0 && cards?.[currentIndex - 1]?.type === "principle";
