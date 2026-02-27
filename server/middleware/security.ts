@@ -17,30 +17,46 @@ function isAllowedOrigin(origin: string): boolean {
 export function applySecurityMiddleware(app: Express) {
   const isDev = process.env.NODE_ENV !== "production";
 
-  app.use(
-    helmet({
-      contentSecurityPolicy: isDev ? false : {
-        directives: {
-          defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "cdnjs.cloudflare.com", "js.stripe.com"],
-          styleSrc: ["'self'", "'unsafe-inline'", "fonts.googleapis.com"],
-          imgSrc: ["'self'", "data:", "blob:", "https:"],
-          connectSrc: ["'self'", "https://api.stripe.com", "https://*.ingest.sentry.io"],
-          fontSrc: ["'self'", "data:", "fonts.gstatic.com"],
-          frameSrc: ["'self'", "js.stripe.com"],
-          objectSrc: ["'none'"],
-          frameAncestors: ["'none'"],
+  if (isDev) {
+    app.use(
+      helmet({
+        contentSecurityPolicy: false,
+        hsts: false,
+        frameguard: false,
+        crossOriginOpenerPolicy: false,
+        crossOriginResourcePolicy: false,
+        crossOriginEmbedderPolicy: false,
+        originAgentCluster: false,
+        noSniff: true,
+        referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+      })
+    );
+  } else {
+    app.use(
+      helmet({
+        contentSecurityPolicy: {
+          directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "cdnjs.cloudflare.com", "js.stripe.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "fonts.googleapis.com"],
+            imgSrc: ["'self'", "data:", "blob:", "https:"],
+            connectSrc: ["'self'", "https://api.stripe.com", "https://*.ingest.sentry.io"],
+            fontSrc: ["'self'", "data:", "fonts.gstatic.com"],
+            frameSrc: ["'self'", "js.stripe.com"],
+            objectSrc: ["'none'"],
+            frameAncestors: ["'none'"],
+          },
         },
-      },
-      hsts: isDev ? false : {
-        maxAge: 31536000,
-        includeSubDomains: true,
-      },
-      frameguard: isDev ? false : { action: "deny" },
-      noSniff: true,
-      referrerPolicy: { policy: "strict-origin-when-cross-origin" },
-    })
-  );
+        hsts: {
+          maxAge: 31536000,
+          includeSubDomains: true,
+        },
+        frameguard: { action: "deny" },
+        noSniff: true,
+        referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+      })
+    );
+  }
 
   app.use("/api", (req: Request, res: Response, next: NextFunction) => {
     const origin = req.headers.origin;
