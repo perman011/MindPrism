@@ -74,6 +74,7 @@ export function registerAdminRoutes(app: Express) {
       const body = { ...req.body };
       if (body.primaryChakra === "") body.primaryChakra = null;
       if (body.secondaryChakra === "") body.secondaryChakra = null;
+      if (body.categoryId === "") body.categoryId = null;
       const partial = insertBookSchema.partial().safeParse(body);
       if (!partial.success) return res.status(400).json({ message: "Invalid data", errors: partial.error.errors });
       const book = await storage.updateBook(req.params.id, partial.data);

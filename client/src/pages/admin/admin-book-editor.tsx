@@ -234,6 +234,7 @@ export default function AdminBookEditor() {
             listenTime={book.listenTime}
             primaryChakra={book.primaryChakra || ""}
             secondaryChakra={book.secondaryChakra || ""}
+            categoryId={book.categoryId || ""}
             onChange={handleBookFieldChange}
           />
 

@@ -2,7 +2,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CHAKRA_MAP, type ChakraType } from "@shared/schema";
+import { CHAKRA_MAP, type ChakraType, type Category } from "@shared/schema";
+import { useQuery } from "@tanstack/react-query";
+import { getQueryFn } from "@/lib/queryClient";
 
 const CHAKRA_OPTIONS: { value: ChakraType; label: string; color: string }[] = [
   { value: "crown", label: "Crown — Spiritual Connection", color: CHAKRA_MAP.crown.color },
@@ -25,13 +27,18 @@ interface BookSetupEditorProps {
   listenTime: number;
   primaryChakra: string;
   secondaryChakra: string;
+  categoryId: string;
   onChange: (field: string, value: string | number) => void;
 }
 
 export function BookSetupEditor({
   title, author, description, coreThesis, coverImage, audioUrl,
-  readTime, listenTime, primaryChakra, secondaryChakra, onChange,
+  readTime, listenTime, primaryChakra, secondaryChakra, categoryId, onChange,
 }: BookSetupEditorProps) {
+  const { data: categories } = useQuery<Category[]>({
+    queryKey: ["/api/categories"],
+    queryFn: getQueryFn({ on401: "throw" }),
+  });
   const thesisLength = coreThesis?.length || 0;
   const thesisMax = 200;
 
@@ -72,6 +79,26 @@ export function BookSetupEditor({
             rows={2}
             data-testid="input-book-description"
           />
+        </div>
+
+        <div className="mt-4">
+          <Label className="text-xs font-semibold">Category</Label>
+          <Select
+            value={categoryId || "none"}
+            onValueChange={(val) => onChange("categoryId", val === "none" ? "" : val)}
+          >
+            <SelectTrigger data-testid="select-category">
+              <SelectValue placeholder="Select category..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">No Category</SelectItem>
+              {categories?.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id}>
+                  {cat.icon} {cat.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mt-4">
