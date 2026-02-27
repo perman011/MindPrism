@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { CHAKRA_MAP, type ChakraType, type ChakraProgress } from "@shared/schema";
 import { motion, AnimatePresence } from "framer-motion";
-import chakraFigureImg from "@assets/chakra-meditating-figure.png";
+import chakraFigureImg from "@assets/19BCBEB7-13F0-4DEA-8D60-2FD625CD7BF2_1772158928986.png";
 
 interface ChakraAvatarProps {
   activeChakra: ChakraType | null;
