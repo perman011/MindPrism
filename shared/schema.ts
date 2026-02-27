@@ -341,6 +341,28 @@ export type ChakraProgress = typeof chakraProgress.$inferSelect;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
 export type Comment = typeof comments.$inferSelect;
 
+export const notificationPreferences = pgTable("notification_preferences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().unique().references(() => users.id),
+  dailyReminder: boolean("daily_reminder").default(true),
+  streakAlerts: boolean("streak_alerts").default(true),
+  newContent: boolean("new_content").default(true),
+  weeklySummary: boolean("weekly_summary").default(true),
+  reminderTime: text("reminder_time").default("09:00"),
+  pushSubscription: jsonb("push_subscription"),
+  permissionStatus: text("permission_status").default("default"),
+  lastPromptDismissed: timestamp("last_prompt_dismissed"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const notificationPreferencesRelations = relations(notificationPreferences, ({ one }) => ({
+  user: one(users, { fields: [notificationPreferences.userId], references: [users.id] }),
+}));
+
+export const insertNotificationPreferencesSchema = createInsertSchema(notificationPreferences).omit({ id: true, updatedAt: true });
+export type InsertNotificationPreferences = z.infer<typeof insertNotificationPreferencesSchema>;
+export type NotificationPreference = typeof notificationPreferences.$inferSelect;
+
 export const CHAKRA_MAP = {
   root: { name: "Root", sanskrit: "Muladhara", color: "#EF4444", theme: "Foundation & Routine" },
   sacral: { name: "Sacral", sanskrit: "Svadhisthana", color: "#F97316", theme: "Creativity & Emotion" },

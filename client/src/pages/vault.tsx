@@ -11,6 +11,7 @@ import { Flame, Headphones, PenLine, BookOpen, LogOut, Settings, Calendar, Bookm
 import { useState } from "react";
 import { ChakraAvatar } from "@/components/chakra-avatar";
 import { CHAKRA_MAP, type ChakraType } from "@shared/schema";
+import { NotificationSettings } from "@/components/notification-settings";
 
 export default function Vault() {
   const { user, logout } = useAuth();
@@ -208,6 +209,7 @@ export default function Vault() {
             <h2 className="font-serif text-lg font-bold mb-1">Settings</h2>
             <p className="text-[11px] text-muted-foreground mb-4">Manage your account and preferences</p>
             <div className="space-y-4">
+              <NotificationSettings />
               <Card className="p-5">
                 <h3 className="font-semibold text-sm mb-4">Account</h3>
                 <div className="space-y-4 text-sm">

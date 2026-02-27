@@ -44,6 +44,16 @@ Security is paramount, with AES-256-GCM encryption for journal entries, RLS poli
 - **Admin Dashboard** (`/admin/analytics`): Overview cards, recharts line/bar charts (DAU, signup trend, popular books), event breakdown badges, recent events feed.
 - **Admin API**: `GET /api/analytics/overview` (stats + charts), `GET /api/analytics/admin-events` (paginated events). Admin role required.
 
+### Push Notifications (`server/routes/notifications.ts`, `server/services/notificationScheduler.ts`)
+- **Service Worker** (`client/public/sw.js`): Handles push events, shows rich notifications, click-to-navigate.
+- **Notification Routes**: GET/PUT `/api/notifications/preferences`, POST `/api/notifications/subscribe`, POST `/api/notifications/test`, POST `/api/notifications/dismiss-prompt`, GET `/api/notifications/vapid-key`.
+- **Permission Prompt** (`client/src/components/notification-prompt.tsx`): Modal with MindPrism logo, shown after onboarding, 7-day dismiss cooldown.
+- **User Preferences** (`client/src/components/notification-settings.tsx`): In Vault > Settings — toggles for daily reminder, streak alerts, new content, weekly summary; time picker for reminder time; test notification button.
+- **Scheduler** (`server/services/notificationScheduler.ts`): node-cron jobs for daily reminders (hourly check matching user's configured time), streak risk (8PM UTC), weekly summary (Sun 10AM UTC).
+- **New Book Notifications**: `sendNewBookNotification()` function available for admin book publish flow.
+- **Database**: `notification_preferences` table with user preferences, push subscription (JSONB), permission status, dismiss tracking.
+- **VAPID Keys**: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VITE_VAPID_PUBLIC_KEY` env vars.
+
 ## External Dependencies
 - **Authentication:** Replit Auth (OpenID Connect)
 - **Database:** PostgreSQL

@@ -29,6 +29,7 @@ import AnalyticsDashboard from "@/pages/admin/analytics-dashboard";
 import { getQueryFn } from "@/lib/queryClient";
 import type { UserInterest } from "@shared/schema";
 import { hasMinRole } from "@shared/models/auth";
+import { NotificationPrompt } from "@/components/notification-prompt";
 
 function AuthenticatedApp() {
   const [location] = useLocation();
@@ -71,6 +72,7 @@ function AuthenticatedApp() {
       <MiniPlayer />
       <FullScreenPlayer />
       <BottomNav />
+      <NotificationPrompt />
     </AudioProvider>
   );
 }

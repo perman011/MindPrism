@@ -12,6 +12,8 @@ import sitemapRouter from "./routes/sitemap";
 import backupRouter from "./routes/backup";
 import analyticsRouter from "./routes/analytics";
 import { startBackupScheduler, stopBackupScheduler } from "./services/backupScheduler";
+import notificationsRouter from "./routes/notifications";
+import { startNotificationScheduler, stopNotificationScheduler } from "./services/notificationScheduler";
 
 initErrorTracking();
 
@@ -96,6 +98,7 @@ app.use((req, res, next) => {
 
   app.use("/api/admin/backups", backupRouter);
   app.use("/api/analytics", analyticsRouter);
+  app.use("/api/notifications", notificationsRouter);
 
   await seedDatabase().catch((err) => {
     console.error("Failed to seed database:", err);
@@ -134,6 +137,7 @@ app.use((req, res, next) => {
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || "5000", 10);
   startBackupScheduler();
+  startNotificationScheduler();
 
   httpServer.listen(
     {
@@ -148,6 +152,7 @@ app.use((req, res, next) => {
 
   const shutdown = () => {
     stopBackupScheduler();
+    stopNotificationScheduler();
     httpServer.close();
     process.exit(0);
   };
