@@ -186,9 +186,9 @@ export default function Dashboard() {
           </h1>
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 bg-orange-500/10 px-4 py-2 rounded-full" data-testid="badge-streak">
-            <Flame className="w-4 h-4 text-orange-500" />
-            <span className="text-sm font-bold text-orange-500">{streak?.currentStreak ?? 0}</span>
+          <div className="flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full" data-testid="badge-streak">
+            <Flame className="w-4 h-4 text-primary" />
+            <span className="text-sm font-bold text-primary">{streak?.currentStreak ?? 0}</span>
           </div>
           <Link href="/vault">
             <Avatar className="h-10 w-10 cursor-pointer">
@@ -200,16 +200,16 @@ export default function Dashboard() {
       </div>
 
       <section className="mb-8 px-5" data-testid="section-energy-map">
-        <div className="relative rounded-2xl bg-gradient-to-b from-[#0f0a1e] via-[#1a1035] to-[#0d0820] p-5 pb-3">
+        <div className="relative rounded-2xl bg-gradient-to-b from-[#1a1400] via-[#1f1a08] to-[#0d0a00] p-5 pb-3">
           <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden rounded-2xl">
-            <div className="absolute top-4 left-8 w-1 h-1 rounded-full bg-white animate-pulse" />
-            <div className="absolute top-12 right-12 w-0.5 h-0.5 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "0.5s" }} />
-            <div className="absolute top-20 left-20 w-0.5 h-0.5 rounded-full bg-indigo-300 animate-pulse" style={{ animationDelay: "1s" }} />
-            <div className="absolute bottom-16 right-8 w-1 h-1 rounded-full bg-violet-300 animate-pulse" style={{ animationDelay: "1.5s" }} />
-            <div className="absolute bottom-24 left-16 w-0.5 h-0.5 rounded-full bg-blue-300 animate-pulse" style={{ animationDelay: "0.8s" }} />
+            <div className="absolute top-4 left-8 w-1 h-1 rounded-full bg-amber-200 animate-pulse" />
+            <div className="absolute top-12 right-12 w-0.5 h-0.5 rounded-full bg-amber-300 animate-pulse" style={{ animationDelay: "0.5s" }} />
+            <div className="absolute top-20 left-20 w-0.5 h-0.5 rounded-full bg-yellow-300 animate-pulse" style={{ animationDelay: "1s" }} />
+            <div className="absolute bottom-16 right-8 w-1 h-1 rounded-full bg-amber-400 animate-pulse" style={{ animationDelay: "1.5s" }} />
+            <div className="absolute bottom-24 left-16 w-0.5 h-0.5 rounded-full bg-yellow-200 animate-pulse" style={{ animationDelay: "0.8s" }} />
           </div>
 
-          <p className="text-center text-xs font-medium text-purple-300/80 uppercase tracking-widest mb-2">
+          <p className="text-center text-xs font-medium text-amber-300/80 uppercase tracking-widest mb-2">
             My Energy Map
           </p>
           <h3 className="text-center font-serif text-sm text-white/70 mb-3">

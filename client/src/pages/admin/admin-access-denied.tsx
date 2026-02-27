@@ -2,11 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShieldX, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
-import mindprismLogo from "@assets/IMG_5130_1772146863644.jpeg";
+import mindprismLogo from "@assets/77531E8D-B1EB-4D23-A577-C8EC54A4B63C_1772158344341.png";
 
 export default function AdminAccessDenied() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-black flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-4 mix-blend-screen">
@@ -15,14 +15,14 @@ export default function AdminAccessDenied() {
           <h1 className="font-serif text-2xl font-bold text-white mb-1" data-testid="text-access-denied">
             Access Denied
           </h1>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-muted-foreground">
             You don't have permission to access the admin portal.
           </p>
         </div>
 
-        <Card className="bg-slate-900/80 border-slate-800 backdrop-blur-sm">
+        <Card className="bg-card/80 border-border backdrop-blur-sm">
           <CardContent className="p-6 space-y-4">
-            <p className="text-sm text-slate-400 text-center">
+            <p className="text-sm text-muted-foreground text-center">
               This area is restricted to team members with admin privileges. If you believe this is an error, contact your administrator.
             </p>
 

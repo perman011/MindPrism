@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import mindprismLogo from "@assets/IMG_5130_1772146863644.jpeg";
+import mindprismLogo from "@assets/77531E8D-B1EB-4D23-A577-C8EC54A4B63C_1772158344341.png";
 import { useState, useEffect, useCallback } from "react";
 const heroBg = "/images/hero-bg.png";
 
@@ -9,19 +9,19 @@ const slides = [
     title: "Skip the 500 pages.",
     highlight: "Master the principles.",
     description: "Every dense psychology book distilled into its most powerful ideas — visual, interactive, and unforgettable.",
-    gradient: "from-indigo-900 via-purple-900 to-slate-900",
+    gradient: "from-black via-yellow-950 to-black",
   },
   {
     title: "Visuals, Exercises &",
     highlight: "Audio Summaries.",
     description: "For the busy mind. Learn through interactive cards, reflection exercises, and listen on the go.",
-    gradient: "from-slate-900 via-emerald-900 to-teal-900",
+    gradient: "from-black via-amber-950 to-black",
   },
   {
     title: "Track your growth.",
     highlight: "Build your mind.",
     description: "Personal journal, streak tracking, and a vault of saved insights. Your psychology toolkit, always with you.",
-    gradient: "from-purple-900 via-rose-900 to-slate-900",
+    gradient: "from-black via-yellow-900 to-black",
   },
 ];
 
@@ -51,10 +51,10 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-black text-white flex flex-col relative overflow-hidden">
       <div className="absolute inset-0 z-0">
         <img src={heroBg} alt="" className="w-full h-full object-cover opacity-10" />
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/50 via-slate-950/80 to-slate-950" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/80 to-black" />
       </div>
 
       <nav className="relative z-10 px-6 py-5 flex items-center justify-between">
@@ -85,7 +85,7 @@ export default function LandingPage() {
               >
                 <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4">
                   {slide.title}{" "}
-                  <span className="bg-gradient-to-r from-purple-400 to-amber-400 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent">
                     {slide.highlight}
                   </span>
                 </h1>

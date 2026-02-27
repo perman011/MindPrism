@@ -13,7 +13,7 @@ The content is organized into a hierarchical "Psychological Taxonomy" featuring 
 
 The application features a consumer-facing app with pages for landing, onboarding, a personalized dashboard, book discovery, audio summaries, and a "Growth Vault" for journaling and progress tracking. A comprehensive admin portal (`/admin`) is also included for content creation, editing, and user management, featuring a 3-panel editor with a Mind Tree navigator, Block Builder, and mobile preview.
 
-UI/UX emphasizes a purple/gold color scheme, "Plus Jakarta Sans" and "Playfair Display" fonts, and a mobile-first, card-based design with interactive elements and animations powered by Framer Motion. Key interactive components include a Chakra Energy Map and an Interactive Engine that dynamically renders content based on specific card templates for different content types.
+UI/UX emphasizes a **black & gold** color scheme (primary gold: HSL 43 75% 49%, backgrounds: pure black/very dark gray, accent: darker gold HSL 43 89% 38%). The logo is a golden feather/pen (`@assets/77531E8D-...png`) displayed with `mix-blend-screen` on wrapper divs. Fonts: 'Inter' (sans), 'Source Serif Pro' (serif), 'Nunito' (mono). Mobile-first, card-based design with interactive elements and animations powered by Framer Motion. Key interactive components include a Chakra Energy Map and an Interactive Engine that dynamically renders content based on specific card templates for different content types.
 
 Security is paramount, with AES-256-GCM encryption for journal entries, RLS policies, and a Role-Based Access Control (RBAC) system (super_admin > admin > editor > writer > user) governing access to features and content within both the consumer and admin applications.
 

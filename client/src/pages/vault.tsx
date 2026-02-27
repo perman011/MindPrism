@@ -42,9 +42,9 @@ export default function Vault() {
     : "U";
 
   const stats = [
-    { icon: Flame, label: "Day Streak", value: streak?.currentStreak ?? 0, color: "text-orange-500 dark:text-orange-400", bgColor: "bg-orange-500/10", barColor: "bg-orange-500" },
-    { icon: Headphones, label: "Mins Listened", value: streak?.totalMinutesListened ?? 0, color: "text-blue-500 dark:text-blue-400", bgColor: "bg-blue-500/10", barColor: "bg-blue-500" },
-    { icon: PenLine, label: "Exercises Done", value: streak?.totalExercisesCompleted ?? 0, color: "text-emerald-500 dark:text-emerald-400", bgColor: "bg-emerald-500/10", barColor: "bg-emerald-500" },
+    { icon: Flame, label: "Day Streak", value: streak?.currentStreak ?? 0, color: "text-primary", bgColor: "bg-primary/10", barColor: "bg-primary" },
+    { icon: Headphones, label: "Mins Listened", value: streak?.totalMinutesListened ?? 0, color: "text-amber-400", bgColor: "bg-amber-400/10", barColor: "bg-amber-400" },
+    { icon: PenLine, label: "Exercises Done", value: streak?.totalExercisesCompleted ?? 0, color: "text-yellow-500", bgColor: "bg-yellow-500/10", barColor: "bg-yellow-500" },
   ];
 
   const tabs = [
@@ -215,7 +215,7 @@ export default function Vault() {
                   </div>
                   <div className="flex items-center justify-between gap-4">
                     <span className="text-muted-foreground">Plan</span>
-                    <span className={user?.isPremium ? "text-amber-600 dark:text-amber-400 font-semibold" : "font-medium"}>
+                    <span className={user?.isPremium ? "text-primary font-semibold" : "font-medium"}>
                       {user?.isPremium ? "Premium" : "Free"}
                     </span>
                   </div>
