@@ -17,8 +17,14 @@ UI/UX emphasizes a **black & gold** color scheme (primary gold: HSL 43 75% 49%, 
 
 Security is paramount, with AES-256-GCM encryption for journal entries, RLS policies, and a Role-Based Access Control (RBAC) system (super_admin > admin > editor > writer > user) governing access to features and content within both the consumer and admin applications.
 
+### Security Middleware (`server/middleware/`)
+- **Helmet.js** (`security.ts`): CSP headers (dev mode allows `unsafe-inline`/`unsafe-eval` for Vite, production is strict), HSTS, X-Frame-Options DENY, noSniff, referrer-policy. CORS configured for `.replit.app`, `.repl.co`, `mindprism.io`, `localhost`.
+- **Rate Limiting** (`rateLimiter.ts`): `authLimiter` (5/min) on `/api/login`, `/api/callback`, `/api/auth`; `apiLimiter` (100/min) on all `/api/*`; `publicLimiter` (20/min) available for unauthenticated endpoints.
+- Applied in `server/index.ts` before body parsing and route registration.
+
 ## External Dependencies
 - **Authentication:** Replit Auth (OpenID Connect)
 - **Database:** PostgreSQL
 - **ORM:** Drizzle ORM
 - **Payments:** Stripe (for premium subscriptions and billing portal)
+- **Security:** Helmet.js (security headers), express-rate-limit (rate limiting)

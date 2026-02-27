@@ -3,6 +3,8 @@ import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { seedDatabase } from "./seed";
+import { applySecurityMiddleware } from "./middleware/security";
+import { authLimiter, apiLimiter } from "./middleware/rateLimiter";
 
 const app = express();
 const httpServer = createServer(app);
@@ -12,6 +14,13 @@ declare module "http" {
     rawBody: unknown;
   }
 }
+
+applySecurityMiddleware(app);
+
+app.use("/api/login", authLimiter);
+app.use("/api/callback", authLimiter);
+app.use("/api/auth", authLimiter);
+app.use("/api", apiLimiter);
 
 app.use(
   express.json({
