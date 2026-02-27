@@ -59,18 +59,19 @@ export function ChakraAvatar({ activeChakra, onChakraSelect, progress, size = "m
           draggable={false}
         />
 
-        {chakraOrder.map((chakra, index) => {
+        {chakraOrder.map((chakra) => {
           const pos = chakraPositions[chakra];
           const info = CHAKRA_MAP[chakra];
           const isActive = activeChakra === chakra;
           const isHovered = hoveredChakra === chakra;
           const dimmed = activeChakra && !isActive;
-          const hitSize = size === "sm" ? 36 : size === "md" ? 44 : 52;
+          const dotSize = size === "sm" ? 14 : size === "md" ? 18 : 22;
+          const hitSize = size === "sm" ? 40 : size === "md" ? 48 : 56;
 
           return (
             <div
               key={chakra}
-              className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer"
+              className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer flex items-center justify-center"
               style={{
                 top: pos.top,
                 left: pos.left,
@@ -85,14 +86,12 @@ export function ChakraAvatar({ activeChakra, onChakraSelect, progress, size = "m
             >
               {isActive && (
                 <div
-                  className="absolute inset-0 -translate-x-1/2 -translate-y-1/2 rounded-full animate-ping"
+                  className="absolute rounded-full animate-ping"
                   style={{
-                    top: "50%",
-                    left: "50%",
-                    width: hitSize * 2,
-                    height: hitSize * 2,
+                    width: dotSize * 2.5,
+                    height: dotSize * 2.5,
                     backgroundColor: info.color,
-                    opacity: 0.15,
+                    opacity: 0.2,
                     animationDuration: "2s",
                   }}
                 />
@@ -101,26 +100,31 @@ export function ChakraAvatar({ activeChakra, onChakraSelect, progress, size = "m
               <div
                 className="absolute rounded-full transition-all duration-300"
                 style={{
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  width: isActive ? hitSize * 1.8 : isHovered ? hitSize * 1.4 : hitSize * 0.9,
-                  height: isActive ? hitSize * 1.8 : isHovered ? hitSize * 1.4 : hitSize * 0.9,
-                  background: `radial-gradient(circle, ${info.color}40 0%, ${info.color}15 50%, transparent 70%)`,
-                  opacity: dimmed ? 0.1 : 1,
+                  width: isActive ? dotSize * 2.2 : isHovered ? dotSize * 1.8 : dotSize * 1.5,
+                  height: isActive ? dotSize * 2.2 : isHovered ? dotSize * 1.8 : dotSize * 1.5,
+                  background: `radial-gradient(circle, ${info.color}50 0%, ${info.color}20 60%, transparent 80%)`,
+                  opacity: dimmed ? 0.15 : 1,
+                }}
+              />
+
+              <div
+                className="absolute rounded-full transition-all duration-300"
+                style={{
+                  width: isActive ? dotSize * 1.4 : isHovered ? dotSize * 1.2 : dotSize,
+                  height: isActive ? dotSize * 1.4 : isHovered ? dotSize * 1.2 : dotSize,
+                  backgroundColor: info.color,
+                  opacity: dimmed ? 0.2 : 0.9,
+                  boxShadow: dimmed ? 'none' : `0 0 ${dotSize * 0.6}px ${info.color}80, 0 0 ${dotSize * 1.2}px ${info.color}40`,
                 }}
               />
 
               {(isActive || isHovered) && !dimmed && (
                 <div
-                  className="absolute rounded-full border transition-all duration-300"
+                  className="absolute rounded-full border-2 transition-all duration-300"
                   style={{
-                    top: "50%",
-                    left: "50%",
-                    transform: "translate(-50%, -50%)",
-                    width: isActive ? hitSize * 1.5 : hitSize * 1.2,
-                    height: isActive ? hitSize * 1.5 : hitSize * 1.2,
-                    borderColor: `${info.color}60`,
+                    width: isActive ? dotSize * 2 : dotSize * 1.6,
+                    height: isActive ? dotSize * 2 : dotSize * 1.6,
+                    borderColor: `${info.color}80`,
                   }}
                 />
               )}
