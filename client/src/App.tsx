@@ -25,6 +25,7 @@ import AdminBookEditor from "@/pages/admin/admin-book-editor";
 import AdminUsers from "@/pages/admin/admin-users";
 import AdminLogin from "@/pages/admin/admin-login";
 import AdminAccessDenied from "@/pages/admin/admin-access-denied";
+import AnalyticsDashboard from "@/pages/admin/analytics-dashboard";
 import { getQueryFn } from "@/lib/queryClient";
 import type { UserInterest } from "@shared/schema";
 import { hasMinRole } from "@shared/models/auth";
@@ -105,6 +106,7 @@ function AppRouter() {
         <Route path="/admin" component={AdminBooks} />
         <Route path="/admin/books/:id" component={AdminBookEditor} />
         <Route path="/admin/users" component={AdminUsers} />
+        <Route path="/admin/analytics" component={AnalyticsDashboard} />
         <Route component={NotFound} />
       </Switch>
     );
