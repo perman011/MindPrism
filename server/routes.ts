@@ -605,7 +605,7 @@ export async function registerRoutes(
         eventType: z.enum([
           "book_opened", "chapter_completed", "section_viewed",
           "audio_played", "exercise_completed", "journal_entry_created",
-          "book_completed", "session_start", "session_end"
+          "book_completed", "session_start", "session_end", "affiliate_click"
         ]),
         eventData: z.record(z.any()).optional(),
         bookId: z.string().optional(),

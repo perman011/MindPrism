@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   ArrowLeft, BookOpen, Lightbulb, Brain, AlertTriangle,
   Dumbbell, ListChecks, Layers, Bookmark, BookmarkCheck,
-  Clock, Headphones, ChevronRight, BarChart3,
+  Clock, Headphones, ChevronRight, BarChart3, ShoppingCart,
 } from "lucide-react";
 import { Link, useParams, useLocation } from "wouter";
 import { useAudio } from "@/lib/audio-context";
@@ -252,6 +252,32 @@ export default function BookDetail() {
               </Button>
             )}
           </div>
+          {book.affiliateUrl && (
+            <div className="w-full px-6 mt-3">
+              <a
+                href={book.affiliateUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => {
+                  fetch("/api/user/activity", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ eventType: "affiliate_click" as const, bookId: book.id }),
+                  }).catch(() => {});
+                }}
+                data-testid="button-buy-book"
+              >
+                <Button
+                  variant="outline"
+                  className="w-full gap-2 border-primary/40 text-primary hover:bg-primary/10 hover:text-primary"
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  Buy This Book
+                </Button>
+              </a>
+            </div>
+          )}
         </div>
       </div>
 

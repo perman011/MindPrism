@@ -32,6 +32,7 @@ export const books = pgTable("books", {
   exerciseCount: integer("exercise_count").default(0),
   primaryChakra: text("primary_chakra"),
   secondaryChakra: text("secondary_chakra"),
+  affiliateUrl: varchar("affiliate_url", { length: 500 }),
   updatedAt: timestamp("updated_at").defaultNow(),
   currentDraftVersionId: varchar("current_draft_version_id"),
   currentPublishedVersionId: varchar("current_published_version_id"),
