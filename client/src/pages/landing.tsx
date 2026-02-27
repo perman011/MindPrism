@@ -9,57 +9,55 @@ function FeatherRain() {
   const feathers = useMemo(() =>
     Array.from({ length: 18 }, (_, i) => ({
       id: i,
-      left: `${Math.random() * 100}%`,
+      left: `${5 + Math.random() * 90}%`,
       size: 18 + Math.random() * 16,
-      delay: Math.random() * 12,
+      delay: -(Math.random() * 15),
       duration: 8 + Math.random() * 7,
-      startRotate: -30 + Math.random() * 60,
-      endRotate: -15 + Math.random() * 30,
       swayAmount: 30 + Math.random() * 50,
-      opacity: 0.08 + Math.random() * 0.12,
+      swayDuration: 3 + Math.random() * 3,
+      startRotate: -20 + Math.random() * 40,
+      opacity: 0.08 + Math.random() * 0.14,
     })),
   []);
 
   return (
     <div className="absolute inset-0 z-[1] pointer-events-none overflow-hidden">
       {feathers.map((f) => (
-        <motion.img
+        <div
           key={f.id}
-          src={mindprismLogo}
-          alt=""
-          className="absolute select-none mix-blend-screen"
+          className="absolute top-0 feather-fall"
           style={{
             left: f.left,
-            width: f.size,
-            height: f.size,
-            opacity: f.opacity,
-            filter: "blur(0.5px)",
+            animationDuration: `${f.duration}s`,
+            animationDelay: `${f.delay}s`,
           }}
-          initial={{ y: -60, rotate: f.startRotate, x: 0 }}
-          animate={{
-            y: ["calc(-60px)", "calc(100vh + 60px)"],
-            rotate: [f.startRotate, f.endRotate, f.startRotate * 0.5, f.endRotate],
-            x: [0, f.swayAmount, -f.swayAmount * 0.6, f.swayAmount * 0.3, 0],
-          }}
-          transition={{
-            duration: f.duration,
-            delay: f.delay,
-            repeat: Infinity,
-            ease: "linear",
-            x: {
-              duration: f.duration,
-              delay: f.delay,
-              repeat: Infinity,
-              ease: "easeInOut",
-            },
-            rotate: {
-              duration: f.duration,
-              delay: f.delay,
-              repeat: Infinity,
-              ease: "easeInOut",
-            },
-          }}
-        />
+        >
+          <div
+            className="feather-sway"
+            style={{
+              animationDuration: `${f.swayDuration}s`,
+              animationDelay: `${f.delay}s`,
+              // @ts-ignore
+              '--sway': `${f.swayAmount}px`,
+            }}
+          >
+            <img
+              src={mindprismLogo}
+              alt=""
+              className="select-none mix-blend-screen feather-spin"
+              style={{
+                width: f.size,
+                height: f.size,
+                opacity: f.opacity,
+                animationDuration: `${f.duration * 0.8}s`,
+                animationDelay: `${f.delay}s`,
+                // @ts-ignore
+                '--spin-from': `${f.startRotate}deg`,
+                '--spin-to': `${-f.startRotate}deg`,
+              }}
+            />
+          </div>
+        </div>
       ))}
     </div>
   );

@@ -292,3 +292,45 @@
     inset: -1px;
   }
 }
+
+@keyframes featherFall {
+  0% {
+    transform: translateY(-60px);
+  }
+  100% {
+    transform: translateY(calc(100vh + 60px));
+  }
+}
+
+@keyframes featherSway {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(var(--sway, 40px));
+  }
+  75% {
+    transform: translateX(calc(var(--sway, 40px) * -0.6));
+  }
+}
+
+@keyframes featherSpin {
+  0%, 100% {
+    transform: rotate(var(--spin-from, -15deg));
+  }
+  50% {
+    transform: rotate(var(--spin-to, 15deg));
+  }
+}
+
+.feather-fall {
+  animation: featherFall linear infinite;
+}
+
+.feather-sway {
+  animation: featherSway ease-in-out infinite;
+}
+
+.feather-spin {
+  animation: featherSpin ease-in-out infinite;
+}
