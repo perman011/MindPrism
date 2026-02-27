@@ -6,19 +6,19 @@ import { hasMinRole } from "@shared/models/auth";
 
 const router = Router();
 
-const requireSuperAdmin = async (req: Request, res: Response, next: NextFunction) => {
+const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
   const user = req.user as any;
   if (!user?.claims?.sub) {
     return res.status(401).json({ message: "Unauthorized" });
   }
   const dbUser = await authStorage.getUser(user.claims.sub);
-  if (!dbUser || !hasMinRole(dbUser.role, "super_admin")) {
-    return res.status(403).json({ message: "Forbidden: super_admin required" });
+  if (!dbUser || !hasMinRole(dbUser.role, "admin")) {
+    return res.status(403).json({ message: "Forbidden: admin role required" });
   }
   next();
 };
 
-router.use(isAuthenticated, requireSuperAdmin);
+router.use(isAuthenticated, requireAdmin);
 
 router.get("/", async (_req: Request, res: Response) => {
   try {
