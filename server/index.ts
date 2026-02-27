@@ -9,6 +9,8 @@ import { initErrorTracking, sentryErrorMiddleware, applySentryRequestHandler } f
 import { queryLoggerMiddleware } from "./middleware/queryLogger";
 import metricsRouter from "./routes/metrics";
 import sitemapRouter from "./routes/sitemap";
+import backupRouter from "./routes/backup";
+import { startBackupScheduler, stopBackupScheduler } from "./services/backupScheduler";
 
 initErrorTracking();
 
@@ -91,6 +93,8 @@ app.use((req, res, next) => {
 (async () => {
   await registerRoutes(httpServer, app);
 
+  app.use("/api/admin/backups", backupRouter);
+
   await seedDatabase().catch((err) => {
     console.error("Failed to seed database:", err);
   });
@@ -127,6 +131,8 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || "5000", 10);
+  startBackupScheduler();
+
   httpServer.listen(
     {
       port,
@@ -137,4 +143,12 @@ app.use((req, res, next) => {
       log(`serving on port ${port}`);
     },
   );
+
+  const shutdown = () => {
+    stopBackupScheduler();
+    httpServer.close();
+    process.exit(0);
+  };
+  process.on("SIGTERM", shutdown);
+  process.on("SIGINT", shutdown);
 })();
