@@ -54,6 +54,15 @@ Security is paramount, with AES-256-GCM encryption for journal entries, RLS poli
 - **Database**: `notification_preferences` table with user preferences, push subscription (JSONB), permission status, dismiss tracking.
 - **VAPID Keys**: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VITE_VAPID_PUBLIC_KEY` env vars.
 
+### PWA & Offline Mode
+- **Web App Manifest** (`client/public/manifest.json`): name, short_name, theme_color (#d4a017), background_color (#000000), display standalone, portrait orientation, categories.
+- **PWA Icons** (`client/public/icons/`): icon-192.png, icon-512.png, icon-maskable-192.png, icon-maskable-512.png, apple-touch-icon.png. Generated from golden feather logo on black background.
+- **Service Worker** (`client/public/sw.js`): Merged caching + push notifications. Cache-First for static assets (JS/CSS/images/fonts), Network-First for API book/category data, offline fallback page with MindPrism branding.
+- **Offline Banner** (`client/src/components/offline-banner.tsx`): Subtle gold "You're offline" banner at top when connection lost.
+- **Install Prompt** (`client/src/components/install-prompt.tsx`): Custom PWA install modal after 2+ visits, 30-day dismiss cooldown, MindPrism logo, gold Install button.
+- **Meta Tags** (`client/index.html`): apple-mobile-web-app-capable, apple-mobile-web-app-status-bar-style (black-translucent), theme-color, manifest link, apple-touch-icon.
+- **Background Sync**: Queued offline actions synced when back online via `sync` event.
+
 ## External Dependencies
 - **Authentication:** Replit Auth (OpenID Connect)
 - **Database:** PostgreSQL

@@ -30,6 +30,10 @@ import { getQueryFn } from "@/lib/queryClient";
 import type { UserInterest } from "@shared/schema";
 import { hasMinRole } from "@shared/models/auth";
 import { NotificationPrompt } from "@/components/notification-prompt";
+import { OfflineBanner } from "@/components/offline-banner";
+import { InstallPrompt } from "@/components/install-prompt";
+import { useEffect } from "react";
+import { registerServiceWorker } from "@/lib/notifications";
 
 function AuthenticatedApp() {
   const [location] = useLocation();
@@ -118,12 +122,18 @@ function AppRouter() {
 }
 
 function App() {
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
+
   return (
     <ErrorBoundary>
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
           <TooltipProvider>
             <Toaster />
+            <OfflineBanner />
+            <InstallPrompt />
             <AppRouter />
           </TooltipProvider>
         </QueryClientProvider>
