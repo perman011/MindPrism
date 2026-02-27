@@ -41,10 +41,9 @@ function handleMetric(metric: Metric) {
 }
 
 export async function initPerformanceMonitoring() {
-  const { onLCP, onFID, onCLS, onTTFB, onINP } = await import("web-vitals");
+  const { onLCP, onINP, onCLS, onTTFB } = await import("web-vitals");
   onLCP(handleMetric);
-  onFID(handleMetric);
+  onINP(handleMetric);
   onCLS(handleMetric);
   onTTFB(handleMetric);
-  onINP(handleMetric);
 }
