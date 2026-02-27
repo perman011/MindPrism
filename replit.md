@@ -31,6 +31,19 @@ Security is paramount, with AES-256-GCM encryption for journal entries, RLS poli
 - All consumer pages (landing, dashboard, discover, vault, audio, book-detail, onboarding, not-found) and admin pages have `SEOHead`.
 - Only the landing page is indexable; all authenticated and admin pages use `noIndex`.
 
+### Database Backups (`server/services/`)
+- **Backup Service** (`backup.ts`): pg_dump to gzip-compressed SQL files, list/delete/download/rotate operations.
+- **Backup Scheduler** (`backupScheduler.ts`): Daily at 3:00 AM UTC via `node-cron`, keeps last 7 backups.
+- **Backup Routes** (`server/routes/backup.ts`): GET/POST/DELETE at `/api/admin/backups` (admin/super_admin only).
+- Graceful shutdown on SIGTERM/SIGINT stops scheduler.
+
+### Analytics (`server/routes/analytics.ts`, `client/src/lib/analytics.ts`)
+- **Event Tracking**: `POST /api/analytics/events` ingests events (authenticated users). Schema: eventType, eventData (JSON), pageUrl, sessionId.
+- **Frontend Tracker** (`client/src/lib/analytics.ts`): `trackEvent()`, `trackPageView()`, `trackBookOpen()`, `trackAudioPlay()`, etc. Debounced, sessionId via sessionStorage, `sendBeacon` in production.
+- **Tracked Events**: `page_view` (dashboard), `book_open` (book detail), `audio_play` (audio page), `chapter_start`/`chapter_complete` (story engine).
+- **Admin Dashboard** (`/admin/analytics`): Overview cards, recharts line/bar charts (DAU, signup trend, popular books), event breakdown badges, recent events feed.
+- **Admin API**: `GET /api/analytics/overview` (stats + charts), `GET /api/analytics/admin-events` (paginated events). Admin role required.
+
 ## External Dependencies
 - **Authentication:** Replit Auth (OpenID Connect)
 - **Database:** PostgreSQL
