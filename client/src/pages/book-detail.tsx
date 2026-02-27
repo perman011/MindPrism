@@ -137,7 +137,7 @@ export default function BookDetail() {
 
   if (bookLoading || bookFetching || !id) {
     return (
-      <div className="min-h-screen bg-background px-5 pt-6">
+      <div className="min-h-screen bg-black px-5 pt-6">
         <Skeleton className="h-8 w-32 mb-4" />
         <Skeleton className="h-64 w-full rounded-xl mb-4" />
         <Skeleton className="h-6 w-48 mb-2" />
@@ -148,7 +148,7 @@ export default function BookDetail() {
 
   if (!book) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <BookOpen className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
           <h2 className="font-serif text-xl font-bold mb-2">Book not found</h2>
@@ -161,7 +161,7 @@ export default function BookDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-black">
       <SEOHead
         title={book?.title ? `${book.title} by ${book.author}` : "Book Detail"}
         description={book?.description || "Explore interactive psychology book breakdowns with principles, stories, exercises, and audio summaries."}
@@ -207,7 +207,7 @@ export default function BookDetail() {
           </button>
         </div>
 
-        <div className="pt-20 pb-6 flex flex-col items-center bg-gradient-to-b from-primary/5 to-background">
+        <div className="pt-20 pb-6 flex flex-col items-center bg-gradient-to-b from-primary/5 to-black">
           <div className="w-40 h-56 rounded-md overflow-hidden shadow-lg shadow-black/20 mb-6">
             {book.coverImage ? (
               <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
