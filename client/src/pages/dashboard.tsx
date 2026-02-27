@@ -200,7 +200,7 @@ export default function Dashboard() {
       </div>
 
       <section className="mb-8 px-5" data-testid="section-energy-map">
-        <div className="relative rounded-2xl bg-gradient-to-b from-[#1a1400] via-[#1f1a08] to-[#0d0a00] p-5 pb-3">
+        <div className="relative rounded-2xl bg-black p-5 pb-3">
           <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden rounded-2xl">
             <div className="absolute top-4 left-8 w-1 h-1 rounded-full bg-amber-200 animate-pulse" />
             <div className="absolute top-12 right-12 w-0.5 h-0.5 rounded-full bg-amber-300 animate-pulse" style={{ animationDelay: "0.5s" }} />
