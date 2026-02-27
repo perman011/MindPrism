@@ -5,9 +5,15 @@ import type { Book } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Headphones, Clock, Play } from "lucide-react";
 import { useAudio } from "@/lib/audio-context";
+import { trackAudioPlay } from "@/lib/analytics";
 
 export default function AudioPage() {
   const { play } = useAudio();
+
+  const handlePlay = (book: Book) => {
+    trackAudioPlay(book.id, book.title);
+    play(book);
+  };
 
   const { data: books, isLoading } = useQuery<Book[]>({
     queryKey: ["/api/books"],
@@ -40,7 +46,7 @@ export default function AudioPage() {
             {audioBooks.map((book) => (
               <button
                 key={book.id}
-                onClick={() => play(book)}
+                onClick={() => handlePlay(book)}
                 className="w-full flex items-center gap-4 p-3 rounded-xl bg-card border border-card-border hover-elevate transition-all text-left"
                 data-testid={`audio-item-${book.id}`}
               >
