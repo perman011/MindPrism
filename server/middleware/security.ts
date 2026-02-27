@@ -33,14 +33,14 @@ export function applySecurityMiddleware(app: Express) {
           fontSrc: ["'self'", "data:", "fonts.gstatic.com"],
           frameSrc: ["'self'", "js.stripe.com"],
           objectSrc: ["'none'"],
-          frameAncestors: ["'none'"],
+          frameAncestors: isDev ? ["'self'", "https://*.replit.dev", "https://*.repl.co"] : ["'none'"],
         },
       },
-      hsts: {
+      hsts: isDev ? false : {
         maxAge: 31536000,
         includeSubDomains: true,
       },
-      frameguard: { action: "deny" },
+      frameguard: isDev ? false : { action: "deny" },
       noSniff: true,
       referrerPolicy: { policy: "strict-origin-when-cross-origin" },
     })
@@ -52,7 +52,8 @@ export function applySecurityMiddleware(app: Express) {
       res.setHeader("Access-Control-Allow-Origin", origin);
       res.setHeader("Access-Control-Allow-Credentials", "true");
       res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, sentry-trace, baggage");
+      res.setHeader("Vary", "Origin");
     }
     if (req.method === "OPTIONS") {
       return res.sendStatus(204);
