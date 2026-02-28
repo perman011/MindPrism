@@ -17,10 +17,12 @@ import {
   type Infographic, type InsertInfographic,
   type Comment, type InsertComment,
   type ChakraProgress, type InsertChakraProgress,
+  type Short, type InsertShort,
+  type ShortView, type InsertShortView,
   books, principles, stories, exercises, userProgress, journalEntries, categories,
   userInterests, dailySparks, userStreaks, savedHighlights,
   chapterSummaries, mentalModels, commonMistakes, actionItems, infographics, comments,
-  chakraProgress,
+  chakraProgress, shorts, shortViews,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, desc, asc, inArray } from "drizzle-orm";
@@ -123,6 +125,15 @@ export interface IStorage {
 
   getChakraProgress(userId: string): Promise<ChakraProgress[]>;
   updateChakraProgress(userId: string, chakra: string, points: number): Promise<ChakraProgress>;
+
+  getPublishedShorts(): Promise<Short[]>;
+  getShortsByBook(bookId: string): Promise<Short[]>;
+  getShort(id: string): Promise<Short | undefined>;
+  createShort(data: InsertShort): Promise<Short>;
+  updateShort(id: string, data: Partial<InsertShort>): Promise<Short>;
+  deleteShort(id: string): Promise<void>;
+  recordShortView(data: InsertShortView): Promise<ShortView>;
+  getShortViewCount(shortId: string): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -608,6 +619,48 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return result;
     }
+  }
+
+  async getPublishedShorts(): Promise<Short[]> {
+    return db.select().from(shorts)
+      .where(eq(shorts.status, "published"))
+      .orderBy(desc(shorts.createdAt));
+  }
+
+  async getShortsByBook(bookId: string): Promise<Short[]> {
+    return db.select().from(shorts)
+      .where(eq(shorts.bookId, bookId))
+      .orderBy(asc(shorts.orderIndex));
+  }
+
+  async getShort(id: string): Promise<Short | undefined> {
+    const [result] = await db.select().from(shorts).where(eq(shorts.id, id));
+    return result;
+  }
+
+  async createShort(data: InsertShort): Promise<Short> {
+    const [result] = await db.insert(shorts).values(data).returning();
+    return result;
+  }
+
+  async updateShort(id: string, data: Partial<InsertShort>): Promise<Short> {
+    const [result] = await db.update(shorts).set({ ...data, updatedAt: new Date() }).where(eq(shorts.id, id)).returning();
+    return result;
+  }
+
+  async deleteShort(id: string): Promise<void> {
+    await db.delete(shortViews).where(eq(shortViews.shortId, id));
+    await db.delete(shorts).where(eq(shorts.id, id));
+  }
+
+  async recordShortView(data: InsertShortView): Promise<ShortView> {
+    const [result] = await db.insert(shortViews).values(data).returning();
+    return result;
+  }
+
+  async getShortViewCount(shortId: string): Promise<number> {
+    const [result] = await db.select({ count: sql<number>`count(*)::int` }).from(shortViews).where(eq(shortViews.shortId, shortId));
+    return result?.count ?? 0;
   }
 }
 

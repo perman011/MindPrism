@@ -252,7 +252,12 @@ export const shortViewsRelations = relations(shortViews, ({ one }) => ({
   short: one(shorts, { fields: [shortViews.shortId], references: [shorts.id] }),
 }));
 
+export const insertShortSchema = createInsertSchema(shorts).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertShort = z.infer<typeof insertShortSchema>;
 export type Short = typeof shorts.$inferSelect;
+
+export const insertShortViewSchema = createInsertSchema(shortViews).omit({ id: true, viewedAt: true });
+export type InsertShortView = z.infer<typeof insertShortViewSchema>;
 export type ShortView = typeof shortViews.$inferSelect;
 
 export const booksRelations = relations(books, ({ one, many }) => ({

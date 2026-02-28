@@ -7,7 +7,7 @@ import { registerStripeRoutes } from "./stripe-routes";
 import { z } from "zod";
 import { encrypt, decrypt } from "./crypto";
 import { db } from "./db";
-import { userActivityLog, userProgress, books, categories, journalEntries, flashcardProgress, quizResults, principles, chapterSummaries, stories } from "@shared/schema";
+import { userActivityLog, userProgress, books, categories, journalEntries, flashcardProgress, quizResults, principles, chapterSummaries, stories, shorts } from "@shared/schema";
 import { eq, and, sql as dsql, desc, gte, count, lte, asc } from "drizzle-orm";
 
 export async function registerRoutes(
@@ -957,6 +957,107 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching quiz results:", error);
       res.status(500).json({ message: "Failed to fetch quiz results" });
+    }
+  });
+
+  app.get("/api/shorts", async (_req, res) => {
+    try {
+      const published = await storage.getPublishedShorts();
+      res.json(published);
+    } catch (error) {
+      console.error("Error fetching shorts:", error);
+      res.status(500).json({ message: "Failed to fetch shorts" });
+    }
+  });
+
+  app.get("/api/shorts/:id", async (req, res) => {
+    try {
+      const short = await storage.getShort(req.params.id);
+      if (!short || short.status !== "published") {
+        return res.status(404).json({ message: "Short not found" });
+      }
+      res.json(short);
+    } catch (error) {
+      console.error("Error fetching short:", error);
+      res.status(500).json({ message: "Failed to fetch short" });
+    }
+  });
+
+  app.get("/api/books/:bookId/shorts", async (req, res) => {
+    try {
+      const allShorts = await storage.getShortsByBook(req.params.bookId);
+      const published = allShorts.filter(s => s.status === "published");
+      res.json(published);
+    } catch (error) {
+      console.error("Error fetching book shorts:", error);
+      res.status(500).json({ message: "Failed to fetch shorts" });
+    }
+  });
+
+  app.post("/api/shorts/:id/view", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || null;
+      await storage.recordShortView({ shortId: req.params.id, userId });
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error recording view:", error);
+      res.status(500).json({ message: "Failed to record view" });
+    }
+  });
+
+  app.get("/api/admin/shorts", isAuthenticated, async (req: any, res) => {
+    try {
+      const userRole = req.user?.claims?.metadata?.role || "user";
+      if (!["admin", "super_admin"].includes(userRole)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const allShorts = await db.select().from(shorts).orderBy(desc(shorts.createdAt));
+      res.json(allShorts);
+    } catch (error) {
+      console.error("Error fetching admin shorts:", error);
+      res.status(500).json({ message: "Failed to fetch shorts" });
+    }
+  });
+
+  app.post("/api/admin/shorts", isAuthenticated, async (req: any, res) => {
+    try {
+      const userRole = req.user?.claims?.metadata?.role || "user";
+      if (!["admin", "super_admin"].includes(userRole)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const result = await storage.createShort(req.body);
+      res.status(201).json(result);
+    } catch (error) {
+      console.error("Error creating short:", error);
+      res.status(500).json({ message: "Failed to create short" });
+    }
+  });
+
+  app.put("/api/admin/shorts/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userRole = req.user?.claims?.metadata?.role || "user";
+      if (!["admin", "super_admin"].includes(userRole)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const result = await storage.updateShort(req.params.id, req.body);
+      res.json(result);
+    } catch (error) {
+      console.error("Error updating short:", error);
+      res.status(500).json({ message: "Failed to update short" });
+    }
+  });
+
+  app.delete("/api/admin/shorts/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userRole = req.user?.claims?.metadata?.role || "user";
+      if (!["admin", "super_admin"].includes(userRole)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      await storage.deleteShort(req.params.id);
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error deleting short:", error);
+      res.status(500).json({ message: "Failed to delete short" });
     }
   });
 
