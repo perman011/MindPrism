@@ -55,7 +55,7 @@ export function ChakraAvatar({ activeChakra, onChakraSelect, progress, size = "m
         <img
           src={chakraFigureImg}
           alt="Meditating figure with chakra points"
-          className="w-full h-full object-contain select-none pointer-events-none"
+          className="w-full h-full object-contain select-none pointer-events-none mix-blend-screen"
           draggable={false}
         />
 
