@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CHAKRA_MAP, type ChakraType, type ChakraProgress } from "@shared/schema";
 import { motion, AnimatePresence } from "framer-motion";
 import chakraFigureImg from "@assets/19BCBEB7-13F0-4DEA-8D60-2FD625CD7BF2_1772158928986.png";
@@ -32,8 +32,48 @@ function getChakraIntensity(chakra: ChakraType, progress?: ChakraProgress[]): nu
   return 0.2 + intensity * 0.8;
 }
 
+function useTransparentImage(src: string): string | null {
+  const [dataUrl, setDataUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      ctx.drawImage(img, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+
+      const threshold = 35;
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const brightness = Math.max(r, g, b);
+        if (brightness < threshold) {
+          data[i + 3] = 0;
+        } else if (brightness < threshold + 30) {
+          data[i + 3] = Math.round((data[i + 3] * (brightness - threshold)) / 30);
+        }
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+      setDataUrl(canvas.toDataURL("image/png"));
+    };
+    img.src = src;
+  }, [src]);
+
+  return dataUrl;
+}
+
 export function ChakraAvatar({ activeChakra, onChakraSelect, progress, size = "md" }: ChakraAvatarProps) {
   const [hoveredChakra, setHoveredChakra] = useState<ChakraType | null>(null);
+  const transparentSrc = useTransparentImage(chakraFigureImg);
 
   const sizeMap = { sm: 240, md: 320, lg: 400 };
   const containerWidth = sizeMap[size];
@@ -50,16 +90,18 @@ export function ChakraAvatar({ activeChakra, onChakraSelect, progress, size = "m
         style={{
           opacity: activeChakra ? 0.85 : 1,
           transition: "opacity 0.5s ease",
-          isolation: "isolate",
         }}
       >
-        <img
-          src={chakraFigureImg}
-          alt="Meditating figure with chakra points"
-          className="w-full h-full object-contain select-none pointer-events-none"
-          draggable={false}
-          style={{ mixBlendMode: "screen" }}
-        />
+        {transparentSrc ? (
+          <img
+            src={transparentSrc}
+            alt="Meditating figure with chakra points"
+            className="w-full h-full object-contain select-none pointer-events-none"
+            draggable={false}
+          />
+        ) : (
+          <div className="w-full h-full" />
+        )}
 
         {chakraOrder.map((chakra) => {
           const pos = chakraPositions[chakra];
