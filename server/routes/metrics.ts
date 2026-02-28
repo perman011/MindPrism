@@ -13,10 +13,14 @@ const metricsLimiter = rateLimit({
 const router = Router();
 
 router.post("/", metricsLimiter, (req: Request, res: Response) => {
+  if (!req.body || !req.body.name) {
+    return res.status(400).json({ error: "Missing required field: name" });
+  }
+
   const { name, value, rating, delta, url, timestamp } = req.body;
 
-  if (!name || typeof value !== "number") {
-    return res.status(400).json({ error: "Invalid metric data" });
+  if (typeof value !== "number") {
+    return res.status(400).json({ error: "Missing required field: value" });
   }
 
   log(
