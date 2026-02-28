@@ -511,6 +511,125 @@ As a developer, I want automated tests so that new features don't break existing
 
 ---
 
+## Epic 8: Visual Design Enhancement
+
+### MIND-800: Extended Color Palette Implementation
+**Priority:** Should Have
+**Story Points:** 5
+**Blocked By:** None
+
+**User Story:**
+As a user, I want a richer visual experience with purposeful color variety so that different content types and states feel distinct and intuitive.
+
+**Technical Spec:**
+- Implement "Warm Prism" extended palette (see `docs/UI_DESIGN_SYSTEM.md`)
+- Add CSS variables to `client/src/index.css`: `--primary-light`, `--primary-lighter`, `--primary-surface`, `--success`, `--warning`, `--accent-teal`, `--accent-gold`
+- Update Tailwind config to expose new colors
+- Apply semantic colors: success (Sage Green) for completed states, warning (Warm Amber) for streak risk, accent-teal for chakra info, accent-gold for premium/achievements
+- Update chart palette to use 6-color system instead of monochromatic
+- Update dark mode variables for all new tokens
+
+**Acceptance Criteria:**
+- [ ] All new CSS variables defined in both :root and .dark
+- [ ] Completed/success states use Sage Green (#4CAF7D) not purple
+- [ ] Warning states use Warm Amber (#E8A838)
+- [ ] Premium badges use Dusty Gold (#C4A35A)
+- [ ] Charts display in the 6-color palette
+- [ ] Dark mode correctly inverts all new tokens
+- [ ] No existing Dream Curtain primary usage broken
+
+**Files:** `client/src/index.css`, `tailwind.config.ts`, `client/src/components/personal-stats.tsx`, `client/src/components/streak-chart.tsx`
+
+---
+
+### MIND-801: Typography Enhancement — Serif Headings
+**Priority:** Could Have
+**Story Points:** 3
+**Blocked By:** None
+
+**User Story:**
+As a user, I want book titles and page headings to feel literary and premium so that the app conveys intellectual credibility.
+
+**Technical Spec:**
+- Add Playfair Display (Google Fonts) as display/serif font
+- Keep Inter for all body text, UI labels, buttons, navigation
+- Apply Playfair Display to: page titles (h1), book titles in cards, book detail hero title, quote/insight cards, "Daily Spark" heading
+- Update Tailwind fontFamily: `serif: ['Playfair Display', 'serif']`
+- Load only weights 500 and 700 to minimize font payload
+- Ensure fallback to Georgia/serif if font fails to load
+
+**Acceptance Criteria:**
+- [ ] Page headings render in Playfair Display serif font
+- [ ] Book titles in cards and detail pages use serif
+- [ ] All UI elements (buttons, labels, nav) remain in Inter
+- [ ] Font loads within 200ms (preload via link tag)
+- [ ] Fallback renders correctly without visual jarring
+- [ ] Mobile readability maintained (minimum 18px for serif headings)
+
+**Files:** `client/index.html`, `tailwind.config.ts`, `client/src/pages/dashboard.tsx`, `client/src/pages/book-detail.tsx`, `client/src/components/book-card.tsx`
+
+---
+
+### MIND-802: Elevation & Hover Polish
+**Priority:** Could Have
+**Story Points:** 3
+**Blocked By:** MIND-800
+
+**User Story:**
+As a user, I want interactive elements to feel responsive and tactile so that the app feels polished and premium.
+
+**Technical Spec:**
+- Implement 4-level elevation system (see Design System doc)
+- Add hover shadow transitions to all clickable Cards (200ms ease-out)
+- Book cards: subtle lift on hover (shadow level 1 → 2)
+- Bottom nav: add press feedback (scale 0.95 on active, 100ms)
+- Tab switches: smooth background slide animation (not just color swap)
+- Button press: subtle inset shadow on active state
+- All transitions respect `prefers-reduced-motion`
+
+**Acceptance Criteria:**
+- [ ] Cards have visible hover state with shadow elevation change
+- [ ] Transitions are 200ms, no layout shift
+- [ ] Reduced motion users see instant state changes (no animation)
+- [ ] Touch devices: active state triggers on press, not hover
+- [ ] Consistent elevation values across all card types
+
+**Files:** `client/src/components/ui/card.tsx`, `client/src/components/book-card.tsx`, `client/src/components/bottom-nav.tsx`, `client/src/index.css`
+
+---
+
+### MIND-803: Dark Mode Implementation
+**Priority:** Should Have
+**Story Points:** 8
+**Blocked By:** MIND-800
+
+**User Story:**
+As a user, I want a dark mode option so that I can read comfortably at night without eye strain.
+
+**Technical Spec:**
+- Create ThemeProvider component with system preference detection + manual toggle
+- Store preference in localStorage, sync with system `prefers-color-scheme`
+- Define `.dark` class color mappings (see Design System dark mode table)
+- Dark backgrounds: deep purple-tinted (`#0F0A14`), not pure black
+- Dark cards: subtle plum surface (`#1A1225`)
+- Primary accent in dark mode: Lavender Mist (`#D4B8D6`) instead of Dream Curtain
+- Add toggle in Settings tab of Growth Vault
+- Ensure all charts, heatmaps, and visualizations work in dark mode
+- Book cover images: no filter needed (natural images work in both modes)
+
+**Acceptance Criteria:**
+- [ ] Toggle in settings switches between light/dark/system modes
+- [ ] Preference persists across sessions
+- [ ] All text meets 4.5:1 contrast ratio in dark mode
+- [ ] Charts and heatmaps are readable in dark mode
+- [ ] No white flashes during page navigation in dark mode
+- [ ] System preference is respected on first visit
+- [ ] Chakra Energy Map colors remain vibrant in dark mode
+
+**Files:** `client/src/components/theme-provider.tsx` (new), `client/src/index.css`, `client/src/pages/vault.tsx`, all component files
+
+---
+
 ## Priority Matrix
 
 | Ticket | Title | Priority | Points | Blocked By | Status |
@@ -528,12 +647,16 @@ As a developer, I want automated tests so that new features don't break existing
 | MIND-601 | Sentry Integration | Should | 3 | User DSN | Pending |
 | MIND-700 | DB Performance | Should | 5 | None | Pending |
 | MIND-701 | Test Suite | Should | 8 | None | Pending |
+| MIND-800 | Extended Color Palette | Should | 5 | None | Pending |
+| MIND-801 | Serif Typography | Could | 3 | None | Pending |
+| MIND-802 | Elevation & Hover Polish | Could | 3 | MIND-800 | Pending |
+| MIND-803 | Dark Mode | Should | 8 | MIND-800 | Pending |
 | MIND-102 | Subscription Analytics | Could | 5 | MIND-100 | Pending |
 | MIND-301 | Recommendation V2 | Could | 8 | None | Pending |
 | MIND-501 | Content Quality Scoring | Could | 5 | MIND-500 | Pending |
 
-**Total Story Points:** 96
-**Estimated Sprints:** 6-8 (2-week sprints, ~15 points velocity)
+**Total Story Points:** 115
+**Estimated Sprints:** 7-8 (2-week sprints, ~15 points velocity)
 
 ---
 
@@ -544,23 +667,28 @@ As a developer, I want automated tests so that new features don't break existing
 - MIND-700: Database Performance (5 pts)
 - MIND-100: Stripe Integration (5 pts) — if keys available
 
-### Sprint 2 (Monetization)
+### Sprint 2 (Monetization + Visual)
 - MIND-101: Content Paywalling (8 pts)
-- MIND-601: Sentry Integration (3 pts)
-- MIND-400: Social Sharing (5 pts)
+- MIND-800: Extended Color Palette (5 pts)
 
-### Sprint 3 (Discovery)
+### Sprint 3 (Discovery + Design)
 - MIND-300: Full-Text Search (8 pts)
-- MIND-201: Audio Management (5 pts)
+- MIND-803: Dark Mode (8 pts)
 
 ### Sprint 4 (Engagement)
 - MIND-401: Streak Gamification (5 pts)
 - MIND-200: Shorts Pipeline (8 pts)
 
-### Sprint 5 (Analytics & Quality)
+### Sprint 5 (Audio + Social)
+- MIND-201: Audio Management (5 pts)
+- MIND-400: Social Sharing (5 pts)
+- MIND-601: Sentry Integration (3 pts)
+
+### Sprint 6 (Analytics & Quality)
 - MIND-500: Analytics V2 (8 pts)
 - MIND-600: Image Optimization (5 pts)
 
-### Sprint 6 (Polish)
+### Sprint 7 (Polish)
 - MIND-701: Test Suite (8 pts)
-- MIND-102: Subscription Analytics (5 pts)
+- MIND-801: Serif Typography (3 pts)
+- MIND-802: Elevation & Hover Polish (3 pts)
