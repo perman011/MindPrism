@@ -46,7 +46,7 @@ function PreviewBookDetail({ title, author, thesis }: { title?: string; author?:
   return (
     <div className="p-4">
       <div className="h-32 bg-gradient-to-br from-primary/30 to-primary/5 rounded-xl mb-4" />
-      <h2 className="font-serif text-lg font-bold mb-1">{title || "Book Title"}</h2>
+      <h2 className="text-lg font-bold mb-1">{title || "Book Title"}</h2>
       <p className="text-xs text-muted-foreground mb-3">by {author || "Author"}</p>
       {thesis && (
         <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg mb-4">

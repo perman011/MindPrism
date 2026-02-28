@@ -83,7 +83,7 @@ export function ShareModal({ open, onClose, bookTitle, bookAuthor, bookId }: Sha
             data-testid="share-modal"
           >
             <div className="flex items-center justify-between p-4 border-b border-border">
-              <h3 className="font-serif text-lg font-bold text-foreground">Share This Book</h3>
+              <h3 className="text-lg font-bold text-foreground">Share This Book</h3>
               <button
                 onClick={onClose}
                 className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"

@@ -71,7 +71,7 @@ export default function Vault() {
             <AvatarFallback className="text-lg font-bold bg-primary/10 text-primary">{initials}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <h1 className="font-serif text-2xl font-bold tracking-tight" data-testid="text-vault-name">
+            <h1 className="text-2xl font-bold tracking-tight" data-testid="text-vault-name">
               {user?.firstName} {user?.lastName}
             </h1>
             <p className="text-sm text-muted-foreground mt-0.5">{user?.email}</p>
@@ -155,7 +155,7 @@ export default function Vault() {
 
         {activeTab === "journal" && (
           <div data-testid="journal-list">
-            <h2 className="font-serif text-lg font-bold mb-1">Journal Entries</h2>
+            <h2 className="text-lg font-bold mb-1">Journal Entries</h2>
             <p className="text-[11px] text-muted-foreground mb-4">Your reflections and exercise responses</p>
             <div className="space-y-3">
               {journalLoading ? (
@@ -187,7 +187,7 @@ export default function Vault() {
 
         {activeTab === "highlights" && (
           <div data-testid="highlights-list">
-            <h2 className="font-serif text-lg font-bold mb-1">Saved Highlights</h2>
+            <h2 className="text-lg font-bold mb-1">Saved Highlights</h2>
             <p className="text-[11px] text-muted-foreground mb-4">Bookmarked insights and key passages</p>
             <div className="space-y-3">
               {!highlights || highlights.length === 0 ? (
@@ -212,7 +212,7 @@ export default function Vault() {
 
         {activeTab === "settings" && (
           <div data-testid="settings-section">
-            <h2 className="font-serif text-lg font-bold mb-1">Settings</h2>
+            <h2 className="text-lg font-bold mb-1">Settings</h2>
             <p className="text-[11px] text-muted-foreground mb-4">Manage your account and preferences</p>
             <div className="space-y-4">
               <NotificationSettings />

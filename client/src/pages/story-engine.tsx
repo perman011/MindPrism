@@ -70,7 +70,7 @@ function ChapterSummaryCard({ card, onNext }: { card: CardItem; onNext: () => vo
           <ArrowRight className="w-8 h-8 text-blue-500" />
         </div>
         <p className="text-sm text-muted-foreground mb-2">Up Next</p>
-        <h2 className="font-serif text-2xl font-bold mb-2">Chapter {d.nextChapterNumber}</h2>
+        <h2 className="text-2xl font-bold mb-2">Chapter {d.nextChapterNumber}</h2>
         <p className="text-base text-muted-foreground">{d.nextChapterTitle}</p>
         <Button className="mt-8 gap-2" onClick={onNext} data-testid="button-start-chapter">
           <Sparkles className="w-4 h-4" />
@@ -91,7 +91,7 @@ function ChapterSummaryCard({ card, onNext }: { card: CardItem; onNext: () => vo
           {d.cardIndex + 1} / {d.totalInChapter}
         </span>
       </div>
-      <h3 className="font-serif text-lg font-semibold mb-6 text-muted-foreground">{d.chapterTitle}</h3>
+      <h3 className="text-lg font-semibold mb-6 text-muted-foreground">{d.chapterTitle}</h3>
       <p className="text-lg leading-relaxed">{d.text}</p>
     </div>
   );
@@ -107,7 +107,7 @@ function MentalModelCard({ card }: { card: CardItem }) {
         <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-6">
           <Brain className="w-8 h-8 text-blue-500" />
         </div>
-        <h2 className="font-serif text-2xl font-bold mb-4">{d.title}</h2>
+        <h2 className="text-2xl font-bold mb-4">{d.title}</h2>
         <p className="text-base text-muted-foreground leading-relaxed mb-6">{d.description}</p>
         <Badge variant="secondary" className="text-[10px] gap-1">
           {d.totalSteps} steps to explore
@@ -127,7 +127,7 @@ function MentalModelCard({ card }: { card: CardItem }) {
           Step {d.stepIndex + 1} / {d.totalSteps}
         </span>
       </div>
-      <h3 className="font-serif text-xl font-bold mb-6 text-center">{d.label}</h3>
+      <h3 className="text-xl font-bold mb-6 text-center">{d.label}</h3>
       <button
         className="w-full"
         onClick={() => setRevealedSteps((prev) => Math.min(prev + 1, 1))}
@@ -175,7 +175,7 @@ function PrincipleStoryCard({ card, cards, currentIndex, goTo }: { card: CardIte
             <Badge variant="secondary" className="text-[10px] gap-1 mb-4">
               Principle
             </Badge>
-            <h2 className="font-serif text-2xl font-bold mb-4">{d.title}</h2>
+            <h2 className="text-2xl font-bold mb-4">{d.title}</h2>
             <p className="text-base text-muted-foreground leading-relaxed mb-8">{d.content}</p>
             {hasLinkedStory && (
               <Button
@@ -199,7 +199,7 @@ function PrincipleStoryCard({ card, cards, currentIndex, goTo }: { card: CardIte
               <Badge variant="secondary" className="text-[10px] gap-1 mb-4">
                 Story
               </Badge>
-              <h2 className="font-serif text-xl font-bold mb-4">{nextCard.data.title}</h2>
+              <h2 className="text-xl font-bold mb-4">{nextCard.data.title}</h2>
               <p className="text-sm text-muted-foreground leading-relaxed mb-6">{nextCard.data.content}</p>
               {nextCard.data.moral && (
                 <Card className="p-4 text-left">
@@ -237,7 +237,7 @@ function PrincipleStoryCard({ card, cards, currentIndex, goTo }: { card: CardIte
         <div className="w-14 h-14 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-6">
           <BookMarked className="w-7 h-7 text-blue-500" />
         </div>
-        <h2 className="font-serif text-xl font-bold mb-4 text-center">{d.title}</h2>
+        <h2 className="text-xl font-bold mb-4 text-center">{d.title}</h2>
         <p className="text-sm text-muted-foreground leading-relaxed mb-6">{d.content}</p>
         {d.moral && (
           <Card className="p-4">
@@ -359,7 +359,7 @@ function ExerciseCard({ card, bookId }: { card: CardItem; bookId: string }) {
         </Badge>
       </div>
 
-      <h2 className="font-serif text-xl font-bold mb-2 text-center">{d.title}</h2>
+      <h2 className="text-xl font-bold mb-2 text-center">{d.title}</h2>
       <p className="text-sm text-muted-foreground mb-6 text-center">{d.description}</p>
 
       {d.type === "reflection" && (() => {
@@ -516,7 +516,7 @@ function InfographicCard({ card, onNext }: { card: CardItem; onNext: () => void 
         <div className="w-16 h-16 rounded-full bg-indigo-500/10 flex items-center justify-center mx-auto mb-6">
           <BarChart3 className="w-8 h-8 text-indigo-500" />
         </div>
-        <h2 className="font-serif text-2xl font-bold mb-3">{d.title}</h2>
+        <h2 className="text-2xl font-bold mb-3">{d.title}</h2>
         <p className="text-base text-muted-foreground mb-4">{d.description}</p>
         <Badge variant="secondary" className="text-xs">
           {d.totalSteps} steps to explore
@@ -555,7 +555,7 @@ function InfographicCard({ card, onNext }: { card: CardItem; onNext: () => void 
         onClick={() => !isRevealed && setRevealedSteps((prev) => [...prev, stepIndex])}
         data-testid={`infographic-step-reveal-${stepIndex}`}
       >
-        <h3 className="font-serif text-xl font-bold mb-3 text-indigo-600 dark:text-indigo-400">{d.label}</h3>
+        <h3 className="text-xl font-bold mb-3 text-indigo-600 dark:text-indigo-400">{d.label}</h3>
 
         {isRevealed ? (
           <p className="text-sm leading-relaxed animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -593,7 +593,7 @@ function ActionItemsCard({ card }: { card: CardItem }) {
         <ListChecks className="w-7 h-7 text-sky-500" />
       </div>
 
-      <h2 className="font-serif text-xl font-bold mb-4 text-center">Action Items</h2>
+      <h2 className="text-xl font-bold mb-4 text-center">Action Items</h2>
 
       <div className="flex items-center justify-center gap-2 mb-6">
         {(["all", "immediate", "long_term"] as const).map((f) => (
@@ -764,7 +764,7 @@ export default function StoryEngine() {
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
             <BookOpen className="w-8 h-8 text-primary" />
           </div>
-          <h2 className="font-serif text-xl font-bold text-foreground mb-2">Content Coming Soon</h2>
+          <h2 className="text-xl font-bold text-foreground mb-2">Content Coming Soon</h2>
           <p className="text-muted-foreground mb-6">Explore other sections of this book below</p>
           <Button onClick={() => setLocation(`/book/${id}`)} className="gap-2" data-testid="button-go-back-empty">
             <ChevronLeft className="w-4 h-4" />

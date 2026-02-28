@@ -50,7 +50,7 @@ export function FullScreenPlayer() {
             )}
           </div>
 
-          <h2 className="font-serif text-xl font-bold text-center mb-1" data-testid="text-player-title">{book.title}</h2>
+          <h2 className="text-xl font-bold text-center mb-1" data-testid="text-player-title">{book.title}</h2>
           <p className="text-sm text-muted-foreground mb-8">{book.author}</p>
         </div>
 

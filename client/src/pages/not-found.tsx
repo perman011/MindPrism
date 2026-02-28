@@ -9,7 +9,7 @@ export default function NotFound() {
       <SEOHead title="Page Not Found" noIndex />
       <div className="text-center px-6">
         <p className="text-7xl font-bold text-primary mb-4" data-testid="text-404">404</p>
-        <h1 className="font-serif text-2xl font-bold text-foreground mb-3" data-testid="text-not-found-title">Page Not Found</h1>
+        <h1 className="text-2xl font-bold text-foreground mb-3" data-testid="text-not-found-title">Page Not Found</h1>
         <p className="text-muted-foreground mb-8" data-testid="text-not-found-message">
           This page doesn't exist. Let's get you back on track.
         </p>

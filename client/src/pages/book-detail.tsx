@@ -187,7 +187,7 @@ export default function BookDetail() {
       <div className="min-h-screen bg-[#F5F0EB] flex items-center justify-center">
         <div className="text-center">
           <BookOpen className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
-          <h2 className="font-serif text-xl font-bold mb-2">Book not found</h2>
+          <h2 className="text-xl font-bold mb-2">Book not found</h2>
           <Link href="/">
             <Button variant="outline" size="sm"><ArrowLeft className="w-3.5 h-3.5 mr-1.5" />Back</Button>
           </Link>
@@ -285,7 +285,7 @@ export default function BookDetail() {
           </div>
 
           <p className="text-[10px] uppercase tracking-[0.2em] text-primary font-semibold mb-1.5" data-testid="text-summary-label">Summary</p>
-          <h1 className="font-serif text-2xl font-bold mb-1 text-center px-6 leading-tight" data-testid="text-book-title">{book.title}</h1>
+          <h1 className="text-2xl font-bold mb-1 text-center px-6 leading-tight" data-testid="text-book-title">{book.title}</h1>
           <p className="text-sm text-muted-foreground mb-4" data-testid="text-book-author">by {book.author}</p>
 
           <div className="flex items-center gap-1.5 mb-6 flex-wrap justify-center">
@@ -363,7 +363,7 @@ export default function BookDetail() {
         )}
 
         <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-1">Explore the book</p>
-        <h2 className="font-serif text-xl font-bold mb-4" data-testid="text-blueprint-heading">Blueprint</h2>
+        <h2 className="text-xl font-bold mb-4" data-testid="text-blueprint-heading">Blueprint</h2>
 
         <div className="grid grid-cols-2 gap-3" data-testid="grid-blueprint">
           {BLUEPRINT_TILES.map((tile) => {
@@ -419,7 +419,7 @@ export default function BookDetail() {
               <p className="text-[10px] uppercase tracking-[0.15em] text-primary font-semibold">Quick Bites</p>
             </div>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-serif text-lg font-bold">Shorts</h3>
+              <h3 className="text-lg font-bold">Shorts</h3>
               <Badge variant="secondary" className="text-[10px] font-semibold">{bookShorts.length} clip{bookShorts.length !== 1 ? "s" : ""}</Badge>
             </div>
             <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide">

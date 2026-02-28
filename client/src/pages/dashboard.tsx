@@ -35,7 +35,7 @@ function HorizontalScroll({ children, title, accentLabel, actionHref, actionLabe
           {accentLabel && (
             <p className="text-[10px] font-semibold uppercase tracking-widest text-primary/70 mb-1">{accentLabel}</p>
           )}
-          <h2 className="font-serif text-xl font-bold">{title}</h2>
+          <h2 className="text-xl font-bold">{title}</h2>
         </div>
         {actionHref && (
           <Link href={actionHref}>
@@ -88,7 +88,7 @@ function BookSlider({ books, title, testId }: { books: Book[]; title: string; te
   return (
     <section className="mb-10" data-testid={testId}>
       <div className="flex items-center justify-between gap-2 px-5 mb-4">
-        <h2 className="font-serif text-xl font-bold">{title}</h2>
+        <h2 className="text-xl font-bold">{title}</h2>
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
@@ -207,7 +207,7 @@ export default function Dashboard() {
       <div className="px-5 pt-8 pb-5 flex items-center justify-between gap-3">
         <div className="flex-1">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{greeting()}</p>
-          <h1 className="font-serif text-2xl font-bold tracking-tight" data-testid="text-welcome">
+          <h1 className="text-2xl font-bold tracking-tight" data-testid="text-welcome">
             {user?.firstName ?? "Explorer"}
           </h1>
         </div>
@@ -238,7 +238,7 @@ export default function Dashboard() {
           <p className="text-center text-xs font-medium text-blue-400/80 uppercase tracking-widest mb-2">
             My Energy Map
           </p>
-          <h3 className="text-center font-serif text-sm text-white/70 mb-3">
+          <h3 className="text-center text-sm text-white/70 mb-3">
             Tap a chakra to explore
           </h3>
 
@@ -310,7 +310,7 @@ export default function Dashboard() {
                               className="w-full h-full flex items-center justify-center"
                               style={{ background: `linear-gradient(135deg, ${CHAKRA_MAP[activeChakra].color}33, ${CHAKRA_MAP[activeChakra].color}11)` }}
                             >
-                              <span className="font-serif text-lg font-bold text-muted-foreground/30">{book.title[0]}</span>
+                              <span className="text-lg font-bold text-muted-foreground/30">{book.title[0]}</span>
                             </div>
                           )}
                         </div>
@@ -350,7 +350,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex-1">
                   <p className="text-[10px] font-semibold text-blue-500 uppercase tracking-widest mb-1.5">Daily Insight</p>
-                  <p className="font-serif text-base font-bold mb-1.5" data-testid="text-insight-title">{dailyInsight.title}</p>
+                  <p className="text-base font-bold mb-1.5" data-testid="text-insight-title">{dailyInsight.title}</p>
                   <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3" data-testid="text-insight-content">{dailyInsight.content}</p>
                   <p className="text-[10px] text-muted-foreground/60 mt-2">From: {dailyInsight.bookTitle}</p>
                 </div>
@@ -402,7 +402,7 @@ export default function Dashboard() {
                       <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                        <span className="font-serif text-xl font-bold text-primary/30">{book.title[0]}</span>
+                        <span className="text-xl font-bold text-primary/30">{book.title[0]}</span>
                       </div>
                     )}
                     <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gray-200/40">
@@ -464,7 +464,7 @@ export default function Dashboard() {
       {categories && categories.length > 0 && (
         <section className="mb-10 px-5" data-testid="section-categories">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-primary/70 mb-1">Explore topics</p>
-          <h2 className="font-serif text-xl font-bold mb-4">Browse by Topic</h2>
+          <h2 className="text-xl font-bold mb-4">Browse by Topic</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {categories.map((cat) => (
               <Link key={cat.id} href={`/discover?category=${cat.slug}`}>

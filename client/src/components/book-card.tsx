@@ -25,7 +25,7 @@ export function BookCard({ book, compact, audioMode }: BookCardProps) {
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center rounded-md">
-            <span className="font-serif text-2xl font-bold text-primary/40">{book.title[0]}</span>
+            <span className="text-2xl font-bold text-primary/40">{book.title[0]}</span>
           </div>
         )}
         {book.featured && !compact && (

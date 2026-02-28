@@ -74,7 +74,7 @@ export function FlashcardPractice({ bookId, bookTitle, onClose }: FlashcardPract
     return (
       <div className="min-h-screen bg-[#F5F0EB] flex flex-col items-center justify-center p-6">
         <Brain className="w-16 h-16 text-muted-foreground/20 mb-4" />
-        <h2 className="font-serif text-xl font-bold mb-2">No Flashcards Available</h2>
+        <h2 className="text-xl font-bold mb-2">No Flashcards Available</h2>
         <p className="text-sm text-muted-foreground text-center mb-6">
           This book doesn't have principles to practice yet.
         </p>
@@ -100,7 +100,7 @@ export function FlashcardPractice({ bookId, bookTitle, onClose }: FlashcardPract
           <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
             <Check className="w-10 h-10 text-primary" />
           </div>
-          <h2 className="font-serif text-2xl font-bold mb-2" data-testid="text-session-complete">Session Complete!</h2>
+          <h2 className="text-2xl font-bold mb-2" data-testid="text-session-complete">Session Complete!</h2>
           <p className="text-sm text-muted-foreground mb-6">{bookTitle}</p>
 
           <div className="grid grid-cols-3 gap-3 mb-8 w-full max-w-xs mx-auto">
@@ -213,7 +213,7 @@ export function FlashcardPractice({ bookId, bookTitle, onClose }: FlashcardPract
                       exit={{ rotateY: 90, opacity: 0 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <h3 className="font-serif text-lg font-bold mb-2" data-testid="text-flashcard-title">
+                      <h3 className="text-lg font-bold mb-2" data-testid="text-flashcard-title">
                         {card.principle.title}
                       </h3>
                       <p className="text-xs text-muted-foreground">Tap to reveal</p>

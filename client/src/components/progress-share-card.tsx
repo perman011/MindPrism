@@ -88,7 +88,7 @@ export function ProgressShareCard() {
       ? `${user.firstName}${user.lastName ? ` ${user.lastName}` : ""}`
       : "Explorer";
     ctx.fillStyle = "#111827";
-    ctx.font = "bold 28px 'Source Serif Pro', Georgia, serif";
+    ctx.font = "bold 28px 'Inter', system-ui, sans-serif";
     ctx.fillText(`${userName}'s Journey`, 40, 110);
 
     ctx.fillStyle = "rgba(59, 130, 246, 0.4)";

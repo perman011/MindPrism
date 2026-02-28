@@ -141,7 +141,7 @@ export function ChakraEnergyBurst({ chakra, show, onComplete, points = 10 }: Cha
             transition={{ delay: 0.4, duration: 0.5, ease: "easeOut" }}
           >
             <motion.span
-              className="text-3xl font-bold font-serif"
+              className="text-3xl font-bold"
               style={{ color, textShadow: `0 0 20px ${color}80` }}
               animate={{ scale: [1, 1.1, 1] }}
               transition={{ delay: 0.6, duration: 0.4 }}

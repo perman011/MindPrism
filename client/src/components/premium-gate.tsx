@@ -44,7 +44,7 @@ export function PremiumGate({ children, isPremium }: PremiumGateProps) {
           <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-50 flex items-center justify-center">
             <Lock className="w-6 h-6 text-blue-600 dark:text-blue-500" />
           </div>
-          <h3 className="font-serif text-lg font-bold">Premium Content</h3>
+          <h3 className="text-lg font-bold">Premium Content</h3>
           <p className="text-sm text-muted-foreground max-w-[240px]">
             Unlock all book breakdowns, exercises, and audio summaries.
           </p>

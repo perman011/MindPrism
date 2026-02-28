@@ -78,7 +78,7 @@ export function NotificationPrompt() {
           <img src={logoImage} alt="MindPrism" className="w-12 h-12 object-contain" />
         </div>
 
-        <h3 className="font-serif text-lg font-bold text-foreground mb-2">Stay in the Flow</h3>
+        <h3 className="text-lg font-bold text-foreground mb-2">Stay in the Flow</h3>
         <p className="text-sm text-muted-foreground mb-5">
           Get daily wisdom, streak reminders, and new book alerts
         </p>

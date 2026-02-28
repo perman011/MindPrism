@@ -114,7 +114,7 @@ export default function AdminUsers() {
             </Button>
           </Link>
           <Users className="w-6 h-6 text-primary" />
-          <h1 className="text-2xl font-serif font-bold">Team & Users</h1>
+          <h1 className="text-2xl font-bold">Team & Users</h1>
           <Badge variant="secondary" className="ml-2">{allUsers?.length || 0} users</Badge>
           <div className="flex-1" />
           <Link href="/">

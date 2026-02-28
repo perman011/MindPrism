@@ -165,7 +165,7 @@ export default function LandingPage() {
                 }`}
                 data-testid={`slide-${i}`}
               >
-                <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4">
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4">
                   {slide.title}{" "}
                   <span className="bg-gradient-to-r from-blue-400 to-purple-300 bg-clip-text text-transparent">
                     {slide.highlight}

@@ -94,7 +94,7 @@ export default function Discover() {
         noIndex
       />
       <div className="px-5 pt-6 pb-4">
-        <h1 className="font-serif text-2xl font-bold mb-1" data-testid="text-discover-title">Discover</h1>
+        <h1 className="text-2xl font-bold mb-1" data-testid="text-discover-title">Discover</h1>
         <p className="text-sm text-muted-foreground mb-5">Find your next great read</p>
 
         <div className="relative mb-4">

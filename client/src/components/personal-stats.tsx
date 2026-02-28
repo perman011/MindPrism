@@ -70,7 +70,7 @@ export function PersonalStats() {
 
   return (
     <div data-testid="personal-stats">
-      <h2 className="font-serif text-lg font-bold mb-1">Your Stats</h2>
+      <h2 className="text-lg font-bold mb-1">Your Stats</h2>
       <p className="text-[11px] text-muted-foreground mb-4">Your learning journey at a glance</p>
 
       <div className="grid grid-cols-2 gap-3 mb-6">

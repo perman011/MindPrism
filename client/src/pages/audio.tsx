@@ -30,7 +30,7 @@ export default function AudioPage() {
         noIndex
       />
       <div className="px-5 pt-6 pb-3">
-        <h1 className="font-serif text-2xl font-bold mb-1" data-testid="text-audio-title">Audio Summaries</h1>
+        <h1 className="text-2xl font-bold mb-1" data-testid="text-audio-title">Audio Summaries</h1>
         <p className="text-sm text-muted-foreground mb-6">Listen and learn on the go</p>
       </div>
 
@@ -55,7 +55,7 @@ export default function AudioPage() {
                     <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                      <span className="font-serif text-lg font-bold text-primary/30">{book.title[0]}</span>
+                      <span className="text-lg font-bold text-primary/30">{book.title[0]}</span>
                     </div>
                   )}
                   <div className="absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">

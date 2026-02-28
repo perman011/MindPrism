@@ -58,7 +58,7 @@ export default function Onboarding() {
           <div className="bg-primary h-1.5 rounded-full w-full transition-all" />
         </div>
 
-        <h1 className="font-serif text-2xl sm:text-3xl font-bold mb-2" data-testid="text-onboarding-title">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2" data-testid="text-onboarding-title">
           What areas of your mind do you want to master?
         </h1>
         <p className="text-muted-foreground mb-6">

@@ -78,7 +78,7 @@ export default function Library() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="font-serif text-2xl sm:text-3xl font-bold" data-testid="text-library-title">
+            <h1 className="text-2xl sm:text-3xl font-bold" data-testid="text-library-title">
               Book Library
             </h1>
             <p className="text-muted-foreground mt-1">

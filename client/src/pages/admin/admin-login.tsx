@@ -19,7 +19,7 @@ export default function AdminLogin() {
           <div className="inline-flex items-center justify-center mb-4 mix-blend-screen">
             <img src={mindprismLogo} alt="MindPrism" className="h-36 object-contain" style={{ aspectRatio: '1.618' }} />
           </div>
-          <h1 className="font-serif text-2xl font-bold text-foreground mb-1" data-testid="text-admin-title">
+          <h1 className="text-2xl font-bold text-foreground mb-1" data-testid="text-admin-title">
             Admin Portal
           </h1>
           <p className="text-sm text-muted-foreground">

@@ -24,7 +24,7 @@ export function MiniPlayer() {
               <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full bg-primary/20 flex items-center justify-center">
-                <span className="font-serif text-sm font-bold text-primary/50">{book.title[0]}</span>
+                <span className="text-sm font-bold text-primary/50">{book.title[0]}</span>
               </div>
             )}
           </div>

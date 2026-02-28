@@ -110,7 +110,7 @@ export function BookQuiz({ bookId, bookTitle, onClose, onCelebrate }: BookQuizPr
     return (
       <div className="min-h-screen bg-[#F5F0EB] flex flex-col items-center justify-center p-6">
         <Brain className="w-16 h-16 text-muted-foreground/20 mb-4" />
-        <h2 className="font-serif text-xl font-bold mb-2">No Quiz Available</h2>
+        <h2 className="text-xl font-bold mb-2">No Quiz Available</h2>
         <p className="text-sm text-muted-foreground text-center mb-6">
           This book needs more content before a quiz can be generated.
         </p>
@@ -140,7 +140,7 @@ export function BookQuiz({ bookId, bookTitle, onClose, onCelebrate }: BookQuizPr
             )}
           </div>
 
-          <h2 className="font-serif text-2xl font-bold mb-1" data-testid="text-quiz-complete">
+          <h2 className="text-2xl font-bold mb-1" data-testid="text-quiz-complete">
             {passed ? "Excellent!" : "Keep Learning!"}
           </h2>
           <p className="text-sm text-muted-foreground mb-2">{bookTitle}</p>
@@ -236,7 +236,7 @@ export function BookQuiz({ bookId, bookTitle, onClose, onCelebrate }: BookQuizPr
             exit={{ x: -30, opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            <h3 className="font-serif text-lg font-bold mb-6 leading-snug" data-testid="text-quiz-question">
+            <h3 className="text-lg font-bold mb-6 leading-snug" data-testid="text-quiz-question">
               {question.question}
             </h3>
 
