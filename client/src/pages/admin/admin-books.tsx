@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, BookOpen, Edit, Trash2, Globe, FileText, Users, ExternalLink, Rocket, ArrowDownCircle, BarChart3 } from "lucide-react";
+import { Plus, BookOpen, Edit, Trash2, Globe, FileText, Users, ExternalLink, Rocket, ArrowDownCircle, BarChart3, Film } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 
@@ -124,6 +124,12 @@ export default function AdminBooks() {
                 </Button>
               </Link>
             )}
+            <Link href="/admin/shorts">
+              <Button variant="outline" className="gap-2" data-testid="button-admin-shorts">
+                <Film className="w-4 h-4" />
+                Shorts
+              </Button>
+            </Link>
             {isSuperAdmin && (
               <Link href="/admin/analytics">
                 <Button variant="outline" className="gap-2" data-testid="button-admin-analytics">

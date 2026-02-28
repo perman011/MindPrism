@@ -1,5 +1,15 @@
 import { sql, relations } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, jsonb, date, real } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  varchar,
+  integer,
+  boolean,
+  timestamp,
+  jsonb,
+  date,
+  real,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -7,7 +17,9 @@ export * from "./models/auth";
 import { users } from "./models/auth";
 
 export const categories = pgTable("categories", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
   icon: text("icon").notNull(),
@@ -15,7 +27,9 @@ export const categories = pgTable("categories", {
 });
 
 export const books = pgTable("books", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   title: text("title").notNull(),
   author: text("author").notNull(),
   coverImage: text("cover_image"),
@@ -39,8 +53,12 @@ export const books = pgTable("books", {
 });
 
 export const bookVersions = pgTable("book_versions", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  bookId: varchar("book_id").references(() => books.id, { onDelete: "cascade" }).notNull(),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  bookId: varchar("book_id")
+    .references(() => books.id, { onDelete: "cascade" })
+    .notNull(),
   versionType: varchar("version_type").notNull().default("draft"),
   content: jsonb("content").notNull().default({}),
   createdAt: timestamp("created_at").defaultNow(),
@@ -49,8 +67,12 @@ export const bookVersions = pgTable("book_versions", {
 });
 
 export const principles = pgTable("principles", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  bookId: varchar("book_id").references(() => books.id).notNull(),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  bookId: varchar("book_id")
+    .references(() => books.id)
+    .notNull(),
   title: text("title").notNull(),
   content: text("content").notNull(),
   orderIndex: integer("order_index").notNull(),
@@ -60,8 +82,12 @@ export const principles = pgTable("principles", {
 });
 
 export const stories = pgTable("stories", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  bookId: varchar("book_id").references(() => books.id).notNull(),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  bookId: varchar("book_id")
+    .references(() => books.id)
+    .notNull(),
   principleId: varchar("principle_id"),
   title: text("title").notNull(),
   content: text("content").notNull(),
@@ -70,8 +96,12 @@ export const stories = pgTable("stories", {
 });
 
 export const exercises = pgTable("exercises", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  bookId: varchar("book_id").references(() => books.id).notNull(),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  bookId: varchar("book_id")
+    .references(() => books.id)
+    .notNull(),
   title: text("title").notNull(),
   description: text("description").notNull(),
   type: text("type").notNull(),
@@ -82,16 +112,24 @@ export const exercises = pgTable("exercises", {
 });
 
 export const chapterSummaries = pgTable("chapter_summaries", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  bookId: varchar("book_id").references(() => books.id).notNull(),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  bookId: varchar("book_id")
+    .references(() => books.id)
+    .notNull(),
   chapterNumber: integer("chapter_number").notNull(),
   chapterTitle: text("chapter_title").notNull(),
   cards: jsonb("cards").notNull(),
 });
 
 export const mentalModels = pgTable("mental_models", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  bookId: varchar("book_id").references(() => books.id).notNull(),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  bookId: varchar("book_id")
+    .references(() => books.id)
+    .notNull(),
   title: text("title").notNull(),
   description: text("description").notNull(),
   steps: jsonb("steps").notNull(),
@@ -99,16 +137,24 @@ export const mentalModels = pgTable("mental_models", {
 });
 
 export const commonMistakes = pgTable("common_mistakes", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  bookId: varchar("book_id").references(() => books.id).notNull(),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  bookId: varchar("book_id")
+    .references(() => books.id)
+    .notNull(),
   mistake: text("mistake").notNull(),
   correction: text("correction").notNull(),
   orderIndex: integer("order_index").notNull(),
 });
 
 export const infographics = pgTable("infographics", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  bookId: varchar("book_id").references(() => books.id).notNull(),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  bookId: varchar("book_id")
+    .references(() => books.id)
+    .notNull(),
   title: text("title").notNull(),
   description: text("description").notNull(),
   imageUrl: text("image_url"),
@@ -117,8 +163,12 @@ export const infographics = pgTable("infographics", {
 });
 
 export const actionItems = pgTable("action_items", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  bookId: varchar("book_id").references(() => books.id).notNull(),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  bookId: varchar("book_id")
+    .references(() => books.id)
+    .notNull(),
   text: text("text").notNull(),
   type: text("type").notNull(),
   powersUpChakra: text("powers_up_chakra"),
@@ -126,9 +176,15 @@ export const actionItems = pgTable("action_items", {
 });
 
 export const userProgress = pgTable("user_progress", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").references(() => users.id).notNull(),
-  bookId: varchar("book_id").references(() => books.id).notNull(),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id")
+    .references(() => users.id)
+    .notNull(),
+  bookId: varchar("book_id")
+    .references(() => books.id)
+    .notNull(),
   completedPrinciples: text("completed_principles").array().default([]),
   completedExercises: text("completed_exercises").array().default([]),
   bookmarked: boolean("bookmarked").default(false),
@@ -139,23 +195,33 @@ export const userProgress = pgTable("user_progress", {
 });
 
 export const journalEntries = pgTable("journal_entries", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").references(() => users.id).notNull(),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id")
+    .references(() => users.id)
+    .notNull(),
   exerciseId: varchar("exercise_id"),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const userInterests = pgTable("user_interests", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").references(() => users.id).notNull(),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id")
+    .references(() => users.id)
+    .notNull(),
   interests: text("interests").array().default([]),
   onboardingCompleted: boolean("onboarding_completed").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const dailySparks = pgTable("daily_sparks", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   quote: text("quote").notNull(),
   author: text("author").notNull(),
   bookId: varchar("book_id").references(() => books.id),
@@ -163,8 +229,12 @@ export const dailySparks = pgTable("daily_sparks", {
 });
 
 export const userStreaks = pgTable("user_streaks", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").references(() => users.id).notNull(),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id")
+    .references(() => users.id)
+    .notNull(),
   currentStreak: integer("current_streak").default(0),
   longestStreak: integer("longest_streak").default(0),
   lastActiveDate: date("last_active_date"),
@@ -174,9 +244,15 @@ export const userStreaks = pgTable("user_streaks", {
 });
 
 export const savedHighlights = pgTable("saved_highlights", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").references(() => users.id).notNull(),
-  bookId: varchar("book_id").references(() => books.id).notNull(),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id")
+    .references(() => users.id)
+    .notNull(),
+  bookId: varchar("book_id")
+    .references(() => books.id)
+    .notNull(),
   principleId: varchar("principle_id"),
   content: text("content").notNull(),
   type: text("type").notNull(),
@@ -184,8 +260,12 @@ export const savedHighlights = pgTable("saved_highlights", {
 });
 
 export const chakraProgress = pgTable("chakra_progress", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").references(() => users.id).notNull(),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id")
+    .references(() => users.id)
+    .notNull(),
   chakra: text("chakra").notNull(),
   points: integer("points").default(0),
   exercisesCompleted: integer("exercises_completed").default(0),
@@ -193,18 +273,26 @@ export const chakraProgress = pgTable("chakra_progress", {
 });
 
 export const comments = pgTable("comments", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  bookId: varchar("book_id").references(() => books.id).notNull(),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  bookId: varchar("book_id")
+    .references(() => books.id)
+    .notNull(),
   blockType: text("block_type").notNull(),
   blockId: text("block_id").notNull(),
-  userId: varchar("user_id").references(() => users.id).notNull(),
+  userId: varchar("user_id")
+    .references(() => users.id)
+    .notNull(),
   content: text("content").notNull(),
   resolved: boolean("resolved").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const analyticsEvents = pgTable("analytics_events", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id),
   eventType: text("event_type").notNull(),
   eventData: jsonb("event_data"),
@@ -213,55 +301,27 @@ export const analyticsEvents = pgTable("analytics_events", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const analyticsEventsRelations = relations(analyticsEvents, ({ one }) => ({
-  user: one(users, { fields: [analyticsEvents.userId], references: [users.id] }),
-}));
+export const analyticsEventsRelations = relations(
+  analyticsEvents,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [analyticsEvents.userId],
+      references: [users.id],
+    }),
+  }),
+);
 
-export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).omit({ id: true, createdAt: true });
+export const insertAnalyticsEventSchema = createInsertSchema(
+  analyticsEvents,
+).omit({ id: true, createdAt: true });
 export type InsertAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
 export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
 
-export const shorts = pgTable("shorts", {
-  id: varchar("id", { length: 255 }).primaryKey().default(sql`gen_random_uuid()`),
-  bookId: varchar("book_id", { length: 255 }).notNull().references(() => books.id),
-  title: text("title").notNull(),
-  content: text("content").notNull(),
-  mediaType: text("media_type").notNull(),
-  mediaUrl: text("media_url"),
-  thumbnailUrl: text("thumbnail_url"),
-  backgroundGradient: text("background_gradient"),
-  duration: integer("duration"),
-  orderIndex: integer("order_index").notNull().default(0),
-  status: text("status").notNull().default("draft"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-export const shortViews = pgTable("short_views", {
-  id: varchar("id", { length: 255 }).primaryKey().default(sql`gen_random_uuid()`),
-  shortId: varchar("short_id", { length: 255 }).notNull().references(() => shorts.id),
-  userId: text("user_id"),
-  viewedAt: timestamp("viewed_at").defaultNow(),
-});
-
-export const shortsRelations = relations(shorts, ({ one }) => ({
-  book: one(books, { fields: [shorts.bookId], references: [books.id] }),
-}));
-
-export const shortViewsRelations = relations(shortViews, ({ one }) => ({
-  short: one(shorts, { fields: [shortViews.shortId], references: [shorts.id] }),
-}));
-
-export const insertShortSchema = createInsertSchema(shorts).omit({ id: true, createdAt: true, updatedAt: true });
-export type InsertShort = z.infer<typeof insertShortSchema>;
-export type Short = typeof shorts.$inferSelect;
-
-export const insertShortViewSchema = createInsertSchema(shortViews).omit({ id: true, viewedAt: true });
-export type InsertShortView = z.infer<typeof insertShortViewSchema>;
-export type ShortView = typeof shortViews.$inferSelect;
-
 export const booksRelations = relations(books, ({ one, many }) => ({
-  category: one(categories, { fields: [books.categoryId], references: [categories.id] }),
+  category: one(categories, {
+    fields: [books.categoryId],
+    references: [categories.id],
+  }),
   principles: many(principles),
   stories: many(stories),
   exercises: many(exercises),
@@ -271,7 +331,6 @@ export const booksRelations = relations(books, ({ one, many }) => ({
   actionItems: many(actionItems),
   infographics: many(infographics),
   versions: many(bookVersions),
-  shorts: many(shorts),
 }));
 
 export const bookVersionsRelations = relations(bookVersions, ({ one }) => ({
@@ -285,16 +344,25 @@ export const principlesRelations = relations(principles, ({ one, many }) => ({
 
 export const storiesRelations = relations(stories, ({ one }) => ({
   book: one(books, { fields: [stories.bookId], references: [books.id] }),
-  principle: one(principles, { fields: [stories.principleId], references: [principles.id] }),
+  principle: one(principles, {
+    fields: [stories.principleId],
+    references: [principles.id],
+  }),
 }));
 
 export const exercisesRelations = relations(exercises, ({ one }) => ({
   book: one(books, { fields: [exercises.bookId], references: [books.id] }),
 }));
 
-export const chapterSummariesRelations = relations(chapterSummaries, ({ one }) => ({
-  book: one(books, { fields: [chapterSummaries.bookId], references: [books.id] }),
-}));
+export const chapterSummariesRelations = relations(
+  chapterSummaries,
+  ({ one }) => ({
+    book: one(books, {
+      fields: [chapterSummaries.bookId],
+      references: [books.id],
+    }),
+  }),
+);
 
 export const mentalModelsRelations = relations(mentalModels, ({ one }) => ({
   book: one(books, { fields: [mentalModels.bookId], references: [books.id] }),
@@ -329,10 +397,19 @@ export const userStreaksRelations = relations(userStreaks, ({ one }) => ({
   user: one(users, { fields: [userStreaks.userId], references: [users.id] }),
 }));
 
-export const savedHighlightsRelations = relations(savedHighlights, ({ one }) => ({
-  user: one(users, { fields: [savedHighlights.userId], references: [users.id] }),
-  book: one(books, { fields: [savedHighlights.bookId], references: [books.id] }),
-}));
+export const savedHighlightsRelations = relations(
+  savedHighlights,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [savedHighlights.userId],
+      references: [users.id],
+    }),
+    book: one(books, {
+      fields: [savedHighlights.bookId],
+      references: [books.id],
+    }),
+  }),
+);
 
 export const chakraProgressRelations = relations(chakraProgress, ({ one }) => ({
   user: one(users, { fields: [chakraProgress.userId], references: [users.id] }),
@@ -343,25 +420,63 @@ export const commentsRelations = relations(comments, ({ one }) => ({
   book: one(books, { fields: [comments.bookId], references: [books.id] }),
 }));
 
-export const insertBookSchema = createInsertSchema(books).omit({ id: true, currentDraftVersionId: true, currentPublishedVersionId: true });
-export const insertBookVersionSchema = createInsertSchema(bookVersions).omit({ id: true });
-export const insertPrincipleSchema = createInsertSchema(principles).omit({ id: true });
+export const insertBookSchema = createInsertSchema(books).omit({
+  id: true,
+  currentDraftVersionId: true,
+  currentPublishedVersionId: true,
+});
+export const insertBookVersionSchema = createInsertSchema(bookVersions).omit({
+  id: true,
+});
+export const insertPrincipleSchema = createInsertSchema(principles).omit({
+  id: true,
+});
 export const insertStorySchema = createInsertSchema(stories).omit({ id: true });
-export const insertExerciseSchema = createInsertSchema(exercises).omit({ id: true });
-export const insertUserProgressSchema = createInsertSchema(userProgress).omit({ id: true });
-export const insertJournalEntrySchema = createInsertSchema(journalEntries).omit({ id: true });
-export const insertCategorySchema = createInsertSchema(categories).omit({ id: true });
-export const insertUserInterestsSchema = createInsertSchema(userInterests).omit({ id: true });
-export const insertDailySparkSchema = createInsertSchema(dailySparks).omit({ id: true });
-export const insertUserStreakSchema = createInsertSchema(userStreaks).omit({ id: true });
-export const insertSavedHighlightSchema = createInsertSchema(savedHighlights).omit({ id: true });
-export const insertChapterSummarySchema = createInsertSchema(chapterSummaries).omit({ id: true });
-export const insertMentalModelSchema = createInsertSchema(mentalModels).omit({ id: true });
-export const insertCommonMistakeSchema = createInsertSchema(commonMistakes).omit({ id: true });
-export const insertInfographicSchema = createInsertSchema(infographics).omit({ id: true });
-export const insertActionItemSchema = createInsertSchema(actionItems).omit({ id: true });
-export const insertChakraProgressSchema = createInsertSchema(chakraProgress).omit({ id: true });
-export const insertCommentSchema = createInsertSchema(comments).omit({ id: true });
+export const insertExerciseSchema = createInsertSchema(exercises).omit({
+  id: true,
+});
+export const insertUserProgressSchema = createInsertSchema(userProgress).omit({
+  id: true,
+});
+export const insertJournalEntrySchema = createInsertSchema(journalEntries).omit(
+  { id: true },
+);
+export const insertCategorySchema = createInsertSchema(categories).omit({
+  id: true,
+});
+export const insertUserInterestsSchema = createInsertSchema(userInterests).omit(
+  { id: true },
+);
+export const insertDailySparkSchema = createInsertSchema(dailySparks).omit({
+  id: true,
+});
+export const insertUserStreakSchema = createInsertSchema(userStreaks).omit({
+  id: true,
+});
+export const insertSavedHighlightSchema = createInsertSchema(
+  savedHighlights,
+).omit({ id: true });
+export const insertChapterSummarySchema = createInsertSchema(
+  chapterSummaries,
+).omit({ id: true });
+export const insertMentalModelSchema = createInsertSchema(mentalModels).omit({
+  id: true,
+});
+export const insertCommonMistakeSchema = createInsertSchema(
+  commonMistakes,
+).omit({ id: true });
+export const insertInfographicSchema = createInsertSchema(infographics).omit({
+  id: true,
+});
+export const insertActionItemSchema = createInsertSchema(actionItems).omit({
+  id: true,
+});
+export const insertChakraProgressSchema = createInsertSchema(
+  chakraProgress,
+).omit({ id: true });
+export const insertCommentSchema = createInsertSchema(comments).omit({
+  id: true,
+});
 
 export type InsertBook = z.infer<typeof insertBookSchema>;
 export type Book = typeof books.$inferSelect;
@@ -403,8 +518,13 @@ export type InsertComment = z.infer<typeof insertCommentSchema>;
 export type Comment = typeof comments.$inferSelect;
 
 export const notificationPreferences = pgTable("notification_preferences", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().unique().references(() => users.id),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id")
+    .notNull()
+    .unique()
+    .references(() => users.id),
   dailyReminder: boolean("daily_reminder").default(true),
   streakAlerts: boolean("streak_alerts").default(true),
   newContent: boolean("new_content").default(true),
@@ -416,17 +536,32 @@ export const notificationPreferences = pgTable("notification_preferences", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const notificationPreferencesRelations = relations(notificationPreferences, ({ one }) => ({
-  user: one(users, { fields: [notificationPreferences.userId], references: [users.id] }),
-}));
+export const notificationPreferencesRelations = relations(
+  notificationPreferences,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [notificationPreferences.userId],
+      references: [users.id],
+    }),
+  }),
+);
 
-export const insertNotificationPreferencesSchema = createInsertSchema(notificationPreferences).omit({ id: true, updatedAt: true });
-export type InsertNotificationPreferences = z.infer<typeof insertNotificationPreferencesSchema>;
-export type NotificationPreference = typeof notificationPreferences.$inferSelect;
+export const insertNotificationPreferencesSchema = createInsertSchema(
+  notificationPreferences,
+).omit({ id: true, updatedAt: true });
+export type InsertNotificationPreferences = z.infer<
+  typeof insertNotificationPreferencesSchema
+>;
+export type NotificationPreference =
+  typeof notificationPreferences.$inferSelect;
 
 export const userActivityLog = pgTable("user_activity_log", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").references(() => users.id).notNull(),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id")
+    .references(() => users.id)
+    .notNull(),
   eventType: text("event_type").notNull(),
   eventData: jsonb("event_data").default({}),
   bookId: varchar("book_id").references(() => books.id),
@@ -434,20 +569,37 @@ export const userActivityLog = pgTable("user_activity_log", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const userActivityLogRelations = relations(userActivityLog, ({ one }) => ({
-  user: one(users, { fields: [userActivityLog.userId], references: [users.id] }),
-  book: one(books, { fields: [userActivityLog.bookId], references: [books.id] }),
-}));
+export const userActivityLogRelations = relations(
+  userActivityLog,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [userActivityLog.userId],
+      references: [users.id],
+    }),
+    book: one(books, {
+      fields: [userActivityLog.bookId],
+      references: [books.id],
+    }),
+  }),
+);
 
-export const insertUserActivityLogSchema = createInsertSchema(userActivityLog).omit({ id: true, createdAt: true });
+export const insertUserActivityLogSchema = createInsertSchema(
+  userActivityLog,
+).omit({ id: true, createdAt: true });
 export type InsertUserActivityLog = z.infer<typeof insertUserActivityLogSchema>;
 export type UserActivityLog = typeof userActivityLog.$inferSelect;
 
 export const flashcardProgress = pgTable("flashcard_progress", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull(),
-  bookId: varchar("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
-  principleId: varchar("principle_id").notNull().references(() => principles.id, { onDelete: "cascade" }),
+  bookId: varchar("book_id")
+    .notNull()
+    .references(() => books.id, { onDelete: "cascade" }),
+  principleId: varchar("principle_id")
+    .notNull()
+    .references(() => principles.id, { onDelete: "cascade" }),
   status: varchar("status").notNull().default("new"),
   nextReviewDate: timestamp("next_review_date").defaultNow(),
   easeFactor: real("ease_factor").default(2.5),
@@ -457,20 +609,39 @@ export const flashcardProgress = pgTable("flashcard_progress", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const flashcardProgressRelations = relations(flashcardProgress, ({ one }) => ({
-  book: one(books, { fields: [flashcardProgress.bookId], references: [books.id] }),
-  principle: one(principles, { fields: [flashcardProgress.principleId], references: [principles.id] }),
-}));
+export const flashcardProgressRelations = relations(
+  flashcardProgress,
+  ({ one }) => ({
+    book: one(books, {
+      fields: [flashcardProgress.bookId],
+      references: [books.id],
+    }),
+    principle: one(principles, {
+      fields: [flashcardProgress.principleId],
+      references: [principles.id],
+    }),
+  }),
+);
 
-export const insertFlashcardProgressSchema = createInsertSchema(flashcardProgress).omit({ id: true, createdAt: true, updatedAt: true });
-export type InsertFlashcardProgress = z.infer<typeof insertFlashcardProgressSchema>;
+export const insertFlashcardProgressSchema = createInsertSchema(
+  flashcardProgress,
+).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertFlashcardProgress = z.infer<
+  typeof insertFlashcardProgressSchema
+>;
 export type FlashcardProgress = typeof flashcardProgress.$inferSelect;
 
 export const quizResults = pgTable("quiz_results", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull(),
-  bookId: varchar("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
-  chapterId: varchar("chapter_id").notNull().references(() => chapterSummaries.id, { onDelete: "cascade" }),
+  bookId: varchar("book_id")
+    .notNull()
+    .references(() => books.id, { onDelete: "cascade" }),
+  chapterId: varchar("chapter_id")
+    .notNull()
+    .references(() => chapterSummaries.id, { onDelete: "cascade" }),
   score: integer("score").notNull(),
   totalQuestions: integer("total_questions").notNull(),
   answers: jsonb("answers").default([]),
@@ -479,21 +650,62 @@ export const quizResults = pgTable("quiz_results", {
 
 export const quizResultsRelations = relations(quizResults, ({ one }) => ({
   book: one(books, { fields: [quizResults.bookId], references: [books.id] }),
-  chapter: one(chapterSummaries, { fields: [quizResults.chapterId], references: [chapterSummaries.id] }),
+  chapter: one(chapterSummaries, {
+    fields: [quizResults.chapterId],
+    references: [chapterSummaries.id],
+  }),
 }));
 
-export const insertQuizResultSchema = createInsertSchema(quizResults).omit({ id: true, completedAt: true });
+export const insertQuizResultSchema = createInsertSchema(quizResults).omit({
+  id: true,
+  completedAt: true,
+});
 export type InsertQuizResult = z.infer<typeof insertQuizResultSchema>;
 export type QuizResult = typeof quizResults.$inferSelect;
 
 export const CHAKRA_MAP = {
-  root: { name: "Root", sanskrit: "Muladhara", color: "#EF4444", theme: "Foundation & Routine" },
-  sacral: { name: "Sacral", sanskrit: "Svadhisthana", color: "#F97316", theme: "Creativity & Emotion" },
-  solar_plexus: { name: "Solar Plexus", sanskrit: "Manipura", color: "#EAB308", theme: "Willpower & Action" },
-  heart: { name: "Heart", sanskrit: "Anahata", color: "#22C55E", theme: "Empathy & Connection" },
-  throat: { name: "Throat", sanskrit: "Vishuddha", color: "#3B82F6", theme: "Communication & Truth" },
-  third_eye: { name: "Third Eye", sanskrit: "Ajna", color: "#6366F1", theme: "Cognition & Intuition" },
-  crown: { name: "Crown", sanskrit: "Sahasrara", color: "#8B5CF6", theme: "Purpose & Meaning" },
+  root: {
+    name: "Root",
+    sanskrit: "Muladhara",
+    color: "#EF4444",
+    theme: "Foundation & Routine",
+  },
+  sacral: {
+    name: "Sacral",
+    sanskrit: "Svadhisthana",
+    color: "#F97316",
+    theme: "Creativity & Emotion",
+  },
+  solar_plexus: {
+    name: "Solar Plexus",
+    sanskrit: "Manipura",
+    color: "#EAB308",
+    theme: "Willpower & Action",
+  },
+  heart: {
+    name: "Heart",
+    sanskrit: "Anahata",
+    color: "#22C55E",
+    theme: "Empathy & Connection",
+  },
+  throat: {
+    name: "Throat",
+    sanskrit: "Vishuddha",
+    color: "#3B82F6",
+    theme: "Communication & Truth",
+  },
+  third_eye: {
+    name: "Third Eye",
+    sanskrit: "Ajna",
+    color: "#6366F1",
+    theme: "Cognition & Intuition",
+  },
+  crown: {
+    name: "Crown",
+    sanskrit: "Sahasrara",
+    color: "#8B5CF6",
+    theme: "Purpose & Meaning",
+  },
 } as const;
 
 export type ChakraType = keyof typeof CHAKRA_MAP;
