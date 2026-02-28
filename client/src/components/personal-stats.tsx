@@ -7,9 +7,6 @@ import {
   Target, PenLine, BarChart3
 } from "lucide-react";
 import { motion } from "framer-motion";
-import {
-  BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell,
-} from "recharts";
 import { ProgressShareCard } from "./progress-share-card";
 
 interface UserStats {
@@ -26,6 +23,8 @@ interface UserStats {
   totalExercisesCompleted: number;
   journalEntries: number;
   weeklyActivity: { day: string; date: string; activities: number }[];
+  monthlyActivity: { date: string; activities: number }[];
+  storiesRead: number;
 }
 
 export function PersonalStats() {
@@ -66,8 +65,6 @@ export function PersonalStats() {
     { icon: BarChart3, label: "Exercises Done", value: stats.exercisesDone, color: "text-purple-700" },
   ];
 
-  const maxActivity = Math.max(...stats.weeklyActivity.map(d => d.activities), 1);
-
   return (
     <div data-testid="personal-stats">
       <h2 className="text-lg font-bold mb-1">Your Stats</h2>
@@ -79,7 +76,7 @@ export function PersonalStats() {
             key={stat.label}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
+            transition={{ delay: i * 0.05, duration: 0.2, ease: "easeOut" }}
           >
             <Card className="p-3.5 relative overflow-hidden" data-testid={`stat-card-${stat.label.toLowerCase().replace(/\s+/g, "-")}`}>
               <div className="flex items-center gap-2.5 mb-2">
@@ -93,45 +90,6 @@ export function PersonalStats() {
           </motion.div>
         ))}
       </div>
-
-      <Card className="p-4 mb-6 bg-[#F5F0EB] border-primary/10" data-testid="weekly-activity-chart">
-        <h3 className="text-[11px] font-semibold uppercase tracking-widest text-primary mb-4">Weekly Activity</h3>
-        <div className="h-36">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={stats.weeklyActivity} barCategoryGap="20%">
-              <XAxis
-                dataKey="day"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
-              />
-              <YAxis hide />
-              <Tooltip
-                contentStyle={{
-                  background: "#FFFFFF",
-                  border: "1px solid hsl(220 13% 91%)",
-                  borderRadius: "8px",
-                  color: "#111827",
-                  fontSize: "12px",
-                }}
-                labelStyle={{ color: "hsl(292 46% 15%)" }}
-                cursor={false}
-              />
-              <Bar dataKey="activities" radius={[4, 4, 0, 0]} maxBarSize={32}>
-                {stats.weeklyActivity.map((entry, index) => (
-                  <Cell
-                    key={index}
-                    fill={entry.activities > 0
-                      ? `hsl(292 46% ${60 - (entry.activities / maxActivity) * 10}%)`
-                      : "hsl(var(--muted) / 0.5)"
-                    }
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </Card>
 
       <div className="grid grid-cols-2 gap-3">
         {highlights.map((h, i) => (

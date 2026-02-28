@@ -710,11 +710,36 @@ export async function registerRoutes(
         weekDays.push({ day: dayName, date: dateStr, activities: found ? Number(found.count) : 0 });
       }
 
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const monthlyActivityRaw = await db
+        .select({
+          date: dsql<string>`DATE(${userActivityLog.createdAt})`,
+          count: count(),
+        })
+        .from(userActivityLog)
+        .where(and(
+          eq(userActivityLog.userId, userId),
+          gte(userActivityLog.createdAt, thirtyDaysAgo)
+        ))
+        .groupBy(dsql`DATE(${userActivityLog.createdAt})`)
+        .orderBy(dsql`DATE(${userActivityLog.createdAt})`);
+
+      const monthDays = [];
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toISOString().split("T")[0];
+        const found = monthlyActivityRaw.find(w => w.date === dateStr);
+        monthDays.push({ date: dateStr, activities: found ? Number(found.count) : 0 });
+      }
+
       res.json({
         booksStarted,
         booksCompleted,
         principlesMastered,
         exercisesDone,
+        storiesRead: principlesMastered,
         categoriesExplored,
         totalTimeInvested,
         avgTimePerBook,
@@ -724,6 +749,7 @@ export async function registerRoutes(
         totalExercisesCompleted: streak?.totalExercisesCompleted ?? 0,
         journalEntries: journalCount?.count ? Number(journalCount.count) : 0,
         weeklyActivity: weekDays,
+        monthlyActivity: monthDays,
       });
     } catch (error) {
       console.error("Error fetching user stats:", error);
