@@ -823,7 +823,7 @@ export default function StoryEngine() {
             <SectionIcon className={`w-3 h-3 ${meta.color}`} />
             {meta.label}
           </Badge>
-          <span className="text-[10px] text-muted-foreground">{currentIndex + 1} / {totalCards}</span>
+          <span className="text-[10px] text-muted-foreground" data-testid="text-key-point-indicator">Key Point {currentIndex + 1} of {totalCards}</span>
         </div>
         <div className="flex items-center gap-2">
           <button

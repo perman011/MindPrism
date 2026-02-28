@@ -489,6 +489,37 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/daily-insight", isAuthenticated, async (_req: any, res) => {
+    try {
+      const allPrinciples = await db.select({
+        id: principles.id,
+        title: principles.title,
+        content: principles.content,
+        bookId: principles.bookId,
+      }).from(principles).where(dsql`${principles.content} IS NOT NULL AND ${principles.content} != ''`);
+
+      if (allPrinciples.length === 0) {
+        return res.json(null);
+      }
+
+      const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+      const insight = allPrinciples[dayOfYear % allPrinciples.length];
+
+      const book = await db.select({ title: books.title }).from(books).where(eq(books.id, insight.bookId)).limit(1);
+
+      res.json({
+        id: insight.id,
+        title: insight.title,
+        content: insight.content,
+        bookTitle: book[0]?.title || "Unknown",
+        bookId: insight.bookId,
+      });
+    } catch (error) {
+      console.error("Error fetching daily insight:", error);
+      res.status(500).json({ message: "Failed to fetch daily insight" });
+    }
+  });
+
   app.post("/api/streak/activity", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;

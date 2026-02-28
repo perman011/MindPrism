@@ -15,7 +15,7 @@ export function FullScreenPlayer() {
   };
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
-  const speeds = [1, 1.25, 1.5, 2];
+  const speeds = [0.5, 1, 1.25, 1.5, 2];
 
   return (
     <div className="fixed inset-0 z-[100] bg-background flex flex-col" data-testid="full-screen-player">

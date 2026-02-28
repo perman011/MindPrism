@@ -7,7 +7,7 @@ import type { Book, Category, DailySpark, UserStreak, UserProgress, ChakraProgre
 import { CHAKRA_MAP } from "@shared/schema";
 import { BookCard } from "@/components/book-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Brain, Flame, ArrowRight, Sparkles, BookOpen, ChevronRight, ChevronLeft, X } from "lucide-react";
+import { Brain, Flame, ArrowRight, Sparkles, BookOpen, ChevronRight, ChevronLeft, X, Lightbulb } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -168,6 +168,11 @@ export default function Dashboard() {
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
+  const { data: dailyInsight } = useQuery<{ id: string; title: string; content: string; bookTitle: string; bookId: string } | null>({
+    queryKey: ["/api/daily-insight"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+  });
+
   const featuredBooks = books?.filter((b) => b.featured) ?? [];
   const allBooks = books ?? [];
   const inProgressBooks = allProgress?.filter(p => p.currentCardIndex && p.currentCardIndex > 0 && p.totalCards && p.currentCardIndex < p.totalCards) ?? [];
@@ -202,9 +207,9 @@ export default function Dashboard() {
           </h1>
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full" data-testid="badge-streak">
-            <Flame className="w-4 h-4 text-primary" />
-            <span className="text-sm font-bold text-primary">{streak?.currentStreak ?? 0}</span>
+          <div className="flex items-center gap-2 bg-primary/10 px-4 py-2.5 rounded-full border border-primary/20" data-testid="badge-streak">
+            <span className="text-base">🔥</span>
+            <span className="text-sm font-bold text-primary">{streak?.currentStreak ?? 0} day{(streak?.currentStreak ?? 0) !== 1 ? "s" : ""}</span>
           </div>
           <Link href="/vault">
             <Avatar className="h-10 w-10 cursor-pointer">
@@ -346,6 +351,26 @@ export default function Dashboard() {
               </div>
             </div>
           </Card>
+        </div>
+      )}
+
+      {dailyInsight && (
+        <div className="px-5 mb-8">
+          <Link href={`/book/${dailyInsight.bookId}`}>
+            <Card className="p-5 bg-gradient-to-br from-violet-500/8 via-transparent to-primary/5 border-violet-500/15 cursor-pointer" data-testid="card-daily-insight">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-md bg-violet-500/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Lightbulb className="w-5 h-5 text-violet-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-[10px] font-semibold text-violet-400 uppercase tracking-widest mb-1.5">Daily Insight</p>
+                  <p className="font-serif text-base font-bold mb-1.5" data-testid="text-insight-title">{dailyInsight.title}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3" data-testid="text-insight-content">{dailyInsight.content}</p>
+                  <p className="text-[10px] text-muted-foreground/60 mt-2">From: {dailyInsight.bookTitle}</p>
+                </div>
+              </div>
+            </Card>
+          </Link>
         </div>
       )}
 
