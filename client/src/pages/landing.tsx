@@ -135,7 +135,10 @@ export default function LandingPage() {
             opacity: { duration: 1.2 },
           }}
         >
-          <img src={mindprismLogo} alt="MindPrism" className="h-16 object-contain" style={{ aspectRatio: '1.618' }} />
+          <div className="flex flex-col items-center">
+            <img src={mindprismLogo} alt="MindPrism" className="h-20 object-contain" style={{ aspectRatio: '1.618' }} />
+            <span className="text-xs font-semibold tracking-[0.15em] text-white/90 mt-1 font-serif">Mind Prism</span>
+          </div>
         </motion.div>
         <Button
           variant="ghost"

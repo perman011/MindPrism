@@ -54,7 +54,10 @@ export default function Library() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           <Link href="/">
             <div className="flex items-center cursor-pointer mix-blend-screen" data-testid="link-home">
-              <img src={mindprismLogo} alt="MindPrism" className="h-14 object-contain" style={{ aspectRatio: '1.618' }} />
+              <div className="flex flex-col items-center">
+                <img src={mindprismLogo} alt="MindPrism" className="h-16 object-contain" style={{ aspectRatio: '1.618' }} />
+                <span className="text-[10px] font-semibold tracking-[0.15em] text-foreground/80 -mt-0.5 font-serif">Mind Prism</span>
+              </div>
             </div>
           </Link>
           <div className="flex items-center gap-3">
