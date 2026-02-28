@@ -170,7 +170,7 @@ export default function Dashboard() {
   const { play } = useAudio();
   const [, navigate] = useLocation();
   const [activeChakra, setActiveChakra] = useState<ChakraType | null>(null);
-  const [dashboardMode, setDashboardMode] = useState<"chakra" | "reels">("chakra");
+  const [dashboardMode, setDashboardMode] = useState<"chakra" | "shorts">("chakra");
   const [celebrationMilestone, setCelebrationMilestone] = useState<typeof STREAK_MILESTONES[0] | null>(null);
   const [celebrationOpen, setCelebrationOpen] = useState(false);
   const [shownMilestones, setShownMilestones] = useState<Set<number>>(() => {
@@ -335,18 +335,18 @@ export default function Dashboard() {
                 Chakra
               </button>
               <button
-                onClick={() => setDashboardMode("reels")}
+                onClick={() => setDashboardMode("shorts")}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-all duration-200 ${
-                  dashboardMode === "reels"
+                  dashboardMode === "shorts"
                     ? "bg-white text-[#341539] shadow-lg"
                     : "text-white/70 hover:text-white"
                 }`}
-                data-testid="button-mode-reels"
-                aria-label="Switch to Reels view"
-                aria-pressed={dashboardMode === "reels"}
+                data-testid="button-mode-shorts"
+                aria-label="Switch to Shorts view"
+                aria-pressed={dashboardMode === "shorts"}
               >
                 <Film className="w-3.5 h-3.5" aria-hidden="true" />
-                Reels
+                Shorts
               </button>
             </div>
           </div>
@@ -404,9 +404,9 @@ export default function Dashboard() {
               <button
                 onClick={() => navigate("/shorts")}
                 className="mt-3 w-full py-2.5 rounded-full bg-white/10 text-white text-xs font-semibold hover:bg-white/15 transition-colors"
-                data-testid="button-see-all-reels"
+                data-testid="button-see-all-shorts"
               >
-                See All Reels
+                See All Shorts
               </button>
             )}
           </div>

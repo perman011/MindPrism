@@ -1268,8 +1268,12 @@ export async function registerRoutes(
 
   app.get("/api/admin/shorts", isAuthenticated, async (req: any, res) => {
     try {
-      const userRole = req.user?.claims?.metadata?.role || "user";
-      if (!["admin", "super_admin"].includes(userRole)) {
+      const { authStorage } = await import("./replit_integrations/auth/storage");
+      const { hasMinRole } = await import("@shared/models/auth");
+      const userId = req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+      const dbUser = await authStorage.getUser(userId);
+      if (!dbUser || !hasMinRole(dbUser.role, "writer")) {
         return res.status(403).json({ message: "Admin access required" });
       }
       const allShorts = await db.select().from(shorts).orderBy(desc(shorts.createdAt));
@@ -1282,8 +1286,12 @@ export async function registerRoutes(
 
   app.post("/api/admin/shorts", isAuthenticated, async (req: any, res) => {
     try {
-      const userRole = req.user?.claims?.metadata?.role || "user";
-      if (!["admin", "super_admin"].includes(userRole)) {
+      const { authStorage } = await import("./replit_integrations/auth/storage");
+      const { hasMinRole } = await import("@shared/models/auth");
+      const userId = req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+      const dbUser = await authStorage.getUser(userId);
+      if (!dbUser || !hasMinRole(dbUser.role, "writer")) {
         return res.status(403).json({ message: "Admin access required" });
       }
       const result = await storage.createShort(req.body);
@@ -1296,8 +1304,12 @@ export async function registerRoutes(
 
   app.put("/api/admin/shorts/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userRole = req.user?.claims?.metadata?.role || "user";
-      if (!["admin", "super_admin"].includes(userRole)) {
+      const { authStorage } = await import("./replit_integrations/auth/storage");
+      const { hasMinRole } = await import("@shared/models/auth");
+      const userId = req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+      const dbUser = await authStorage.getUser(userId);
+      if (!dbUser || !hasMinRole(dbUser.role, "writer")) {
         return res.status(403).json({ message: "Admin access required" });
       }
       const result = await storage.updateShort(req.params.id, req.body);
@@ -1398,8 +1410,12 @@ export async function registerRoutes(
 
   app.delete("/api/admin/shorts/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userRole = req.user?.claims?.metadata?.role || "user";
-      if (!["admin", "super_admin"].includes(userRole)) {
+      const { authStorage } = await import("./replit_integrations/auth/storage");
+      const { hasMinRole } = await import("@shared/models/auth");
+      const userId = req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+      const dbUser = await authStorage.getUser(userId);
+      if (!dbUser || !hasMinRole(dbUser.role, "writer")) {
         return res.status(403).json({ message: "Admin access required" });
       }
       await storage.deleteShort(req.params.id);

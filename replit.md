@@ -18,7 +18,7 @@ The content is organized into a hierarchical "Psychological Taxonomy." The appli
 - **Colors:** "Warm Prism" extended palette — Dream Curtain (#341539) primary, with semantic colors: success (Sage Green #4CAF7D), warning (Warm Amber #E8A838), accent-teal (#3D8B8B), accent-gold (#C4A35A), primary-light (#6B3A6E), primary-lighter (#D4B8D6), primary-surface (#F5EEF5)
 - **Dark Mode:** Primary inverts to Lavender Mist (#D4B8D6); background: #0F0A14; cards: #1A1225; borders: #2A1E35. ThemeProvider component wraps App with localStorage persistence and system preference detection.
 - **Typography:** Playfair Display (serif) for page titles, book titles, hero headings. Inter (sans-serif) for all body text, UI labels, buttons, navigation.
-- **Components:** Buttons pill-shaped (48px h), cards rounded-2xl with p-4 and hover shadow transitions, inputs 48px tall with 10px radius. Cards have transition-shadow duration-200 ease-out for hover elevation.
+- **Components:** Buttons pill-shaped (48px h) with dark purple primary and visible outline variants, cards rounded-2xl with p-4 and hover shadow transitions, inputs 48px tall with 10px radius. Cards have transition-shadow duration-200 ease-out for hover elevation.
 - **Accessibility:** ARIA labels on all icon-only buttons, aria-current on active nav, keyboard navigation in Story Engine, prefers-reduced-motion CSS media query, minimum 44px touch targets.
 - **Animation:** Framer Motion 200ms fade-in animations, reduced motion support.
 - **Charts:** 6-color palette using design tokens (chart-1 through chart-6).

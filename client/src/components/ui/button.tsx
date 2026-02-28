@@ -15,9 +15,9 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive text-destructive-foreground rounded-[12px] border border-destructive-border",
         outline:
-          "rounded-[12px] border [border-color:var(--button-outline)] shadow-xs active:shadow-none",
+          "rounded-[12px] border border-primary/30 text-primary shadow-xs active:shadow-none hover:bg-primary/5",
         secondary: "rounded-[12px] border bg-secondary text-secondary-foreground border-secondary-border",
-        ghost: "rounded-[12px] border border-transparent",
+        ghost: "rounded-[12px] border border-transparent text-foreground hover:bg-muted",
       },
       size: {
         default: "h-12 px-6 py-2",

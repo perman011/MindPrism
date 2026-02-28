@@ -241,13 +241,14 @@ export default function BookDetail() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => window.history.length > 1 ? window.history.back() : navigate("/")}
-              className="w-9 h-9 rounded-full bg-white/60 backdrop-blur-sm flex items-center justify-center"
+              className="w-9 h-9 rounded-full bg-primary/80 backdrop-blur-sm flex items-center justify-center"
               data-testid="button-back"
+              aria-label="Go back"
             >
               <ArrowLeft className="w-5 h-5 text-white" />
             </button>
             <Link href="/">
-              <button className="w-9 h-9 rounded-full bg-white/60 backdrop-blur-sm flex items-center justify-center" data-testid="button-home">
+              <button className="w-9 h-9 rounded-full bg-primary/80 backdrop-blur-sm flex items-center justify-center" data-testid="button-home" aria-label="Go home">
                 <Home className="w-4 h-4 text-white" />
               </button>
             </Link>
@@ -255,18 +256,20 @@ export default function BookDetail() {
           <div className="flex items-center gap-2">
             <button
               onClick={handleShare}
-              className="w-9 h-9 rounded-full bg-white/60 backdrop-blur-sm flex items-center justify-center"
+              className="w-9 h-9 rounded-full bg-primary/80 backdrop-blur-sm flex items-center justify-center"
               data-testid="button-share"
+              aria-label="Share book"
             >
               <Share2 className="w-4.5 h-4.5 text-white" />
             </button>
             <button
               onClick={() => bookmarkMutation.mutate()}
-              className="w-9 h-9 rounded-full bg-white/60 backdrop-blur-sm flex items-center justify-center"
+              className="w-9 h-9 rounded-full bg-primary/80 backdrop-blur-sm flex items-center justify-center"
               data-testid="button-bookmark"
+              aria-label={isBookmarked ? "Remove bookmark" : "Bookmark book"}
             >
               {isBookmarked
-                ? <BookmarkCheck className="w-5 h-5 text-primary" />
+                ? <BookmarkCheck className="w-5 h-5 text-white" />
                 : <Bookmark className="w-5 h-5 text-white" />
               }
             </button>
@@ -312,13 +315,14 @@ export default function BookDetail() {
 
           <div className="flex gap-3 w-full px-6">
             <Link href={`/book/${id}/journey`} className="flex-1">
-              <Button variant="outline" className="w-full gap-2" data-testid="button-start-journey">
+              <Button className="w-full gap-2" data-testid="button-start-journey">
                 <BookOpen className="w-4 h-4" />
                 {cardProgress > 0 ? `Resume (${cardProgress}%)` : "Read"}
               </Button>
             </Link>
             {book.audioUrl && (
               <Button
+                variant="outline"
                 className="flex-1 gap-2"
                 onClick={() => play(book)}
                 data-testid="button-play-audio"
@@ -328,32 +332,31 @@ export default function BookDetail() {
               </Button>
             )}
           </div>
-          {book.affiliateUrl && (
-            <div className="w-full px-6 mt-3">
-              <a
-                href={book.affiliateUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => {
-                  fetch("/api/user/activity", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "include",
-                    body: JSON.stringify({ eventType: "affiliate_click" as const, bookId: book.id }),
-                  }).catch(() => {});
-                }}
-                data-testid="button-buy-book"
+          <div className="w-full px-6 mt-3">
+            <a
+              href={book.affiliateUrl || `https://www.amazon.com/s?k=${encodeURIComponent(book.title + ' ' + book.author)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => {
+                fetch("/api/user/activity", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  credentials: "include",
+                  body: JSON.stringify({ eventType: "affiliate_click" as const, bookId: book.id }),
+                }).catch(() => {});
+              }}
+              data-testid="button-buy-book"
+            >
+              <Button
+                variant="outline"
+                className="w-full gap-2"
+                style={{ borderColor: "hsl(var(--accent-gold))", color: "hsl(var(--accent-gold))" }}
               >
-                <Button
-                  variant="outline"
-                  className="w-full gap-2 border-primary/40 text-primary"
-                >
-                  <ShoppingCart className="w-4 h-4" />
-                  Buy This Book
-                </Button>
-              </a>
-            </div>
-          )}
+                <ShoppingCart className="w-4 h-4" />
+                Buy This Book
+              </Button>
+            </a>
+          </div>
         </div>
       </div>
 
@@ -371,56 +374,6 @@ export default function BookDetail() {
             </div>
           </Card>
         )}
-
-        <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-1">Explore the book</p>
-        <h2 className="text-xl font-bold mb-4" data-testid="text-blueprint-heading">Blueprint</h2>
-
-        <div className="grid grid-cols-2 gap-3" data-testid="grid-blueprint">
-          {BLUEPRINT_TILES.map((tile) => {
-            const count = contentCounts?.[tile.countKey] ?? 0;
-            const Icon = tile.icon;
-
-            if (tile.featured) {
-              return (
-                <Card
-                  key={tile.key}
-                  className="col-span-2 p-4 cursor-pointer hover-elevate active-elevate-2 overflow-visible"
-                  onClick={() => navigate(`/book/${id}/journey?section=${tile.key}`)}
-                  data-testid={`tile-${tile.key}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0 w-11 h-11 rounded-md bg-primary/10 flex items-center justify-center">
-                      <Icon className="w-5 h-5 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm">{tile.label}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">Tap through key insights chapter by chapter</p>
-                    </div>
-                    <Badge variant="secondary" className="text-[10px] font-semibold">{count}</Badge>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                  </div>
-                </Card>
-              );
-            }
-
-            return (
-              <Card
-                key={tile.key}
-                className="p-4 cursor-pointer hover-elevate active-elevate-2 overflow-visible"
-                onClick={() => navigate(`/book/${id}/journey?section=${tile.key}`)}
-                data-testid={`tile-${tile.key}`}
-              >
-                <div className="flex flex-col items-center justify-center text-center gap-2.5 min-h-[110px]">
-                  <div className="w-11 h-11 rounded-md bg-primary/10 flex items-center justify-center">
-                    <Icon className="w-5 h-5 text-primary" />
-                  </div>
-                  <p className="font-semibold text-xs leading-tight">{tile.label}</p>
-                  <Badge variant="secondary" className="text-[10px] font-semibold">{count}</Badge>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
 
         {bookShorts && bookShorts.length > 0 && (
           <div className="mt-8" data-testid="section-book-shorts">
