@@ -14,7 +14,7 @@ import {
   GraduationCap, HelpCircle, Film,
 } from "lucide-react";
 import type { Short } from "@shared/schema";
-import { ShortsPlayer } from "@/components/shorts-player";
+import { ShortsPlayer, ShortCard } from "@/components/shorts-player";
 import { Link, useParams, useLocation } from "wouter";
 import { useAudio } from "@/lib/audio-context";
 import { useToast } from "@/hooks/use-toast";
@@ -99,6 +99,7 @@ export default function BookDetail() {
   const [showFlashcards, setShowFlashcards] = useState(false);
   const [showQuiz, setShowQuiz] = useState(false);
   const [showShortsPlayer, setShowShortsPlayer] = useState(false);
+  const [shortsPlayerIndex, setShortsPlayerIndex] = useState(0);
 
   const triggerCelebration = useCallback(() => {
     confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ["#d4a017", "#fbbf24", "#f59e0b", "#ffffff"] });
@@ -412,23 +413,28 @@ export default function BookDetail() {
         </div>
 
         {bookShorts && bookShorts.length > 0 && (
-          <Card
-            className="mt-6 p-4 bg-[#1a1a1a] border-white/5 cursor-pointer hover-elevate active-elevate-2 overflow-visible"
-            onClick={() => setShowShortsPlayer(true)}
-            data-testid="card-book-shorts"
-          >
-            <div className="flex items-center gap-3">
-              <div className="flex-shrink-0 w-11 h-11 rounded-md bg-primary/10 flex items-center justify-center">
-                <Film className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm">Shorts</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Bite-sized visual insights</p>
-              </div>
-              <Badge variant="secondary" className="text-[10px] font-semibold">{bookShorts.length}</Badge>
-              <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+          <div className="mt-8" data-testid="section-book-shorts">
+            <div className="flex items-center gap-2 mb-1">
+              <Film className="w-4 h-4 text-primary" />
+              <p className="text-[10px] uppercase tracking-[0.15em] text-primary font-semibold">Quick Bites</p>
             </div>
-          </Card>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-serif text-lg font-bold">Shorts</h3>
+              <Badge variant="secondary" className="text-[10px] font-semibold">{bookShorts.length} clip{bookShorts.length !== 1 ? "s" : ""}</Badge>
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide">
+              {bookShorts.map((short, i) => (
+                <ShortCard
+                  key={short.id}
+                  short={short}
+                  onClick={() => {
+                    setShortsPlayerIndex(i);
+                    setShowShortsPlayer(true);
+                  }}
+                />
+              ))}
+            </div>
+          </div>
         )}
       </div>
 
@@ -446,6 +452,7 @@ export default function BookDetail() {
         <ShortsPlayer
           shorts={bookShorts}
           bookId={id}
+          initialIndex={shortsPlayerIndex}
           onClose={() => setShowShortsPlayer(false)}
         />
       )}

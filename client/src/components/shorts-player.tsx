@@ -293,16 +293,16 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
   );
 }
 
-export function ShortCard({ short, onClick }: { short: Short & { bookTitle?: string }; onClick: () => void }) {
+export function ShortCard({ short, onClick, fluid }: { short: Short & { bookTitle?: string }; onClick: () => void; fluid?: boolean }) {
   const MediaIcon = short.mediaType === "audio" ? Headphones : short.mediaType === "video" ? Video : Image;
 
   return (
     <div
-      className="flex-shrink-0 w-[120px] cursor-pointer active:scale-95 transition-transform"
+      className={`cursor-pointer active:scale-95 transition-transform ${fluid ? "w-full" : "flex-shrink-0 w-[120px]"}`}
       onClick={onClick}
       data-testid={`card-short-${short.id}`}
     >
-      <div className="relative w-[120px] h-[180px] rounded-xl overflow-hidden">
+      <div className={`relative rounded-xl overflow-hidden ${fluid ? "w-full aspect-[2/3]" : "w-[120px] h-[180px]"}`}>
         {short.thumbnailUrl ? (
           <img src={short.thumbnailUrl} alt={short.title} className="w-full h-full object-cover" />
         ) : short.backgroundGradient ? (
