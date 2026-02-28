@@ -313,24 +313,35 @@ export default function BookDetail() {
             </span>
           </div>
 
-          <div className="flex gap-3 w-full px-6">
-            <Link href={`/book/${id}/journey`} className="flex-1">
+          <div className="grid grid-cols-2 gap-3 w-full px-6">
+            <Link href={`/book/${id}/journey`} className="col-span-1">
               <Button className="w-full gap-2" data-testid="button-start-journey">
                 <BookOpen className="w-4 h-4" />
                 {cardProgress > 0 ? `Resume (${cardProgress}%)` : "Read"}
               </Button>
             </Link>
-            {book.audioUrl && (
-              <Button
-                variant="outline"
-                className="flex-1 gap-2"
-                onClick={() => play(book)}
-                data-testid="button-play-audio"
-              >
-                <Headphones className="w-4 h-4" />
-                Listen
+            <Button
+              variant="outline"
+              className="col-span-1 gap-2"
+              onClick={() => book.audioUrl ? play(book) : undefined}
+              disabled={!book.audioUrl}
+              data-testid="button-play-audio"
+            >
+              <Headphones className="w-4 h-4" />
+              Listen
+            </Button>
+            <Link href={`/book/${id}/journey?section=mental-models`} className="col-span-1">
+              <Button variant="outline" className="w-full gap-2" data-testid="button-mental-models">
+                <Brain className="w-4 h-4" />
+                Mental Models
               </Button>
-            )}
+            </Link>
+            <Link href={`/book/${id}/journey?section=shorts`} className="col-span-1">
+              <Button variant="outline" className="w-full gap-2" data-testid="button-shorts">
+                <Film className="w-4 h-4" />
+                Shorts
+              </Button>
+            </Link>
           </div>
           <div className="w-full px-6 mt-3">
             <a
