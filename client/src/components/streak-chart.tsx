@@ -24,7 +24,7 @@ export function StreakChart({ data }: StreakChartProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
     >
-      <Card data-testid="streak-chart">
+      <Card className="p-5" data-testid="streak-chart">
         <div className="flex items-center gap-2 mb-4">
           <Calendar className="w-4 h-4 text-primary" />
           <h3 className="text-sm font-semibold">30-Day Activity</h3>
@@ -39,12 +39,12 @@ export function StreakChart({ data }: StreakChartProps) {
                 data-testid={`streak-day-${index}`}
                 className={`aspect-square rounded-md flex items-center justify-center text-[10px] font-medium ${
                   isActive
-                    ? "text-white"
-                    : "bg-gray-200 dark:bg-gray-700 text-muted-foreground"
+                    ? "text-primary-foreground"
+                    : "bg-muted text-muted-foreground"
                 }`}
                 style={
                   isActive
-                    ? { backgroundColor: `hsla(292, 46%, 15%, ${getOpacity(day.activities)})` }
+                    ? { backgroundColor: `hsl(var(--primary) / ${getOpacity(day.activities)})` }
                     : undefined
                 }
               >
@@ -59,8 +59,8 @@ export function StreakChart({ data }: StreakChartProps) {
           {[0.15, 0.3, 0.55, 0.8, 1].map((opacity, i) => (
             <div
               key={i}
-              className={`w-3 h-3 rounded-sm ${i === 0 ? "bg-gray-200 dark:bg-gray-700" : ""}`}
-              style={i > 0 ? { backgroundColor: `hsla(292, 46%, 15%, ${opacity})` } : undefined}
+              className={`w-3 h-3 rounded-sm ${i === 0 ? "bg-muted" : ""}`}
+              style={i > 0 ? { backgroundColor: `hsl(var(--primary) / ${opacity})` } : undefined}
             />
           ))}
           <span className="text-[10px] text-muted-foreground">More</span>

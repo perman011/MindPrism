@@ -1,6 +1,6 @@
 import { storage } from "./storage";
 import { db } from "./db";
-import { books, chapterSummaries, mentalModels, commonMistakes, actionItems, infographics } from "@shared/schema";
+import { books, chapterSummaries, mentalModels, commonMistakes, actionItems, infographics, shorts } from "@shared/schema";
 import { users } from "@shared/models/auth";
 import { eq } from "drizzle-orm";
 
@@ -40,7 +40,7 @@ export async function seedDatabase() {
     description: "An easy and proven way to build good habits and break bad ones. Tiny changes, remarkable results.",
     coreThesis: "You do not rise to the level of your goals. You fall to the level of your systems. Small habits compound into extraordinary results when you focus on becoming 1% better every day.",
     categoryId: catHabits.id,
-    readTime: 12, listenTime: 10, audioUrl: "placeholder", featured: true,
+    readTime: 12, listenTime: 10, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", audioDuration: 600, featured: true,
     principleCount: 5, storyCount: 2, exerciseCount: 3,
   });
 
@@ -131,7 +131,7 @@ export async function seedDatabase() {
     description: "A groundbreaking tour of the mind that explains the two systems that drive the way we think and make choices.",
     coreThesis: "Human judgment is driven by two mental systems: fast, intuitive System 1 and slow, deliberate System 2. Most errors in thinking happen when System 1 hijacks decisions that require System 2's careful analysis.",
     categoryId: catMindset.id,
-    readTime: 15, listenTime: 12, audioUrl: "placeholder", featured: true,
+    readTime: 15, listenTime: 12, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", audioDuration: 720, featured: true,
     principleCount: 4, storyCount: 2, exerciseCount: 2,
   });
 
@@ -192,7 +192,7 @@ export async function seedDatabase() {
     description: "A guide to spiritual enlightenment that teaches you to live in the present moment and find inner peace.",
     coreThesis: "The present moment is all you ever have. Suffering is created by the mind's attachment to past and future. True peace comes when you stop identifying with your thoughts and become the awareness behind them.",
     categoryId: catMindfulness.id,
-    readTime: 10, listenTime: 8, audioUrl: "placeholder", featured: true,
+    readTime: 10, listenTime: 8, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", audioDuration: 480, featured: true,
     principleCount: 3, storyCount: 1, exerciseCount: 2,
   });
 
@@ -248,7 +248,7 @@ export async function seedDatabase() {
     description: "Why emotional intelligence can matter more than IQ. A revolutionary framework for understanding human behavior.",
     coreThesis: "IQ accounts for only 20% of life success. The remaining 80% is determined by emotional intelligence — your ability to recognize, understand, and manage your own emotions and those of others.",
     categoryId: catEmotions.id,
-    readTime: 14, listenTime: 11, audioUrl: "placeholder", featured: false,
+    readTime: 14, listenTime: 11, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", audioDuration: 660, featured: false,
     principleCount: 3, storyCount: 1, exerciseCount: 2,
   });
 
@@ -306,7 +306,7 @@ export async function seedDatabase() {
     description: "A psychiatrist's experience in Nazi death camps and its lessons for spiritual survival. Finding meaning in suffering.",
     coreThesis: "Everything can be taken from a person except the last human freedom — to choose one's attitude in any given set of circumstances. Those who find meaning in their suffering can endure almost anything.",
     categoryId: catMeaning.id,
-    readTime: 8, listenTime: 7, audioUrl: "placeholder", featured: false,
+    readTime: 8, listenTime: 7, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", audioDuration: 420, featured: false,
     principleCount: 3, storyCount: 1, exerciseCount: 1,
   });
 
@@ -351,6 +351,139 @@ export async function seedDatabase() {
     { label: "2. Experiential Values", explanation: "Find meaning through what you receive from the world — love, beauty, truth, nature. What moments take your breath away?" },
     { label: "3. Attitudinal Values", explanation: "Find meaning through the stance you take toward unavoidable suffering. When you can't change the situation, you can still choose your response." },
   ], orderIndex: 1 });
+
+  // ===================== SHORTS =====================
+  await storage.createShort({
+    bookId: book1.id,
+    title: "The 1% Rule That Changes Everything",
+    content: "If you get just 1% better each day, you'll be 37 times better in one year. The secret isn't massive action — it's tiny, consistent improvements that compound over time. Your habits are the compound interest of self-improvement.",
+    mediaType: "text",
+    backgroundGradient: "linear-gradient(135deg, #6B21A8, #9333EA, #A855F7)",
+    duration: 15,
+    orderIndex: 1,
+    status: "published",
+  });
+
+  await storage.createShort({
+    bookId: book1.id,
+    title: "You Don't Rise to Your Goals",
+    content: "You don't rise to the level of your goals. You fall to the level of your systems. Every Olympic athlete wants to win gold — the difference is in the daily systems they build. Stop obsessing over outcomes. Build better systems instead.",
+    mediaType: "text",
+    backgroundGradient: "linear-gradient(135deg, #7C3AED, #8B5CF6, #C084FC)",
+    duration: 15,
+    orderIndex: 2,
+    status: "published",
+  });
+
+  await storage.createShort({
+    bookId: book2.id,
+    title: "Your Brain Has Two Pilots",
+    content: "System 1 is your autopilot — fast, intuitive, and often wrong. System 2 is your co-pilot — slow, deliberate, and lazy. Most of your 'decisions' are actually System 1 reflexes that System 2 never bothered to check. The key? Know which system is flying.",
+    mediaType: "text",
+    backgroundGradient: "linear-gradient(135deg, #1E3A5F, #2563EB, #60A5FA)",
+    duration: 15,
+    orderIndex: 3,
+    status: "published",
+  });
+
+  await storage.createShort({
+    bookId: book2.id,
+    title: "The Anchoring Trap",
+    content: "The first number you hear in any negotiation becomes your anchor — and it silently controls the entire outcome. Even random numbers influence your estimates. Next time someone throws out a number first, pause. Ask yourself: is this anchor real, or is it manipulating me?",
+    mediaType: "text",
+    backgroundGradient: "linear-gradient(135deg, #0F766E, #14B8A6, #5EEAD4)",
+    duration: 15,
+    orderIndex: 4,
+    status: "published",
+  });
+
+  await storage.createShort({
+    bookId: book3.id,
+    title: "The Only Moment That Exists",
+    content: "Nothing has ever happened in the past. It happened in the Now. Nothing will ever happen in the future. It will happen in the Now. The present moment is literally all you ever have. Yet most people spend their entire lives lost in memories and projections.",
+    mediaType: "text",
+    backgroundGradient: "linear-gradient(135deg, #581C87, #7E22CE, #D8B4FE)",
+    duration: 15,
+    orderIndex: 5,
+    status: "published",
+  });
+
+  await storage.createShort({
+    bookId: book3.id,
+    title: "You Are Not Your Thoughts",
+    content: "The moment you realize you are not present, you ARE present. You can't observe the thinker if you ARE the thinker. This gap — between the thought and the awareness of the thought — is where freedom lives. Watch your mind like you'd watch clouds passing.",
+    mediaType: "text",
+    backgroundGradient: "linear-gradient(135deg, #4C1D95, #6D28D9, #A78BFA)",
+    duration: 15,
+    orderIndex: 6,
+    status: "published",
+  });
+
+  await storage.createShort({
+    bookId: book4.id,
+    title: "The 6-Second Rule",
+    content: "Your amygdala can hijack your brain in milliseconds — triggering anger, fear, or panic before your rational mind even wakes up. The antidote? Six seconds. One full breath cycle. That's all it takes to let your prefrontal cortex catch up and choose a better response.",
+    mediaType: "text",
+    backgroundGradient: "linear-gradient(135deg, #9F1239, #E11D48, #FB7185)",
+    duration: 15,
+    orderIndex: 7,
+    status: "published",
+  });
+
+  await storage.createShort({
+    bookId: book4.id,
+    title: "Name It to Tame It",
+    content: "When you name an emotion — 'I notice I'm feeling anxious right now' — brain scans show the amygdala's activity drops by up to 50%. Labeling emotions engages your prefrontal cortex, which calms the emotional brain. Awareness is not weakness. It's your superpower.",
+    mediaType: "text",
+    backgroundGradient: "linear-gradient(135deg, #B91C1C, #DC2626, #F87171)",
+    duration: 15,
+    orderIndex: 8,
+    status: "published",
+  });
+
+  await storage.createShort({
+    bookId: book5.id,
+    title: "The Last Human Freedom",
+    content: "Everything can be taken from a person except one thing: the freedom to choose your attitude in any circumstance. Viktor Frankl discovered this in Auschwitz. The guards could control his body, but never his mind. Between stimulus and response, there is a space. In that space is your power.",
+    mediaType: "text",
+    backgroundGradient: "linear-gradient(135deg, #1E40AF, #3B82F6, #93C5FD)",
+    duration: 15,
+    orderIndex: 9,
+    status: "published",
+  });
+
+  await storage.createShort({
+    bookId: book5.id,
+    title: "Why Happiness Can't Be Chased",
+    content: "Happiness cannot be pursued — it must ensue. The more you chase happiness directly, the more it eludes you. It comes as a side effect of dedicating yourself to a cause greater than yourself, or loving another person deeply. Stop chasing. Start meaning.",
+    mediaType: "text",
+    backgroundGradient: "linear-gradient(135deg, #312E81, #4338CA, #818CF8)",
+    duration: 15,
+    orderIndex: 10,
+    status: "published",
+  });
+
+  await storage.createShort({
+    bookId: book1.id,
+    title: "Identity Beats Motivation",
+    content: "Don't say 'I want to read more.' Say 'I am a reader.' Every action you take is a vote for the type of person you wish to become. No single vote is decisive, but as the votes build up, the evidence of your new identity builds up too. Become the person, then the habits follow.",
+    mediaType: "text",
+    backgroundGradient: "linear-gradient(135deg, #92400E, #D97706, #FCD34D)",
+    duration: 15,
+    orderIndex: 11,
+    status: "published",
+  });
+
+  await storage.createShort({
+    bookId: book2.id,
+    title: "Losses Hit Twice as Hard",
+    content: "Losing $100 feels about twice as painful as gaining $100 feels good. This asymmetry — loss aversion — shapes almost every decision you make. It's why you hold losing stocks too long, stay in bad relationships, and fear change even when the odds favor it.",
+    mediaType: "text",
+    backgroundGradient: "linear-gradient(135deg, #065F46, #059669, #6EE7B7)",
+    duration: 15,
+    orderIndex: 12,
+    status: "published",
+  });
 
   console.log("Database seeded successfully with new taxonomy!");
 }

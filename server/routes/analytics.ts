@@ -75,13 +75,15 @@ const requireAdmin = async (req: Request, res: Response, next: NextFunction) => 
   next();
 };
 
-router.get("/overview", isAuthenticated, requireAdmin, async (_req: Request, res: Response) => {
+router.get("/overview", isAuthenticated, requireAdmin, async (req: Request, res: Response) => {
   try {
-    const cached = getCached("overview");
+    const rangeDays = Math.min(365, Math.max(1, parseInt(req.query.days as string) || 30));
+    const cacheKey = `overview_${rangeDays}`;
+    const cached = getCached(cacheKey);
     if (cached) return res.json(cached);
 
     const now = new Date();
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const rangeStart = new Date(now.getTime() - rangeDays * 24 * 60 * 60 * 1000);
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
@@ -100,7 +102,7 @@ router.get("/overview", isAuthenticated, requireAdmin, async (_req: Request, res
     const [mauResult] = await db
       .select({ count: sql<number>`count(distinct ${analyticsEvents.userId})` })
       .from(analyticsEvents)
-      .where(gte(analyticsEvents.createdAt, thirtyDaysAgo));
+      .where(gte(analyticsEvents.createdAt, new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)));
 
     const [totalBooksResult] = await db.select({ count: count() }).from(books);
 
@@ -112,7 +114,7 @@ router.get("/overview", isAuthenticated, requireAdmin, async (_req: Request, res
         count: sql<number>`count(distinct ${analyticsEvents.userId})`,
       })
       .from(analyticsEvents)
-      .where(gte(analyticsEvents.createdAt, thirtyDaysAgo))
+      .where(gte(analyticsEvents.createdAt, rangeStart))
       .groupBy(sql`date(${analyticsEvents.createdAt})`)
       .orderBy(sql`date(${analyticsEvents.createdAt})`);
 
@@ -124,7 +126,7 @@ router.get("/overview", isAuthenticated, requireAdmin, async (_req: Request, res
         avgDuration: sql<number>`coalesce(avg(${userActivityLog.sessionDuration}), 0)`,
       })
       .from(userActivityLog)
-      .where(gte(userActivityLog.createdAt, thirtyDaysAgo))
+      .where(gte(userActivityLog.createdAt, rangeStart))
       .groupBy(sql`date(${userActivityLog.createdAt})`)
       .orderBy(sql`date(${userActivityLog.createdAt})`);
 
@@ -146,7 +148,7 @@ router.get("/overview", isAuthenticated, requireAdmin, async (_req: Request, res
         count: count(),
       })
       .from(users)
-      .where(gte(users.createdAt, thirtyDaysAgo))
+      .where(gte(users.createdAt, rangeStart))
       .groupBy(sql`date(${users.createdAt})`)
       .orderBy(sql`date(${users.createdAt})`);
 
@@ -156,7 +158,7 @@ router.get("/overview", isAuthenticated, requireAdmin, async (_req: Request, res
         count: count(),
       })
       .from(analyticsEvents)
-      .where(gte(analyticsEvents.createdAt, thirtyDaysAgo))
+      .where(gte(analyticsEvents.createdAt, rangeStart))
       .groupBy(analyticsEvents.eventType)
       .orderBy(sql`count(*) desc`)
       .limit(20);
@@ -198,7 +200,7 @@ router.get("/overview", isAuthenticated, requireAdmin, async (_req: Request, res
       funnel,
     };
 
-    setCache("overview", result);
+    setCache(cacheKey, result);
     res.json(result);
   } catch (error: any) {
     console.error("[analytics] Overview error:", error.message);

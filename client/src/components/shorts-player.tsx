@@ -71,7 +71,7 @@ function AudioShort({ short, isActive }: { short: Short; isActive: boolean }) {
             className="w-[4px] rounded-full transition-all"
             style={{
               height: `${bar.height}px`,
-              backgroundColor: bar.isPlayed ? "#341539" : "rgba(255,255,255,0.2)",
+              backgroundColor: bar.isPlayed ? "hsl(var(--primary))" : "rgba(255,255,255,0.2)",
             }}
           />
         ))}
@@ -212,7 +212,7 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
               className="h-full rounded-full transition-all duration-300"
               style={{
                 width: i < currentIndex ? "100%" : i === currentIndex ? "100%" : "0%",
-                backgroundColor: "#341539",
+                backgroundColor: "hsl(var(--primary))",
               }}
             />
           </div>
@@ -301,10 +301,10 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
           )}
 
           {!currentShort.mediaUrl && !currentShort.backgroundGradient && (
-            <div className="absolute inset-0 bg-gradient-to-br from-[#FFFFFF] via-[#0F0F1A] to-[#0F0F1A]" />
+            <div className="absolute inset-0 bg-gradient-to-br from-background via-foreground/90 to-foreground/90" />
           )}
 
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0F0F1A]/80 via-transparent to-[#0F0F1A]/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
 
           <div className="absolute bottom-0 left-0 right-0 p-6 pb-10 z-10">
             {currentShort.mediaType === "audio" ? (
@@ -348,9 +348,9 @@ export function ShortCard({ short, onClick, fluid }: { short: Short & { bookTitl
         ) : short.backgroundGradient ? (
           <div className="w-full h-full" style={{ background: short.backgroundGradient }} />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-primary/20 via-[#FFFFFF] to-[#0F0F1A]" />
+          <div className="w-full h-full bg-gradient-to-br from-primary/20 via-background to-foreground/90" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0F0F1A]/80 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
         <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/30 flex items-center justify-center">
           <MediaIcon className="w-3 h-3 text-white" />
         </div>

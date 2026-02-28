@@ -187,7 +187,7 @@ export default function Discover() {
 
   const booksWithShorts = useMemo(() => {
     if (!publishedShorts || !books) return [];
-    const bookIds = [...new Set(publishedShorts.map(s => s.bookId))];
+    const bookIds = Array.from(new Set(publishedShorts.map(s => s.bookId)));
     return books.filter(b => bookIds.includes(b.id));
   }, [publishedShorts, books]);
 
@@ -213,7 +213,7 @@ export default function Discover() {
             ref={searchInputRef}
             type="search"
             placeholder={activeTab === "books" ? "Search books, authors, principles..." : "Search shorts, topics..."}
-            className="w-full pl-10 pr-4 bg-muted/50 border-transparent focus:border-border rounded-full text-sm"
+            className="w-full pl-10 pr-10 bg-muted/50 border-transparent focus:border-border rounded-full text-sm"
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -230,6 +230,20 @@ export default function Discover() {
             }}
             data-testid="input-search"
           />
+          {searchQuery.length > 0 && (
+            <button
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground/60 hover:text-foreground transition-colors"
+              onClick={() => {
+                setSearchQuery("");
+                setShowSuggestions(false);
+                searchInputRef.current?.focus();
+              }}
+              aria-label="Clear search"
+              data-testid="button-clear-search"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
 
           {showRecentSearches && (
             <div
@@ -239,6 +253,17 @@ export default function Discover() {
             >
               <div className="px-4 py-2 flex items-center justify-between gap-2">
                 <span className="text-xs font-medium text-muted-foreground">Recent Searches</span>
+                <button
+                  className="text-xs text-primary/70 hover:text-primary transition-colors"
+                  onClick={() => {
+                    localStorage.removeItem(RECENT_SEARCHES_KEY);
+                    setRecentSearches([]);
+                    setShowSuggestions(false);
+                  }}
+                  data-testid="button-clear-recent-searches"
+                >
+                  Clear All
+                </button>
               </div>
               {recentSearches.map((query) => (
                 <button

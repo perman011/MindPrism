@@ -25,20 +25,23 @@ The content is organized into a hierarchical "Psychological Taxonomy." The appli
 
 ### Features
 - **Chakra Energy Map** and Interactive Engine for dynamic content rendering
-- **Full-Text Search** with ILIKE across books/principles, debounced suggestions, recent searches (localStorage)
+- **Full-Text Search** with ILIKE across books/principles, debounced suggestions, recent searches (localStorage), clear all button
 - **Recommendation V2** with collaborative filtering and "Because You Read" carousel
 - **Dashboard Mode Toggle** — pill-shaped Chakra/Reels segmented control switches between ChakraAvatar energy map and inline shorts/reels grid
-- **Shorts Pipeline** with admin gradient picker, rich text editing, trending sort by views, share button
-- **Audio Management** with audioDuration field, continue listening section on dashboard
+- **Shorts Pipeline** with admin gradient picker, rich text editing, trending sort by views, share button, 12+ seed shorts
+- **Audio Management** with audioDuration field, continue listening section on dashboard, sample audio URLs for all books
 - **Social Sharing** with branded progress share card, Web Share API, milestone triggers (7/30/100 day streaks)
 - **Streak Gamification** with freeze mechanic, milestone badges (7/14/30/60/100 days), celebration modal
-- **Content Paywalling** with premiumOnly/freePreviewCards fields, PremiumGate overlay in Story Engine
-- **Analytics V2** with DAU/WAU/MAU cards, engagement chart, funnel visualization, content performance, tabbed layout (Overview/Engagement/Content/Events), plus Revenue tab for subscription analytics
+- **Content Paywalling** with premiumOnly/freePreviewCards fields, PremiumGate overlay in Story Engine, Premium badge on book detail
+- **Analytics V2** with DAU/WAU/MAU cards, engagement chart, funnel visualization, content performance, tabbed layout (Overview/Engagement/Content/Events), plus Revenue tab for subscription analytics, date range filter (7d/30d/90d)
 - **Content Quality Scoring** with completeness percentages and "Content Health" overview in admin
 - **Image Optimization** with lazy loading, explicit width/height, skeleton states
 - **Database Performance** with composite indexes on user_progress, journal_entries, analytics_events, books, user_activity_log; N+1 query fix for principles; query timing logging for >500ms queries
 - **PWA** features including offline mode, service worker, install prompt
 - **Push Notifications** with daily reminders, streak alerts, new content notifications
+- **Landing Page** with animated gradient hero, serif headline, OG meta tags
+- **Story Engine** with keyboard navigation (arrow keys), tap zones, reduced motion support
+- **Growth Vault** with book attribution on highlights, loading skeletons, dark mode heatmap
 
 ### Security
 - AES-256-GCM encryption for journal entries

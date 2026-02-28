@@ -2,12 +2,12 @@ import { SEOHead } from "@/components/SEOHead";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
-import type { UserStreak, JournalEntry, SavedHighlight, Exercise, ChakraProgress } from "@shared/schema";
+import type { UserStreak, JournalEntry, SavedHighlight, Exercise, ChakraProgress, Book } from "@shared/schema";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PenLine, LogOut, Settings, Calendar, Bookmark, BarChart3, Sun, Moon, Monitor, Flame, Star, Shield, Zap, Trophy, Snowflake } from "lucide-react";
+import { PenLine, LogOut, Settings, Calendar, Bookmark, BarChart3, Sun, Moon, Monitor, Flame, Star, Shield, Zap, Trophy, Snowflake, BookOpen } from "lucide-react";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -48,13 +48,18 @@ export default function Vault() {
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
-  const { data: highlights } = useQuery<SavedHighlight[]>({
+  const { data: highlights, isLoading: highlightsLoading } = useQuery<SavedHighlight[]>({
     queryKey: ["/api/highlights"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
   const { data: chakraProgress } = useQuery<ChakraProgress[]>({
     queryKey: ["/api/chakra-progress"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+  });
+
+  const { data: books } = useQuery<Book[]>({
+    queryKey: ["/api/books"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
@@ -181,7 +186,7 @@ export default function Vault() {
           )}
         </Card>
 
-        <Card className="p-5 mb-8 bg-background dark:bg-card border-primary/10">
+        <Card className="p-5 mb-8 border-primary/10">
           <h3 className="text-[11px] font-semibold uppercase tracking-widest text-primary mb-4 text-center">My Personal Aura</h3>
           <div className="flex justify-center mb-3">
             <ChakraAvatar
@@ -306,21 +311,36 @@ export default function Vault() {
                 <h2 className="text-lg font-bold mb-1">Saved Highlights</h2>
                 <p className="text-[11px] text-muted-foreground mb-4">Bookmarked insights and key passages</p>
                 <div className="space-y-3">
-                  {!highlights || highlights.length === 0 ? (
+                  {highlightsLoading ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton key={i} className="h-20 rounded-md" />
+                    ))
+                  ) : !highlights || highlights.length === 0 ? (
                     <div className="text-center py-14">
                       <Bookmark className="w-10 h-10 text-muted-foreground/20 mx-auto mb-3" />
                       <p className="text-sm font-medium text-muted-foreground">No saved highlights yet</p>
                       <p className="text-xs text-muted-foreground mt-1">Long-press text or visuals to save them here</p>
                     </div>
                   ) : (
-                    highlights.map((h) => (
-                      <Card key={h.id} className="p-4" data-testid={`highlight-${h.id}`}>
-                        <p className="text-sm leading-relaxed">{h.content}</p>
-                        <p className="text-[11px] text-muted-foreground mt-2.5 font-medium">
-                          {h.createdAt ? new Date(h.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : ""}
-                        </p>
-                      </Card>
-                    ))
+                    highlights.map((h) => {
+                      const book = books?.find(b => b.id === h.bookId);
+                      return (
+                        <Card key={h.id} className="p-4" data-testid={`highlight-${h.id}`}>
+                          <p className="text-sm leading-relaxed">{h.content}</p>
+                          <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                            {book && (
+                              <span className="flex items-center gap-1 text-[11px] text-primary font-medium" data-testid={`highlight-book-${h.id}`}>
+                                <BookOpen className="w-3 h-3" />
+                                {book.title}
+                              </span>
+                            )}
+                            <span className="text-[11px] text-muted-foreground font-medium">
+                              {h.createdAt ? new Date(h.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : ""}
+                            </span>
+                          </div>
+                        </Card>
+                      );
+                    })
                   )}
                 </div>
               </motion.div>

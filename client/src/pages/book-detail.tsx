@@ -11,7 +11,7 @@ import {
   ArrowLeft, BookOpen, Lightbulb, Brain, AlertTriangle,
   Dumbbell, ListChecks, Layers, Bookmark, BookmarkCheck,
   Clock, Headphones, ChevronRight, BarChart3, ShoppingCart, Share2,
-  GraduationCap, HelpCircle, Film,
+  GraduationCap, HelpCircle, Film, Crown,
 } from "lucide-react";
 import type { Short } from "@shared/schema";
 import { ShortsPlayer, ShortCard } from "@/components/shorts-player";
@@ -274,7 +274,7 @@ export default function BookDetail() {
         </div>
 
         <div className="pt-20 pb-6 flex flex-col items-center bg-background">
-          <div className="w-40 h-56 rounded-md overflow-hidden shadow-lg shadow-black/20 mb-6">
+          <div className="w-40 h-56 rounded-md overflow-hidden shadow-lg shadow-black/20 mb-6" data-testid="img-book-cover">
             {book.coverImage ? (
               <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
             ) : (
@@ -286,15 +286,25 @@ export default function BookDetail() {
 
           <p className="text-[10px] uppercase tracking-[0.2em] text-primary font-semibold mb-1.5" data-testid="text-summary-label">Summary</p>
           <h1 className="text-2xl font-bold font-serif text-foreground mb-1 text-center px-6 leading-tight" data-testid="text-book-title">{book.title}</h1>
+          {book.premiumOnly && (
+            <Badge
+              className="mt-1 mb-1 gap-1 text-[10px] font-semibold"
+              style={{ backgroundColor: "hsl(var(--accent-gold))", color: "hsl(0 0% 10%)" }}
+              data-testid="badge-premium"
+            >
+              <Crown className="w-3 h-3" />
+              Premium
+            </Badge>
+          )}
           <p className="text-sm text-muted-foreground mb-4" data-testid="text-book-author">by {book.author}</p>
 
           <div className="flex items-center gap-1.5 mb-6 flex-wrap justify-center">
-            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1 text-xs text-muted-foreground" data-testid="text-read-time">
               <Clock className="w-3 h-3" />
               {book.readTime} min read
             </span>
             <span className="text-muted-foreground/40 text-xs">·</span>
-            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1 text-xs text-muted-foreground" data-testid="text-listen-time">
               <Headphones className="w-3 h-3" />
               {book.listenTime} min listen
             </span>
@@ -336,7 +346,7 @@ export default function BookDetail() {
               >
                 <Button
                   variant="outline"
-                  className="w-full gap-2 border-primary/40 text-primary hover:bg-primary/10 hover:text-primary"
+                  className="w-full gap-2 border-primary/40 text-primary"
                 >
                   <ShoppingCart className="w-4 h-4" />
                   Buy This Book

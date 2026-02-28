@@ -69,19 +69,16 @@ const slides = [
     title: "Skip the 500 pages.",
     highlight: "Master the principles.",
     description: "Every dense psychology book distilled into its most powerful ideas — visual, interactive, and unforgettable.",
-    gradient: "from-[#0F0F1A] via-purple-100 to-[#0F0F1A]",
   },
   {
     title: "Visuals, Exercises &",
     highlight: "Audio Summaries.",
     description: "For the busy mind. Learn through interactive cards, reflection exercises, and listen on the go.",
-    gradient: "from-[#0F0F1A] via-purple-50 to-[#0F0F1A]",
   },
   {
     title: "Track your growth.",
     highlight: "Build your mind.",
     description: "Personal journal, streak tracking, and a vault of saved insights. Your psychology toolkit, always with you.",
-    gradient: "from-[#0F0F1A] via-purple-100 to-[#0F0F1A]",
   },
 ];
 
@@ -115,15 +112,16 @@ export default function LandingPage() {
       <SEOHead
         title="Welcome"
         description="Transform dense psychology books into bite-sized principles, interactive exercises, stories, and audio summaries. Start your personal growth journey today."
+        ogImage="/images/mindprism-logo.jpeg"
       />
       <div className="absolute inset-0 z-0">
-        <img src={heroBg} alt="" className="w-full h-full object-cover opacity-5" />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#F5F0EB]/50 via-[#F5F0EB]/80 to-[#F5F0EB]" />
+        <img src={heroBg} alt="" className="w-full h-full object-cover opacity-5 dark:opacity-[0.03]" />
+        <div className="absolute inset-0 landing-hero-gradient" />
       </div>
 
       <FeatherRain />
 
-      <nav className="relative z-10 px-6 py-5 flex items-center justify-between">
+      <nav className="relative z-10 px-6 py-5 flex items-center justify-between gap-2 flex-wrap">
         <motion.div
           className="flex items-center"
           data-testid="text-logo"
@@ -142,7 +140,6 @@ export default function LandingPage() {
         <Button
           variant="ghost"
           size="sm"
-          className="text-foreground/70 hover:text-foreground hover:bg-foreground/5"
           onClick={() => { window.location.href = "/api/login"; }}
           data-testid="button-login"
         >
@@ -165,9 +162,9 @@ export default function LandingPage() {
                 }`}
                 data-testid={`slide-${i}`}
               >
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4">
+                <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4">
                   {slide.title}{" "}
-                  <span className="bg-gradient-to-r from-purple-600 to-purple-300 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-primary to-primary-lighter bg-clip-text text-transparent">
                     {slide.highlight}
                   </span>
                 </h1>
@@ -181,7 +178,7 @@ export default function LandingPage() {
           <div className="flex items-center justify-center gap-3 mt-8 mb-10">
             <button
               onClick={() => handleManualNav("prev")}
-              className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+              className="w-9 h-9 rounded-full bg-foreground/10 flex items-center justify-center hover:bg-foreground/20 transition-colors"
               data-testid="button-carousel-prev"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -192,7 +189,7 @@ export default function LandingPage() {
                   key={i}
                   onClick={() => { setCurrentSlide(i); setIsAutoPlaying(false); setTimeout(() => setIsAutoPlaying(true), 8000); }}
                   className={`h-1.5 rounded-full transition-all duration-500 ${
-                    i === currentSlide ? "w-8 bg-primary" : "w-2 bg-white/30"
+                    i === currentSlide ? "w-8 bg-primary" : "w-2 bg-foreground/20"
                   }`}
                   data-testid={`dot-${i}`}
                 />
@@ -200,7 +197,7 @@ export default function LandingPage() {
             </div>
             <button
               onClick={() => handleManualNav("next")}
-              className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+              className="w-9 h-9 rounded-full bg-foreground/10 flex items-center justify-center hover:bg-foreground/20 transition-colors"
               data-testid="button-carousel-next"
             >
               <ChevronRight className="w-4 h-4" />
@@ -212,7 +209,7 @@ export default function LandingPage() {
       <div className="relative z-10 px-6 pb-10 flex flex-col items-center gap-3 w-full max-w-sm mx-auto">
         <Button
           size="lg"
-          className="w-full rounded-full text-base font-semibold h-14 bg-primary hover:bg-primary/90"
+          className="w-full rounded-full text-base font-semibold"
           onClick={() => { window.location.href = "/api/login"; }}
           data-testid="button-get-started"
         >
@@ -221,7 +218,7 @@ export default function LandingPage() {
         <Button
           variant="ghost"
           size="lg"
-          className="w-full rounded-full text-base font-medium h-14 text-white/60 hover:text-white hover:bg-white/10"
+          className="w-full rounded-full text-base font-medium text-muted-foreground"
           onClick={() => { window.location.href = "/api/login"; }}
           data-testid="button-hero-cta"
         >

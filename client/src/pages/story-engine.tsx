@@ -16,7 +16,7 @@ import {
   ArrowRight, Sparkles, BarChart3, CalendarPlus,
 } from "lucide-react";
 import { useParams, useLocation, useSearch } from "wouter";
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { trackEvent } from "@/lib/analytics";
 
@@ -37,14 +37,30 @@ const SECTION_META: Record<SectionType, { label: string; icon: any; color: strin
   "action-items": { label: "Action Items", icon: ListChecks, color: "text-sky-500" },
 };
 
+function useReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduced(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+  return reduced;
+}
+
 function ConfettiOverlay() {
-  const particles = Array.from({ length: 30 }, (_, i) => ({
+  const reducedMotion = useReducedMotion();
+
+  const particles = useMemo(() => Array.from({ length: 30 }, (_, i) => ({
     id: i,
     left: Math.random() * 100,
     delay: Math.random() * 0.5,
     duration: 1 + Math.random() * 1,
     color: ["bg-primary", "bg-emerald-500", "bg-purple-700", "bg-purple-700", "bg-pink-500"][i % 5],
-  }));
+  })), []);
+
+  if (reducedMotion) return null;
 
   return (
     <div className="absolute inset-0 z-[300] pointer-events-none overflow-hidden">
@@ -835,7 +851,7 @@ export default function StoryEngine() {
         {cards.map((_, i) => (
           <div
             key={i}
-            className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+            className={`h-1 flex-1 rounded-full transition-all duration-300 motion-reduce:transition-none ${
               i < currentIndex ? "bg-primary" : i === currentIndex ? "bg-primary/70" : "bg-muted"
             }`}
             data-testid={`progress-segment-${i}`}
@@ -872,7 +888,23 @@ export default function StoryEngine() {
         </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center px-6 py-4 overflow-y-auto" role="main" aria-live="polite">
+      <div className="flex-1 flex items-center justify-center px-6 py-4 overflow-y-auto relative" role="main" aria-live="polite">
+        <button
+          className="absolute left-0 top-0 bottom-0 w-1/5 z-10 opacity-0 cursor-w-resize"
+          onClick={() => goTo(currentIndex - 1)}
+          disabled={currentIndex === 0}
+          aria-label="Go to previous card"
+          data-testid="tap-zone-left"
+          tabIndex={-1}
+        />
+        <button
+          className="absolute right-0 top-0 bottom-0 w-1/5 z-10 opacity-0 cursor-e-resize"
+          onClick={() => goTo(currentIndex + 1)}
+          disabled={currentIndex >= totalCards - 1}
+          aria-label="Go to next card"
+          data-testid="tap-zone-right"
+          tabIndex={-1}
+        />
         <div className="w-full max-w-lg">
           {renderCard()}
         </div>
@@ -886,13 +918,14 @@ export default function StoryEngine() {
           disabled={currentIndex === 0}
           className="gap-1"
           data-testid="button-prev-card"
+          aria-label="Go to previous card"
         >
-          <ChevronLeft className="w-4 h-4" />
+          <ChevronLeft className="w-4 h-4" aria-hidden="true" />
           Back
         </Button>
 
         <div className="w-24 bg-muted rounded-full h-1.5">
-          <div className="bg-primary h-1.5 rounded-full transition-all" style={{ width: `${progress}%` }} />
+          <div className="bg-primary h-1.5 rounded-full transition-all motion-reduce:transition-none" style={{ width: `${progress}%` }} />
         </div>
 
         {currentIndex < totalCards - 1 ? (
@@ -901,9 +934,10 @@ export default function StoryEngine() {
             onClick={() => goTo(currentIndex + 1)}
             className="gap-1"
             data-testid="button-next-card"
+            aria-label="Go to next card"
           >
             Next
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-4 h-4" aria-hidden="true" />
           </Button>
         ) : (
           <Button
@@ -911,9 +945,10 @@ export default function StoryEngine() {
             onClick={() => setLocation(`/book/${id}`)}
             className="gap-1"
             data-testid="button-finish-journey"
+            aria-label="Finish journey and return to book"
           >
             Finish
-            <CheckCircle2 className="w-4 h-4" />
+            <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
           </Button>
         )}
       </div>
