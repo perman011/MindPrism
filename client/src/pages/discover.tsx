@@ -5,16 +5,18 @@ import type { Book, Category } from "@shared/schema";
 import { BookCard } from "@/components/book-card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Search } from "lucide-react";
-import { useSearch } from "wouter";
+import { BookOpen, Search, Film, Play } from "lucide-react";
+import { useSearch, useLocation, Link } from "wouter";
 import { useState, useMemo } from "react";
 import { CategoryIcon } from "@/components/category-icon";
+import type { Short } from "@shared/schema";
 
 export default function Discover() {
   const searchParams = new URLSearchParams(useSearch());
   const categorySlug = searchParams.get("category");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(categorySlug);
+  const [, navigate] = useLocation();
 
   const { data: books, isLoading: booksLoading } = useQuery<Book[]>({
     queryKey: ["/api/books"],
@@ -24,6 +26,11 @@ export default function Discover() {
   const { data: categories } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
     queryFn: getQueryFn({ on401: "throw" }),
+  });
+
+  const { data: publishedShorts } = useQuery<Short[]>({
+    queryKey: ["/api/shorts"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
   const filteredBooks = useMemo(() => {
@@ -99,6 +106,34 @@ export default function Discover() {
           )}
         </div>
       </div>
+
+      {publishedShorts && publishedShorts.length > 0 && (
+        <div className="px-5 mb-6" data-testid="banner-trending-shorts">
+          <div
+            className="relative w-full rounded-2xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+            style={{ height: "160px", background: "linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 40%, #1a1000 100%)" }}
+            onClick={() => navigate("/shorts")}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/15 via-transparent to-primary/5" />
+            <div className="absolute top-3 right-4 w-20 h-20 rounded-full bg-primary/5 blur-2xl" />
+            <div className="relative flex flex-col justify-center h-full px-6">
+              <div className="flex items-center gap-2 mb-2">
+                <Film className="w-5 h-5 text-primary" />
+                <p className="text-[10px] font-bold uppercase tracking-widest text-primary/80">Trending</p>
+              </div>
+              <h3 className="text-[22px] font-bold text-white mb-1">Story Shorts</h3>
+              <p className="text-[14px] text-white/60 mb-4">Bite-sized insights in seconds</p>
+              <button
+                className="self-start px-5 py-2 rounded-full bg-primary text-black text-xs font-bold flex items-center gap-1.5"
+                data-testid="button-watch-shorts"
+              >
+                <Play className="w-3 h-3" />
+                Watch Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {categories && categories.length > 0 && (
         <div className="flex items-center gap-2.5 px-5 mb-6 overflow-x-auto pb-2 scrollbar-hide" data-testid="category-pills">

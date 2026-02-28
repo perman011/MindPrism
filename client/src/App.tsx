@@ -28,6 +28,7 @@ import AdminAccessDenied from "@/pages/admin/admin-access-denied";
 import AnalyticsDashboard from "@/pages/admin/analytics-dashboard";
 import AdminShorts from "@/pages/admin/admin-shorts";
 import AdminShortEditor from "@/pages/admin/admin-short-editor";
+import ShortsPage from "@/pages/shorts-page";
 import { getQueryFn } from "@/lib/queryClient";
 import type { UserInterest } from "@shared/schema";
 import { hasMinRole } from "@shared/models/auth";
@@ -57,6 +58,17 @@ function AuthenticatedApp() {
 
   if (!interests || !interests.onboardingCompleted) {
     return <Onboarding />;
+  }
+
+  if (location === "/shorts" || location.startsWith("/shorts/book/")) {
+    return (
+      <AudioProvider>
+        <Switch>
+          <Route path="/shorts" component={ShortsPage} />
+          <Route path="/shorts/book/:bookId" component={ShortsPage} />
+        </Switch>
+      </AudioProvider>
+    );
   }
 
   return (

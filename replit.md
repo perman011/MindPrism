@@ -61,6 +61,17 @@ Security is paramount, with AES-256-GCM encryption for journal entries, RLS poli
 - **Admin Dashboard** (`/admin/analytics`): Overview cards, recharts line/bar charts (DAU, signup trend, popular books), event breakdown badges, recent events feed.
 - **Admin API**: `GET /api/analytics/overview` (stats + charts), `GET /api/analytics/admin-events` (paginated events). Admin role required.
 
+### Story Shorts (`client/src/components/shorts-player.tsx`, `server/routes.ts`)
+- **Database**: `shorts` table (id, bookId, title, content, mediaType, mediaUrl, thumbnailUrl, backgroundGradient, duration, orderIndex, status, timestamps). `short_views` table tracks views.
+- **Player** (`shorts-player.tsx`): Full-screen TikTok-style vertical swipe player using Framer Motion spring animations (stiffness 300, damping 30). Gold progress segments at top. X close button (44x44px). Supports image (auto-advance by duration), audio (waveform + play/pause + progress bar), and video (inline player) media types. Records views via `POST /api/shorts/:id/view`.
+- **ShortCard**: 120x180px cards with thumbnail, dark gradient overlay, book title in gold 11px, short title white 13px, media icon top-right, duration badge bottom-left.
+- **Dashboard**: "Quick Bites" horizontal carousel section between Daily Insight and Jump Back In. Skeleton loading. Hidden if no shorts.
+- **Book Detail**: "Shorts" card after Blueprint grid with Film icon, count badge, opens player filtered to that book's shorts. Hidden if no shorts for that book.
+- **Discover**: "Trending Shorts" banner (160px tall, gradient, "Watch Now" gold pill button) above category pills. Links to `/shorts`. Hidden if no shorts.
+- **Routes**: `/shorts` (all published shorts) and `/shorts/book/:bookId` (book-specific). Rendered full-screen without bottom nav. X button navigates back via browser history.
+- **Admin**: `/admin/shorts` list page with filters, `/admin/shorts/new` and `/admin/shorts/:id/edit` editor pages. Accessible via "Shorts" button in admin nav bar.
+- **API**: `GET /api/shorts` (enriched with bookTitle), `GET /api/shorts/:id`, `GET /api/books/:bookId/shorts`, `POST /api/shorts/:id/view` (public). Admin CRUD at `/api/admin/shorts`.
+
 ### Push Notifications (`server/routes/notifications.ts`, `server/services/notificationScheduler.ts`)
 - **Service Worker** (`client/public/sw.js`): Handles push events, shows rich notifications, click-to-navigate.
 - **Notification Routes**: GET/PUT `/api/notifications/preferences`, POST `/api/notifications/subscribe`, POST `/api/notifications/test`, POST `/api/notifications/dismiss-prompt`, GET `/api/notifications/vapid-key`.

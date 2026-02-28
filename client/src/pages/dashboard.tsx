@@ -7,8 +7,10 @@ import type { Book, Category, DailySpark, UserStreak, UserProgress, ChakraProgre
 import { CHAKRA_MAP } from "@shared/schema";
 import { BookCard } from "@/components/book-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Brain, Flame, ArrowRight, Sparkles, BookOpen, ChevronRight, ChevronLeft, X, Lightbulb } from "lucide-react";
+import { Brain, Flame, ArrowRight, Sparkles, BookOpen, ChevronRight, ChevronLeft, X, Lightbulb, Film } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import type { Short } from "@shared/schema";
+import { ShortsPlayer, ShortCard } from "@/components/shorts-player";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -172,6 +174,14 @@ export default function Dashboard() {
     queryKey: ["/api/daily-insight"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
+
+  const { data: publishedShorts, isLoading: shortsLoading } = useQuery<(Short & { bookTitle?: string })[]>({
+    queryKey: ["/api/shorts"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+  });
+
+  const [shortsPlayerOpen, setShortsPlayerOpen] = useState(false);
+  const [shortsPlayerIndex, setShortsPlayerIndex] = useState(0);
 
   const featuredBooks = books?.filter((b) => b.featured) ?? [];
   const allBooks = books ?? [];
@@ -374,6 +384,34 @@ export default function Dashboard() {
         </div>
       )}
 
+      {publishedShorts && publishedShorts.length > 0 && (
+        <HorizontalScroll title="Quick Bites" accentLabel="Bite-sized insights" actionHref="/shorts" actionLabel="Watch All" testId="section-quick-bites">
+          {publishedShorts.map((short, i) => (
+            <ShortCard
+              key={short.id}
+              short={short}
+              onClick={() => {
+                setShortsPlayerIndex(i);
+                setShortsPlayerOpen(true);
+              }}
+            />
+          ))}
+        </HorizontalScroll>
+      )}
+      {shortsLoading && (
+        <section className="mb-10" data-testid="section-quick-bites-skeleton">
+          <div className="px-5 mb-4">
+            <Skeleton className="h-3 w-20 mb-1" />
+            <Skeleton className="h-6 w-32" />
+          </div>
+          <div className="flex gap-4 px-5">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="flex-shrink-0 w-[120px] h-[180px] rounded-xl" />
+            ))}
+          </div>
+        </section>
+      )}
+
       {inProgressBooks.length > 0 && (
         <HorizontalScroll title="Jump Back In" accentLabel="Based on your activity" testId="section-resume">
           {inProgressBooks.map((prog) => {
@@ -467,6 +505,14 @@ export default function Dashboard() {
             ))}
           </div>
         </section>
+      )}
+
+      {shortsPlayerOpen && publishedShorts && (
+        <ShortsPlayer
+          shorts={publishedShorts}
+          initialIndex={shortsPlayerIndex}
+          onClose={() => setShortsPlayerOpen(false)}
+        />
       )}
     </div>
   );

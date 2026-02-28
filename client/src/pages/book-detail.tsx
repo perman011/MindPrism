@@ -11,8 +11,10 @@ import {
   ArrowLeft, BookOpen, Lightbulb, Brain, AlertTriangle,
   Dumbbell, ListChecks, Layers, Bookmark, BookmarkCheck,
   Clock, Headphones, ChevronRight, BarChart3, ShoppingCart, Share2,
-  GraduationCap, HelpCircle,
+  GraduationCap, HelpCircle, Film,
 } from "lucide-react";
+import type { Short } from "@shared/schema";
+import { ShortsPlayer } from "@/components/shorts-player";
 import { Link, useParams, useLocation } from "wouter";
 import { useAudio } from "@/lib/audio-context";
 import { useToast } from "@/hooks/use-toast";
@@ -96,6 +98,7 @@ export default function BookDetail() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showFlashcards, setShowFlashcards] = useState(false);
   const [showQuiz, setShowQuiz] = useState(false);
+  const [showShortsPlayer, setShowShortsPlayer] = useState(false);
 
   const triggerCelebration = useCallback(() => {
     confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ["#d4a017", "#fbbf24", "#f59e0b", "#ffffff"] });
@@ -122,6 +125,12 @@ export default function BookDetail() {
 
   const { data: progress } = useQuery<UserProgress | null>({
     queryKey: ["/api/progress", id],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: !!id,
+  });
+
+  const { data: bookShorts } = useQuery<Short[]>({
+    queryKey: ["/api/books", id, "shorts"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: !!id,
   });
@@ -401,6 +410,26 @@ export default function BookDetail() {
             );
           })}
         </div>
+
+        {bookShorts && bookShorts.length > 0 && (
+          <Card
+            className="mt-6 p-4 bg-[#1a1a1a] border-white/5 cursor-pointer hover-elevate active-elevate-2 overflow-visible"
+            onClick={() => setShowShortsPlayer(true)}
+            data-testid="card-book-shorts"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0 w-11 h-11 rounded-md bg-primary/10 flex items-center justify-center">
+                <Film className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm">Shorts</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Bite-sized visual insights</p>
+              </div>
+              <Badge variant="secondary" className="text-[10px] font-semibold">{bookShorts.length}</Badge>
+              <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+            </div>
+          </Card>
+        )}
       </div>
 
       {book && (
@@ -410,6 +439,14 @@ export default function BookDetail() {
           bookTitle={book.title}
           bookAuthor={book.author}
           bookId={book.id}
+        />
+      )}
+
+      {showShortsPlayer && bookShorts && bookShorts.length > 0 && (
+        <ShortsPlayer
+          shorts={bookShorts}
+          bookId={id}
+          onClose={() => setShowShortsPlayer(false)}
         />
       )}
     </div>

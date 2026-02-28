@@ -963,7 +963,13 @@ export async function registerRoutes(
   app.get("/api/shorts", async (_req, res) => {
     try {
       const published = await storage.getPublishedShorts();
-      res.json(published);
+      const allBooks = await storage.getBooks();
+      const bookMap = new Map(allBooks.map(b => [b.id, b.title]));
+      const enriched = published.map(s => ({
+        ...s,
+        bookTitle: bookMap.get(s.bookId) ?? "",
+      }));
+      res.json(enriched);
     } catch (error) {
       console.error("Error fetching shorts:", error);
       res.status(500).json({ message: "Failed to fetch shorts" });
