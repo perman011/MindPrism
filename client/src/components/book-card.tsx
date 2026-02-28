@@ -40,10 +40,10 @@ export function BookCard({ book, compact, audioMode }: BookCardProps) {
         )}
       </div>
       <div className={compact ? "pt-2.5 px-0.5" : "p-4"}>
-        <h3 className={`font-semibold line-clamp-2 leading-snug ${compact ? "text-sm mb-1" : "text-base mb-1"}`} data-testid={`text-book-title-${book.id}`}>
+        <h3 className={`font-semibold text-[#111827] line-clamp-2 leading-snug ${compact ? "text-sm mb-1" : "text-base mb-1"}`} data-testid={`text-book-title-${book.id}`}>
           {book.title}
         </h3>
-        <p className={`text-muted-foreground/70 ${compact ? "text-xs" : "text-sm mb-3"}`}>{book.author}</p>
+        <p className={`text-[#6B7280] ${compact ? "text-xs" : "text-sm mb-3"}`}>{book.author}</p>
         {!compact && (
           <>
             <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{book.description}</p>

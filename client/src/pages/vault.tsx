@@ -71,7 +71,7 @@ export default function Vault() {
             <AvatarFallback className="text-lg font-bold bg-primary/10 text-primary">{initials}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold tracking-tight" data-testid="text-vault-name">
+            <h1 className="text-2xl font-bold text-[#111827] tracking-tight" data-testid="text-vault-name">
               {user?.firstName} {user?.lastName}
             </h1>
             <p className="text-sm text-muted-foreground mt-0.5">{user?.email}</p>

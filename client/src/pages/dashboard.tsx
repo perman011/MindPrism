@@ -33,9 +33,9 @@ function HorizontalScroll({ children, title, accentLabel, actionHref, actionLabe
       <div className="flex items-center justify-between gap-2 px-5 mb-4">
         <div>
           {accentLabel && (
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-primary/70 mb-1">{accentLabel}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-[#3B82F6] mb-1">{accentLabel}</p>
           )}
-          <h2 className="text-xl font-bold">{title}</h2>
+          <h2 className="text-xl font-bold text-[#111827]">{title}</h2>
         </div>
         {actionHref && (
           <Link href={actionHref}>
@@ -88,7 +88,7 @@ function BookSlider({ books, title, testId }: { books: Book[]; title: string; te
   return (
     <section className="mb-10" data-testid={testId}>
       <div className="flex items-center justify-between gap-2 px-5 mb-4">
-        <h2 className="text-xl font-bold">{title}</h2>
+        <h2 className="text-xl font-bold text-[#111827]">{title}</h2>
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
@@ -207,7 +207,7 @@ export default function Dashboard() {
       <div className="px-5 pt-8 pb-5 flex items-center justify-between gap-3">
         <div className="flex-1">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{greeting()}</p>
-          <h1 className="text-2xl font-bold tracking-tight" data-testid="text-welcome">
+          <h1 className="text-2xl font-bold text-[#111827] tracking-tight" data-testid="text-welcome">
             {user?.firstName ?? "Explorer"}
           </h1>
         </div>
@@ -226,21 +226,16 @@ export default function Dashboard() {
       </div>
 
       <section className="mb-8 px-5" data-testid="section-energy-map">
-        <div className="relative rounded-2xl bg-[#F5F0EB] p-5 pb-3">
+        <p className="text-[11px] font-semibold text-[#111827] uppercase tracking-widest mb-2 px-1">My Energy Map</p>
+        <p className="text-sm text-[#6B7280] mb-3 px-1">Tap a chakra to see your progress</p>
+        <div className="relative rounded-2xl bg-[#1E1033] p-5 pb-3 overflow-hidden">
           <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden rounded-2xl">
-            <div className="absolute top-4 left-8 w-1 h-1 rounded-full bg-blue-300 animate-pulse" />
-            <div className="absolute top-12 right-12 w-0.5 h-0.5 rounded-full bg-blue-400 animate-pulse" style={{ animationDelay: "0.5s" }} />
-            <div className="absolute top-20 left-20 w-0.5 h-0.5 rounded-full bg-blue-300 animate-pulse" style={{ animationDelay: "1s" }} />
-            <div className="absolute bottom-16 right-8 w-1 h-1 rounded-full bg-blue-400 animate-pulse" style={{ animationDelay: "1.5s" }} />
-            <div className="absolute bottom-24 left-16 w-0.5 h-0.5 rounded-full bg-blue-200 animate-pulse" style={{ animationDelay: "0.8s" }} />
+            <div className="absolute top-4 left-8 w-1 h-1 rounded-full bg-purple-400 animate-pulse" />
+            <div className="absolute top-12 right-12 w-0.5 h-0.5 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "0.5s" }} />
+            <div className="absolute top-20 left-20 w-0.5 h-0.5 rounded-full bg-purple-400 animate-pulse" style={{ animationDelay: "1s" }} />
+            <div className="absolute bottom-16 right-8 w-1 h-1 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "1.5s" }} />
+            <div className="absolute bottom-24 left-16 w-0.5 h-0.5 rounded-full bg-purple-200 animate-pulse" style={{ animationDelay: "0.8s" }} />
           </div>
-
-          <p className="text-center text-xs font-medium text-blue-400/80 uppercase tracking-widest mb-2">
-            My Energy Map
-          </p>
-          <h3 className="text-center text-sm text-white/70 mb-3">
-            Tap a chakra to explore
-          </h3>
 
           <div className="flex justify-center relative" style={{ zIndex: 10 }}>
             <ChakraAvatar
@@ -463,8 +458,8 @@ export default function Dashboard() {
 
       {categories && categories.length > 0 && (
         <section className="mb-10 px-5" data-testid="section-categories">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-primary/70 mb-1">Explore topics</p>
-          <h2 className="text-xl font-bold mb-4">Browse by Topic</h2>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-[#3B82F6] mb-1">Explore topics</p>
+          <h2 className="text-xl font-bold text-[#111827] mb-4">Browse by Topic</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {categories.map((cat) => (
               <Link key={cat.id} href={`/discover?category=${cat.slug}`}>

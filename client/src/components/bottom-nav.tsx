@@ -26,12 +26,12 @@ export function BottomNav() {
               key={item.path}
               onClick={() => setLocation(item.path)}
               className={`flex flex-col items-center justify-center gap-1 flex-1 py-2 rounded-md transition-colors ${
-                active ? "text-primary" : "text-muted-foreground/60"
+                active ? "text-[#3B82F6]" : "text-[#9CA3AF]"
               }`}
               data-testid={item.testId}
             >
               <item.icon className={`w-[22px] h-[22px] transition-all ${active ? "stroke-[2.5]" : "stroke-[1.75]"}`} />
-              <span className={`text-[11px] leading-tight transition-all ${active ? "font-bold text-primary" : "font-medium"}`}>{item.label}</span>
+              <span className={`text-[11px] leading-tight transition-all ${active ? "font-bold text-[#3B82F6]" : "font-medium"}`}>{item.label}</span>
             </button>
           );
         })}
