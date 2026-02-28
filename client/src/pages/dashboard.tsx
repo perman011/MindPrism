@@ -228,7 +228,7 @@ export default function Dashboard() {
       <section className="mb-8 px-5" data-testid="section-energy-map">
         <p className="text-[11px] font-semibold text-[#111827] uppercase tracking-widest mb-2 px-1">My Energy Map</p>
         <p className="text-sm text-[#6B7280] mb-3 px-1">Tap a chakra to see your progress</p>
-        <div className="relative rounded-2xl bg-[#1E1033] p-5 pb-3 overflow-hidden">
+        <div className="relative rounded-2xl bg-[#341539] p-5 pb-3 overflow-hidden">
           <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden rounded-2xl">
             <div className="absolute top-4 left-8 w-1 h-1 rounded-full bg-purple-400 animate-pulse" />
             <div className="absolute top-12 right-12 w-0.5 h-0.5 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "0.5s" }} />
