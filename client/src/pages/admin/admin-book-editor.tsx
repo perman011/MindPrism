@@ -527,15 +527,9 @@ export default function AdminBookEditor() {
             coreThesis={editableBook?.coreThesis || book.coreThesis || ""}
             coverImage={editableBook?.coverImage || book.coverImage || ""}
             audioUrl={editableBook?.audioUrl || book.audioUrl || ""}
-            audioDuration={editableBook?.audioDuration ?? book.audioDuration ?? 0}
-            affiliateUrl={editableBook?.affiliateUrl || book.affiliateUrl || ""}
-            readTime={editableBook?.readTime ?? book.readTime}
-            listenTime={editableBook?.listenTime ?? book.listenTime}
             primaryChakra={editableBook?.primaryChakra || book.primaryChakra || ""}
             secondaryChakra={editableBook?.secondaryChakra || book.secondaryChakra || ""}
             categoryId={editableBook?.categoryId || book.categoryId || ""}
-            premiumOnly={editableBook?.premiumOnly ?? book.premiumOnly ?? false}
-            freePreviewCards={editableBook?.freePreviewCards ?? book.freePreviewCards ?? 5}
             onChange={handleBookFieldChange}
           />
 
