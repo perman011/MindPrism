@@ -48,7 +48,6 @@ export function MindTree({ counts, activeSection, onSectionClick, bookTitle }: M
     { id: "thesis", label: "Core Thesis", icon: Target, section: "thesis" },
     { id: "chapters", label: "Chapter Summaries", icon: BookOpen, section: "chapters" },
     { id: "mental-models", label: "Mental Models", icon: Brain, section: "mental-models" },
-    { id: "principles", label: "Principles & Stories", icon: Lightbulb, section: "principles" },
   ];
 
   const getCount = (sectionId: string): number => {

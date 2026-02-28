@@ -535,7 +535,6 @@ export default function AdminBookEditor() {
 
           <ChapterEditor bookId={bookId} chapters={chapters} />
           <MentalModelEditor bookId={bookId} models={mentalModels} />
-          <PrincipleEditor bookId={bookId} principles={principles} stories={stories} />
         </div>
 
         <div className="w-[375px] flex-shrink-0 overflow-hidden">
