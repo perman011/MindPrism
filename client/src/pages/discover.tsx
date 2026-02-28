@@ -5,12 +5,68 @@ import type { Book, Category } from "@shared/schema";
 import { BookCard } from "@/components/book-card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Search, Film, Play, ChevronDown } from "lucide-react";
+import { BookOpen, Search, Film, Clock, X, Lightbulb } from "lucide-react";
 import { useSearch, useLocation } from "wouter";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { CategoryIcon } from "@/components/category-icon";
 import type { Short } from "@shared/schema";
 import { ShortsPlayer, ShortCard } from "@/components/shorts-player";
+
+const RECENT_SEARCHES_KEY = "mindprism_recent_searches";
+const MAX_RECENT_SEARCHES = 8;
+
+function getRecentSearches(): string[] {
+  try {
+    const stored = localStorage.getItem(RECENT_SEARCHES_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+function addRecentSearch(query: string) {
+  const searches = getRecentSearches().filter(s => s !== query);
+  searches.unshift(query);
+  localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(searches.slice(0, MAX_RECENT_SEARCHES)));
+}
+
+function removeRecentSearch(query: string) {
+  const searches = getRecentSearches().filter(s => s !== query);
+  localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(searches));
+}
+
+interface SearchResult {
+  books: Array<{
+    id: string;
+    title: string;
+    author: string;
+    description: string;
+    coverImage: string | null;
+    categoryId: string | null;
+    readTime: number;
+    highlightedTitle: string;
+    highlightedAuthor: string;
+    highlightedDescription: string;
+  }>;
+  principles: Array<{
+    id: string;
+    title: string;
+    content: string;
+    bookId: string;
+    bookTitle: string;
+    highlightedTitle: string;
+    highlightedContent: string;
+  }>;
+}
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
+}
 
 export default function Discover() {
   const searchParams = new URLSearchParams(useSearch());
@@ -22,7 +78,13 @@ export default function Discover() {
   const [shortsBookFilter, setShortsBookFilter] = useState<string | null>(null);
   const [shortsPlayerOpen, setShortsPlayerOpen] = useState(false);
   const [shortsPlayerIndex, setShortsPlayerIndex] = useState(0);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>(getRecentSearches());
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
   const [, navigate] = useLocation();
+
+  const debouncedQuery = useDebounce(searchQuery, 300);
 
   const { data: books, isLoading: booksLoading } = useQuery<Book[]>({
     queryKey: ["/api/books"],
@@ -39,21 +101,69 @@ export default function Discover() {
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
+  const { data: searchResults, isLoading: searchLoading } = useQuery<SearchResult>({
+    queryKey: ["/api/search", `?q=${encodeURIComponent(debouncedQuery)}&type=all`],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: debouncedQuery.length >= 2,
+  });
+
+  const isSearchActive = searchQuery.length >= 2;
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(e.target as Node) &&
+        searchInputRef.current &&
+        !searchInputRef.current.contains(e.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSearchSubmit = useCallback((query: string) => {
+    if (query.trim().length >= 2) {
+      addRecentSearch(query.trim());
+      setRecentSearches(getRecentSearches());
+      setShowSuggestions(false);
+    }
+  }, []);
+
+  const handleRecentSearchClick = useCallback((query: string) => {
+    setSearchQuery(query);
+    setShowSuggestions(false);
+    handleSearchSubmit(query);
+  }, [handleSearchSubmit]);
+
+  const handleRemoveRecent = useCallback((e: React.MouseEvent, query: string) => {
+    e.stopPropagation();
+    removeRecentSearch(query);
+    setRecentSearches(getRecentSearches());
+  }, []);
+
   const filteredBooks = useMemo(() => {
+    if (isSearchActive && searchResults) {
+      let result = searchResults.books.map(sr => {
+        const fullBook = books?.find(b => b.id === sr.id);
+        return fullBook || sr as any;
+      });
+      if (activeCategory) {
+        const cat = categories?.find((c) => c.slug === activeCategory);
+        if (cat) result = result.filter((b: any) => b.categoryId === cat.id);
+      }
+      return result;
+    }
+
     let result = books ?? [];
     if (activeCategory) {
       const cat = categories?.find((c) => c.slug === activeCategory);
       if (cat) result = result.filter((b) => b.categoryId === cat.id);
     }
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (b) => b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q) ||
-          b.description.toLowerCase().includes(q)
-      );
-    }
     return result;
-  }, [books, categories, activeCategory, searchQuery]);
+  }, [books, categories, activeCategory, isSearchActive, searchResults]);
 
   const filteredShorts = useMemo(() => {
     let result = publishedShorts ?? [];
@@ -70,13 +180,10 @@ export default function Discover() {
     return result;
   }, [publishedShorts, shortsBookFilter, searchQuery]);
 
-  const suggestions = useMemo(() => {
-    if (searchQuery.length < 2) return [];
-    const q = searchQuery.toLowerCase();
-    return (books ?? [])
-      .filter(b => b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q))
-      .slice(0, 4);
-  }, [books, searchQuery]);
+  const topSuggestions = useMemo(() => {
+    if (!searchResults || debouncedQuery.length < 2) return [];
+    return searchResults.books.slice(0, 5);
+  }, [searchResults, debouncedQuery]);
 
   const booksWithShorts = useMemo(() => {
     if (!publishedShorts || !books) return [];
@@ -86,6 +193,9 @@ export default function Discover() {
 
   const shortsCount = publishedShorts?.length ?? 0;
 
+  const showRecentSearches = showSuggestions && searchQuery.length < 2 && recentSearches.length > 0;
+  const showSearchSuggestions = showSuggestions && debouncedQuery.length >= 2 && (topSuggestions.length > 0 || (searchResults?.principles?.length ?? 0) > 0);
+
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
@@ -94,74 +204,160 @@ export default function Discover() {
         noIndex
       />
       <div className="px-5 pt-6 pb-4">
-        <h1 className="text-2xl font-bold text-[#111827] mb-1" data-testid="text-discover-title">Discover</h1>
-        <p className="text-sm text-[#6B7280] mb-5">Find your next great read</p>
+        <h1 className="text-2xl font-bold text-foreground mb-1" data-testid="text-discover-title">Discover</h1>
+        <p className="text-sm text-muted-foreground mb-5">Find your next great read</p>
 
         <div className="relative mb-4">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
           <Input
+            ref={searchInputRef}
             type="search"
             placeholder={activeTab === "books" ? "Search books, authors, principles..." : "Search shorts, topics..."}
             className="w-full pl-10 pr-4 bg-muted/50 border-transparent focus:border-border rounded-full text-sm"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setShowSuggestions(true);
+            }}
+            onFocus={() => setShowSuggestions(true)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSearchSubmit(searchQuery);
+              }
+              if (e.key === "Escape") {
+                setShowSuggestions(false);
+              }
+            }}
             data-testid="input-search"
           />
-          {activeTab === "books" && suggestions.length > 0 && searchQuery.length >= 2 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-md shadow-lg z-10 overflow-hidden" data-testid="search-suggestions">
-              {suggestions.map((book) => (
-                <a
-                  key={book.id}
-                  href={`/book/${book.id}`}
-                  className="flex items-center gap-3 px-4 py-2.5 hover-elevate transition-colors"
-                  data-testid={`suggestion-${book.id}`}
+
+          {showRecentSearches && (
+            <div
+              ref={suggestionsRef}
+              className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-md shadow-lg z-10 overflow-hidden"
+              data-testid="recent-searches"
+            >
+              <div className="px-4 py-2 flex items-center justify-between gap-2">
+                <span className="text-xs font-medium text-muted-foreground">Recent Searches</span>
+              </div>
+              {recentSearches.map((query) => (
+                <button
+                  key={query}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 hover-elevate transition-colors text-left"
+                  onClick={() => handleRecentSearchClick(query)}
+                  data-testid={`recent-search-${query}`}
                 >
-                  <div className="w-8 h-11 rounded-md overflow-hidden flex-shrink-0">
-                    {book.coverImage ? (
-                      <img src={book.coverImage} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-[10px] font-bold text-primary/40">{book.title[0]}</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{book.title}</p>
-                    <p className="text-xs text-muted-foreground">{book.author}</p>
-                  </div>
-                </a>
+                  <Clock className="w-3.5 h-3.5 text-muted-foreground/60 flex-shrink-0" />
+                  <span className="text-sm flex-1 truncate">{query}</span>
+                  <button
+                    className="p-1 rounded-full text-muted-foreground/40 hover-elevate"
+                    onClick={(e) => handleRemoveRecent(e, query)}
+                    aria-label={`Remove ${query} from recent searches`}
+                    data-testid={`remove-recent-${query}`}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </button>
               ))}
+            </div>
+          )}
+
+          {showSearchSuggestions && (
+            <div
+              ref={suggestionsRef}
+              className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-md shadow-lg z-10 overflow-hidden max-h-80 overflow-y-auto"
+              data-testid="search-suggestions"
+            >
+              {topSuggestions.length > 0 && (
+                <>
+                  <div className="px-4 py-2">
+                    <span className="text-xs font-medium text-muted-foreground">Books</span>
+                  </div>
+                  {topSuggestions.map((book) => (
+                    <a
+                      key={book.id}
+                      href={`/book/${book.id}`}
+                      className="flex items-center gap-3 px-4 py-2.5 hover-elevate transition-colors"
+                      onClick={() => handleSearchSubmit(searchQuery)}
+                      data-testid={`suggestion-${book.id}`}
+                    >
+                      <div className="w-8 h-11 rounded-md overflow-hidden flex-shrink-0">
+                        {book.coverImage ? (
+                          <img src={book.coverImage} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                            <span className="text-[10px] font-bold text-primary/40">{book.title[0]}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate" dangerouslySetInnerHTML={{ __html: book.highlightedTitle }} />
+                        <p className="text-xs text-muted-foreground" dangerouslySetInnerHTML={{ __html: book.highlightedAuthor }} />
+                      </div>
+                    </a>
+                  ))}
+                </>
+              )}
+
+              {(searchResults?.principles?.length ?? 0) > 0 && (
+                <>
+                  <div className="px-4 py-2 border-t border-border">
+                    <span className="text-xs font-medium text-muted-foreground">Principles</span>
+                  </div>
+                  {searchResults!.principles.slice(0, 5).map((principle) => (
+                    <a
+                      key={principle.id}
+                      href={`/book/${principle.bookId}`}
+                      className="flex items-center gap-3 px-4 py-2.5 hover-elevate transition-colors"
+                      onClick={() => handleSearchSubmit(searchQuery)}
+                      data-testid={`suggestion-principle-${principle.id}`}
+                    >
+                      <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Lightbulb className="w-4 h-4 text-primary/60" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate" dangerouslySetInnerHTML={{ __html: principle.highlightedTitle }} />
+                        <p className="text-xs text-muted-foreground truncate">{principle.bookTitle}</p>
+                      </div>
+                    </a>
+                  ))}
+                </>
+              )}
             </div>
           )}
         </div>
 
-        <div className="flex rounded-xl bg-[#FFFFFF] p-1 mb-4" data-testid="discover-tabs">
+        <div className="flex rounded-xl bg-card p-1 mb-4" data-testid="discover-tabs" role="tablist" aria-label="Content type">
           <button
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
               activeTab === "books"
-                ? "bg-[#341539] text-white shadow-sm"
-                : "text-[#6B7280] hover:text-[#374151]"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground"
             }`}
             onClick={() => { setActiveTab("books"); setSearchQuery(""); }}
             data-testid="tab-books"
+            role="tab"
+            aria-selected={activeTab === "books"}
           >
-            <BookOpen className="w-4 h-4" />
+            <BookOpen className="w-4 h-4" aria-hidden="true" />
             Books
           </button>
           <button
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
               activeTab === "shorts"
-                ? "bg-[#341539] text-white shadow-sm"
-                : "text-[#6B7280] hover:text-[#374151]"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground"
             }`}
             onClick={() => { setActiveTab("shorts"); setSearchQuery(""); }}
             data-testid="tab-shorts"
+            role="tab"
+            aria-selected={activeTab === "shorts"}
           >
-            <Film className="w-4 h-4" />
+            <Film className="w-4 h-4" aria-hidden="true" />
             Shorts
             {shortsCount > 0 && (
               <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                activeTab === "shorts" ? "bg-primary/20 text-primary-foreground" : "bg-primary/20 text-primary"
+                activeTab === "shorts" ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary/20 text-primary"
               }`}>
                 {shortsCount}
               </span>
@@ -172,13 +368,23 @@ export default function Discover() {
 
       {activeTab === "books" && (
         <>
-          {categories && categories.length > 0 && (
+          {isSearchActive && searchResults && (
+            <div className="px-5 pb-4">
+              <p className="text-xs text-muted-foreground" data-testid="text-search-results-count">
+                {searchResults.books.length} book{searchResults.books.length !== 1 ? "s" : ""}
+                {searchResults.principles.length > 0 && ` and ${searchResults.principles.length} principle${searchResults.principles.length !== 1 ? "s" : ""}`}
+                {" "}found for "{searchQuery}"
+              </p>
+            </div>
+          )}
+
+          {!isSearchActive && categories && categories.length > 0 && (
             <div className="flex items-center gap-2.5 px-5 mb-6 overflow-x-auto pb-2 scrollbar-hide" data-testid="category-pills">
               <button
                 className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all ${
                   activeCategory === null
-                    ? "bg-[#341539] text-white shadow-sm"
-                    : "bg-white text-[#374151] border border-[#E5E7EB]"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "bg-card text-foreground border border-border"
                 }`}
                 onClick={() => setActiveCategory(null)}
                 data-testid="filter-all"
@@ -190,8 +396,8 @@ export default function Discover() {
                   key={cat.id}
                   className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-2 transition-all ${
                     activeCategory === cat.slug
-                      ? "bg-[#341539] text-white shadow-sm"
-                      : "bg-white text-[#374151] border border-[#E5E7EB]"
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "bg-card text-foreground border border-border"
                   }`}
                   onClick={() => setActiveCategory(activeCategory === cat.slug ? null : cat.slug)}
                   data-testid={`filter-${cat.slug}`}
@@ -204,7 +410,7 @@ export default function Discover() {
           )}
 
           <div className="px-5 pb-8">
-            {activeCategory && (
+            {!isSearchActive && activeCategory && (
               <p className="text-xs text-muted-foreground mb-3" data-testid="text-filter-label">
                 Showing {filteredBooks.length} {filteredBooks.length === 1 ? "book" : "books"}
                 {categories?.find(c => c.slug === activeCategory)
@@ -212,7 +418,7 @@ export default function Discover() {
                   : ""}
               </p>
             )}
-            {booksLoading ? (
+            {booksLoading || (isSearchActive && searchLoading) ? (
               <div className="grid grid-cols-2 gap-4">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <div key={i} className="space-y-2">
@@ -233,6 +439,26 @@ export default function Discover() {
                 {filteredBooks.map((book) => (
                   <BookCard key={book.id} book={book} compact />
                 ))}
+              </div>
+            )}
+
+            {isSearchActive && searchResults && searchResults.principles.length > 0 && (
+              <div className="mt-8" data-testid="search-principles-results">
+                <h2 className="text-lg font-semibold mb-4">Matching Principles</h2>
+                <div className="space-y-3">
+                  {searchResults.principles.map((principle) => (
+                    <a
+                      key={principle.id}
+                      href={`/book/${principle.bookId}`}
+                      className="block p-4 bg-card border border-border rounded-md hover-elevate transition-colors"
+                      data-testid={`search-result-principle-${principle.id}`}
+                    >
+                      <p className="text-sm font-medium mb-1" dangerouslySetInnerHTML={{ __html: principle.highlightedTitle }} />
+                      <p className="text-xs text-muted-foreground line-clamp-2" dangerouslySetInnerHTML={{ __html: principle.highlightedContent }} />
+                      <p className="text-xs text-primary mt-2">{principle.bookTitle}</p>
+                    </a>
+                  ))}
+                </div>
               </div>
             )}
           </div>

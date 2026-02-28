@@ -51,18 +51,18 @@ export function PersonalStats() {
 
   const statCards = [
     { icon: BookOpen, label: "Books Started", value: stats.booksStarted, color: "text-primary", bg: "bg-primary/10" },
-    { icon: Trophy, label: "Books Completed", value: stats.booksCompleted, color: "text-emerald-400", bg: "bg-emerald-400/10" },
-    { icon: Brain, label: "Principles Mastered", value: stats.principlesMastered, color: "text-purple-700", bg: "bg-purple-600/10" },
-    { icon: Target, label: "Domains Explored", value: stats.categoriesExplored, color: "text-purple-600", bg: "bg-purple-600/10" },
-    { icon: Clock, label: "Minutes Invested", value: stats.totalTimeInvested, color: "text-purple-700", bg: "bg-purple-600/10" },
-    { icon: TrendingUp, label: "Avg Min/Book", value: stats.avgTimePerBook, color: "text-rose-400", bg: "bg-rose-400/10" },
+    { icon: Trophy, label: "Books Completed", value: stats.booksCompleted, color: "text-success", bg: "bg-success/10" },
+    { icon: Brain, label: "Principles Mastered", value: stats.principlesMastered, color: "text-primary-light", bg: "bg-primary-light/10" },
+    { icon: Target, label: "Domains Explored", value: stats.categoriesExplored, color: "text-accent-teal", bg: "bg-accent-teal/10" },
+    { icon: Clock, label: "Minutes Invested", value: stats.totalTimeInvested, color: "text-primary-light", bg: "bg-primary-light/10" },
+    { icon: TrendingUp, label: "Avg Min/Book", value: stats.avgTimePerBook, color: "text-warning", bg: "bg-warning/10" },
   ];
 
   const highlights = [
     { icon: Flame, label: "Current Streak", value: `${stats.currentStreak} days`, color: "text-primary" },
-    { icon: Trophy, label: "Longest Streak", value: `${stats.longestStreak} days`, color: "text-amber-400" },
-    { icon: PenLine, label: "Journal Entries", value: stats.journalEntries, color: "text-emerald-400" },
-    { icon: BarChart3, label: "Exercises Done", value: stats.exercisesDone, color: "text-purple-700" },
+    { icon: Trophy, label: "Longest Streak", value: `${stats.longestStreak} days`, color: "text-accent-gold" },
+    { icon: PenLine, label: "Journal Entries", value: stats.journalEntries, color: "text-success" },
+    { icon: BarChart3, label: "Exercises Done", value: stats.exercisesDone, color: "text-primary-light" },
   ];
 
   return (

@@ -43,7 +43,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       book,
       isPlaying: false,
       currentTime: 0,
-      duration: book.listenTime * 60,
+      duration: book.audioDuration || book.listenTime * 60,
       isFullScreen: true,
     }));
   }, []);

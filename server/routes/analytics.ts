@@ -2,13 +2,29 @@ import { Router, type Request, type Response, type NextFunction } from "express"
 import { isAuthenticated } from "../replit_integrations/auth";
 import { authStorage } from "../replit_integrations/auth/storage";
 import { hasMinRole } from "@shared/models/auth";
-import { analyticsEvents, books, userProgress } from "@shared/schema";
+import { analyticsEvents, books, userProgress, userActivityLog } from "@shared/schema";
 import { users } from "@shared/models/auth";
 import { db } from "../db";
 import { sql, desc, gte, count, eq } from "drizzle-orm";
 import { z } from "zod";
 
 const router = Router();
+
+const analyticsCache = new Map<string, { data: any; expiresAt: number }>();
+const CACHE_TTL = 5 * 60 * 1000;
+
+function getCached(key: string) {
+  const entry = analyticsCache.get(key);
+  if (entry && entry.expiresAt > Date.now()) {
+    return entry.data;
+  }
+  analyticsCache.delete(key);
+  return null;
+}
+
+function setCache(key: string, data: any) {
+  analyticsCache.set(key, { data, expiresAt: Date.now() + CACHE_TTL });
+}
 
 const eventSchema = z.object({
   eventType: z.string().min(1).max(100),
@@ -61,18 +77,34 @@ const requireAdmin = async (req: Request, res: Response, next: NextFunction) => 
 
 router.get("/overview", isAuthenticated, requireAdmin, async (_req: Request, res: Response) => {
   try {
+    const cached = getCached("overview");
+    if (cached) return res.json(cached);
+
     const now = new Date();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
     const [totalUsersResult] = await db.select({ count: count() }).from(users);
 
-    const [activeUsersResult] = await db
+    const [dauResult] = await db
+      .select({ count: sql<number>`count(distinct ${analyticsEvents.userId})` })
+      .from(analyticsEvents)
+      .where(gte(analyticsEvents.createdAt, oneDayAgo));
+
+    const [wauResult] = await db
       .select({ count: sql<number>`count(distinct ${analyticsEvents.userId})` })
       .from(analyticsEvents)
       .where(gte(analyticsEvents.createdAt, sevenDaysAgo));
 
+    const [mauResult] = await db
+      .select({ count: sql<number>`count(distinct ${analyticsEvents.userId})` })
+      .from(analyticsEvents)
+      .where(gte(analyticsEvents.createdAt, thirtyDaysAgo));
+
     const [totalBooksResult] = await db.select({ count: count() }).from(books);
+
+    const [totalEventsResult] = await db.select({ count: count() }).from(analyticsEvents);
 
     const dailyActiveUsers = await db
       .select({
@@ -84,14 +116,27 @@ router.get("/overview", isAuthenticated, requireAdmin, async (_req: Request, res
       .groupBy(sql`date(${analyticsEvents.createdAt})`)
       .orderBy(sql`date(${analyticsEvents.createdAt})`);
 
+    const engagementByDay = await db
+      .select({
+        date: sql<string>`date(${userActivityLog.createdAt})`,
+        sessions: sql<number>`count(*)`,
+        uniqueUsers: sql<number>`count(distinct ${userActivityLog.userId})`,
+        avgDuration: sql<number>`coalesce(avg(${userActivityLog.sessionDuration}), 0)`,
+      })
+      .from(userActivityLog)
+      .where(gte(userActivityLog.createdAt, thirtyDaysAgo))
+      .groupBy(sql`date(${userActivityLog.createdAt})`)
+      .orderBy(sql`date(${userActivityLog.createdAt})`);
+
     const popularBooks = await db
       .select({
-        bookTitle: sql<string>`${analyticsEvents.eventData}->>'bookTitle'`,
+        bookTitle: sql<string>`coalesce(${books.title}, ${analyticsEvents.eventData}->>'bookTitle', 'Unknown')`,
         count: sql<number>`count(*)`,
       })
       .from(analyticsEvents)
+      .leftJoin(books, sql`${analyticsEvents.eventData}->>'bookId' = ${books.id}`)
       .where(sql`${analyticsEvents.eventType} = 'book_open'`)
-      .groupBy(sql`${analyticsEvents.eventData}->>'bookTitle'`)
+      .groupBy(sql`coalesce(${books.title}, ${analyticsEvents.eventData}->>'bookTitle', 'Unknown')`)
       .orderBy(sql`count(*) desc`)
       .limit(10);
 
@@ -105,8 +150,6 @@ router.get("/overview", isAuthenticated, requireAdmin, async (_req: Request, res
       .groupBy(sql`date(${users.createdAt})`)
       .orderBy(sql`date(${users.createdAt})`);
 
-    const [totalEventsResult] = await db.select({ count: count() }).from(analyticsEvents);
-
     const eventBreakdown = await db
       .select({
         eventType: analyticsEvents.eventType,
@@ -118,16 +161,45 @@ router.get("/overview", isAuthenticated, requireAdmin, async (_req: Request, res
       .orderBy(sql`count(*) desc`)
       .limit(20);
 
-    res.json({
+    const [funnelSignup] = await db.select({ count: count() }).from(users);
+    const [funnelOnboarded] = await db
+      .select({ count: sql<number>`count(distinct ${analyticsEvents.userId})` })
+      .from(analyticsEvents)
+      .where(sql`${analyticsEvents.eventType} = 'onboarding_complete'`);
+    const [funnelBookOpened] = await db
+      .select({ count: sql<number>`count(distinct ${analyticsEvents.userId})` })
+      .from(analyticsEvents)
+      .where(sql`${analyticsEvents.eventType} = 'book_open'`);
+    const [funnelCardViewed] = await db
+      .select({ count: sql<number>`count(distinct ${analyticsEvents.userId})` })
+      .from(analyticsEvents)
+      .where(sql`${analyticsEvents.eventType} IN ('card_view', 'card_swipe', 'page_view')`);
+
+    const funnel = [
+      { stage: "Signed Up", count: Number(funnelSignup.count) || 0 },
+      { stage: "Onboarded", count: Number(funnelOnboarded.count) || 0 },
+      { stage: "Opened Book", count: Number(funnelBookOpened.count) || 0 },
+      { stage: "Engaged", count: Number(funnelCardViewed.count) || 0 },
+    ];
+
+    const result = {
       totalUsers: totalUsersResult.count,
-      activeUsers7d: activeUsersResult.count,
+      dau: Number(dauResult.count) || 0,
+      wau: Number(wauResult.count) || 0,
+      mau: Number(mauResult.count) || 0,
+      activeUsers7d: Number(wauResult.count) || 0,
       totalBooks: totalBooksResult.count,
       totalEvents: totalEventsResult.count,
       dailyActiveUsers,
+      engagementByDay,
       popularBooks,
       signupTrend,
       eventBreakdown,
-    });
+      funnel,
+    };
+
+    setCache("overview", result);
+    res.json(result);
   } catch (error: any) {
     console.error("[analytics] Overview error:", error.message);
     res.status(500).json({ message: "Failed to fetch analytics overview" });

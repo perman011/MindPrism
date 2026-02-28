@@ -17,20 +17,24 @@ export function BottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/98 backdrop-blur-xl border-t border-border/40 safe-area-bottom" data-testid="bottom-nav">
-      <div className="flex items-center justify-around h-[4.25rem] max-w-2xl mx-auto px-4">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/98 backdrop-blur-xl border-t border-border/40 safe-area-bottom" data-testid="bottom-nav" aria-label="Main navigation">
+      <div className="flex items-center justify-around h-[4.25rem] max-w-2xl mx-auto px-4" role="tablist">
         {navItems.map((item) => {
           const active = isActive(item.path);
           return (
             <button
               key={item.path}
               onClick={() => setLocation(item.path)}
-              className={`flex flex-col items-center justify-center gap-1 flex-1 py-2 rounded-md transition-colors ${
-                active ? "text-[#341539]" : "text-[#9CA3AF]"
+              aria-label={item.label}
+              aria-current={active ? "page" : undefined}
+              role="tab"
+              aria-selected={active}
+              className={`flex flex-col items-center justify-center gap-1 flex-1 py-2 min-h-[2.75rem] rounded-md transition-all duration-150 active:scale-95 ${
+                active ? "text-[#341539] dark:text-primary" : "text-[#9CA3AF] dark:text-muted-foreground"
               }`}
               data-testid={item.testId}
             >
-              <item.icon className={`w-[22px] h-[22px] transition-all ${active ? "stroke-[2.5]" : "stroke-[1.75]"}`} />
+              <item.icon className={`w-[22px] h-[22px] transition-all ${active ? "stroke-[2.5]" : "stroke-[1.75]"}`} aria-hidden="true" />
               <span className={`text-[11px] leading-tight transition-all ${active ? "font-bold text-[#341539]" : "font-medium"}`}>{item.label}</span>
             </button>
           );

@@ -19,7 +19,7 @@ import {
 import { hasMinRole } from "@shared/models/auth";
 import { users } from "@shared/models/auth";
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql, count, isNotNull } from "drizzle-orm";
 import { z } from "zod";
 
 const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
@@ -165,8 +165,8 @@ export function registerAdminRoutes(app: Express) {
       } else {
         const publishedSnapshot: Record<string, any> = {};
         const snapshotFields = ["title", "author", "coverImage", "description", "coreThesis",
-          "categoryId", "readTime", "listenTime", "audioUrl", "featured",
-          "primaryChakra", "secondaryChakra"] as const;
+          "categoryId", "readTime", "listenTime", "audioUrl", "audioDuration", "featured",
+          "primaryChakra", "secondaryChakra", "premiumOnly", "freePreviewCards"] as const;
         for (const f of snapshotFields) {
           publishedSnapshot[f] = book[f];
         }
@@ -215,8 +215,8 @@ export function registerAdminRoutes(app: Express) {
 
       const updateData: Record<string, any> = {};
       const allowedFields = ["title", "author", "coverImage", "description", "coreThesis",
-        "categoryId", "readTime", "listenTime", "audioUrl", "featured",
-        "primaryChakra", "secondaryChakra"];
+        "categoryId", "readTime", "listenTime", "audioUrl", "audioDuration", "featured",
+        "primaryChakra", "secondaryChakra", "premiumOnly", "freePreviewCards"];
       for (const field of allowedFields) {
         if (field in draftContent) {
           updateData[field] = draftContent[field];
@@ -283,8 +283,8 @@ export function registerAdminRoutes(app: Express) {
       const changes: Array<{ field: string; published: any; draft: any }> = [];
 
       const compareFields = ["title", "author", "coverImage", "description", "coreThesis",
-        "categoryId", "readTime", "listenTime", "audioUrl", "featured",
-        "primaryChakra", "secondaryChakra"];
+        "categoryId", "readTime", "listenTime", "audioUrl", "audioDuration", "featured",
+        "primaryChakra", "secondaryChakra", "premiumOnly", "freePreviewCards"];
 
       for (const field of compareFields) {
         const pubVal = book[field as keyof typeof book];
@@ -655,6 +655,140 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
+  app.get("/api/admin/content-health", isAuthenticated, isAdmin, async (_req: any, res) => {
+    try {
+      const allBooks = await storage.getBooks();
+      const scores = await Promise.all(
+        allBooks.map(async (book) => {
+          const [principles, stories, exercises, chapters, mentalModels, commonMistakes, infographics, actionItems] = await Promise.all([
+            storage.getPrinciplesByBook(book.id),
+            storage.getStoriesByBook(book.id),
+            storage.getExercisesByBook(book.id),
+            storage.getChapterSummariesByBook(book.id),
+            storage.getMentalModelsByBook(book.id),
+            storage.getCommonMistakesByBook(book.id),
+            storage.getInfographicsByBook(book.id),
+            storage.getActionItemsByBook(book.id),
+          ]);
+
+          const sections = {
+            basicInfo: {
+              label: "Basic Info",
+              score: 0,
+              maxScore: 5,
+              details: [] as string[],
+            },
+            principles: {
+              label: "Principles",
+              score: Math.min(principles.length, 3),
+              maxScore: 3,
+              details: principles.length === 0 ? ["No principles added"] : [],
+            },
+            stories: {
+              label: "Stories",
+              score: Math.min(stories.length, 2),
+              maxScore: 2,
+              details: stories.length === 0 ? ["No stories added"] : [],
+            },
+            exercises: {
+              label: "Exercises",
+              score: Math.min(exercises.length, 2),
+              maxScore: 2,
+              details: exercises.length === 0 ? ["No exercises added"] : [],
+            },
+            chapters: {
+              label: "Chapters",
+              score: Math.min(chapters.length, 2),
+              maxScore: 2,
+              details: chapters.length === 0 ? ["No chapter summaries"] : [],
+            },
+            mentalModels: {
+              label: "Mental Models",
+              score: Math.min(mentalModels.length, 1),
+              maxScore: 1,
+              details: mentalModels.length === 0 ? ["No mental models"] : [],
+            },
+            commonMistakes: {
+              label: "Common Mistakes",
+              score: Math.min(commonMistakes.length, 1),
+              maxScore: 1,
+              details: commonMistakes.length === 0 ? ["No common mistakes"] : [],
+            },
+            infographics: {
+              label: "Infographics",
+              score: Math.min(infographics.length, 1),
+              maxScore: 1,
+              details: infographics.length === 0 ? ["No infographics"] : [],
+            },
+            actionItems: {
+              label: "Action Items",
+              score: Math.min(actionItems.length, 2),
+              maxScore: 2,
+              details: actionItems.length === 0 ? ["No action items"] : [],
+            },
+          };
+
+          let basicScore = 0;
+          const basicDetails: string[] = [];
+          if (book.title && book.title !== "Untitled Book") basicScore++;
+          else basicDetails.push("Missing title");
+          if (book.author && book.author !== "Unknown Author") basicScore++;
+          else basicDetails.push("Missing author");
+          if (book.description && book.description.length > 20) basicScore++;
+          else basicDetails.push("Missing or short description");
+          if (book.coverImage) basicScore++;
+          else basicDetails.push("Missing cover image");
+          if (book.coreThesis) basicScore++;
+          else basicDetails.push("Missing core thesis");
+          sections.basicInfo.score = basicScore;
+          sections.basicInfo.details = basicDetails;
+
+          const totalScore = Object.values(sections).reduce((sum, s) => sum + s.score, 0);
+          const maxScore = Object.values(sections).reduce((sum, s) => sum + s.maxScore, 0);
+          const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
+
+          return {
+            bookId: book.id,
+            bookTitle: book.title,
+            bookStatus: book.status,
+            percentage,
+            totalScore,
+            maxScore,
+            sections,
+            counts: {
+              principles: principles.length,
+              stories: stories.length,
+              exercises: exercises.length,
+              chapters: chapters.length,
+              mentalModels: mentalModels.length,
+              commonMistakes: commonMistakes.length,
+              infographics: infographics.length,
+              actionItems: actionItems.length,
+            },
+          };
+        })
+      );
+
+      const totalBooks = scores.length;
+      const avgScore = totalBooks > 0 ? Math.round(scores.reduce((sum, s) => sum + s.percentage, 0) / totalBooks) : 0;
+      const completeBooks = scores.filter((s) => s.percentage >= 80).length;
+      const needsWork = scores.filter((s) => s.percentage < 50).length;
+
+      res.json({
+        overview: {
+          totalBooks,
+          averageScore: avgScore,
+          completeBooks,
+          needsWork,
+        },
+        books: scores,
+      });
+    } catch (error) {
+      console.error("Error calculating content health:", error);
+      res.status(500).json({ message: "Failed to calculate content health" });
+    }
+  });
+
   app.get("/api/admin/users", isAuthenticated, isSuperAdmin, async (_req: any, res) => {
     try {
       const allUsers = await db.select().from(users);
@@ -690,6 +824,72 @@ export function registerAdminRoutes(app: Express) {
     } catch (error) {
       console.error("Error updating premium status:", error);
       res.status(500).json({ message: "Failed to update premium status" });
+    }
+  });
+
+  app.get("/api/admin/subscription-stats", isAuthenticated, isAdmin, async (_req: any, res) => {
+    try {
+      const allUsers = await db.select().from(users);
+      const totalUsers = allUsers.length;
+      const premiumUsers = allUsers.filter(u => u.isPremium);
+      const totalSubscribers = premiumUsers.length;
+      const conversionRate = totalUsers > 0 ? (totalSubscribers / totalUsers) * 100 : 0;
+
+      const now = new Date();
+      let monthlyCount = 0;
+      let yearlyCount = 0;
+      const recentSubscriptions: { date: string; count: number }[] = [];
+
+      for (const u of premiumUsers) {
+        if (u.currentPeriodEnd) {
+          const periodEnd = new Date(u.currentPeriodEnd);
+          const diffDays = (periodEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+          if (diffDays > 60) {
+            yearlyCount++;
+          } else {
+            monthlyCount++;
+          }
+        } else {
+          monthlyCount++;
+        }
+      }
+
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const dateMap = new Map<string, number>();
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        dateMap.set(d.toISOString().slice(0, 10), 0);
+      }
+      for (const u of premiumUsers) {
+        if (u.updatedAt && new Date(u.updatedAt) >= thirtyDaysAgo) {
+          const dateKey = new Date(u.updatedAt).toISOString().slice(0, 10);
+          if (dateMap.has(dateKey)) {
+            dateMap.set(dateKey, (dateMap.get(dateKey) || 0) + 1);
+          }
+        }
+      }
+      dateMap.forEach((cnt, date) => {
+        recentSubscriptions.push({ date, count: cnt });
+      });
+
+      const withStripe = premiumUsers.filter(u => u.stripeSubscriptionId).length;
+      const manualGrants = totalSubscribers - withStripe;
+
+      res.json({
+        totalSubscribers,
+        totalUsers,
+        conversionRate: Math.round(conversionRate * 100) / 100,
+        monthlyCount,
+        yearlyCount,
+        stripeSubscribers: withStripe,
+        manualGrants,
+        recentSubscriptions,
+      });
+    } catch (error) {
+      console.error("Error fetching subscription stats:", error);
+      res.status(500).json({ message: "Failed to fetch subscription stats" });
     }
   });
 }

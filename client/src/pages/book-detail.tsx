@@ -285,7 +285,7 @@ export default function BookDetail() {
           </div>
 
           <p className="text-[10px] uppercase tracking-[0.2em] text-primary font-semibold mb-1.5" data-testid="text-summary-label">Summary</p>
-          <h1 className="text-2xl font-bold text-[#111827] mb-1 text-center px-6 leading-tight" data-testid="text-book-title">{book.title}</h1>
+          <h1 className="text-2xl font-bold font-serif text-[#111827] mb-1 text-center px-6 leading-tight" data-testid="text-book-title">{book.title}</h1>
           <p className="text-sm text-[#6B7280] mb-4" data-testid="text-book-author">by {book.author}</p>
 
           <div className="flex items-center gap-1.5 mb-6 flex-wrap justify-center">

@@ -9,6 +9,7 @@ import {
   jsonb,
   date,
   real,
+  index,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -39,6 +40,7 @@ export const books = pgTable("books", {
   readTime: integer("read_time").notNull(),
   listenTime: integer("listen_time").notNull(),
   audioUrl: text("audio_url"),
+  audioDuration: integer("audio_duration"),
   featured: boolean("featured").default(false),
   status: text("status").default("draft"),
   principleCount: integer("principle_count").default(0),
@@ -46,11 +48,15 @@ export const books = pgTable("books", {
   exerciseCount: integer("exercise_count").default(0),
   primaryChakra: text("primary_chakra"),
   secondaryChakra: text("secondary_chakra"),
+  premiumOnly: boolean("premium_only").default(false),
+  freePreviewCards: integer("free_preview_cards").default(5),
   affiliateUrl: varchar("affiliate_url", { length: 500 }),
   updatedAt: timestamp("updated_at").defaultNow(),
   currentDraftVersionId: varchar("current_draft_version_id"),
   currentPublishedVersionId: varchar("current_published_version_id"),
-});
+}, (table) => ({
+  statusCategoryIdx: index("books_status_category_idx").on(table.status, table.categoryId),
+}));
 
 export const bookVersions = pgTable("book_versions", {
   id: varchar("id")
@@ -192,7 +198,9 @@ export const userProgress = pgTable("user_progress", {
   currentCardIndex: integer("current_card_index").default(0),
   totalCards: integer("total_cards").default(0),
   currentSection: text("current_section"),
-});
+}, (table) => ({
+  userBookIdx: index("user_progress_user_book_idx").on(table.userId, table.bookId),
+}));
 
 export const journalEntries = pgTable("journal_entries", {
   id: varchar("id")
@@ -204,7 +212,9 @@ export const journalEntries = pgTable("journal_entries", {
   exerciseId: varchar("exercise_id"),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  userCreatedAtIdx: index("journal_entries_user_created_idx").on(table.userId, table.createdAt),
+}));
 
 export const userInterests = pgTable("user_interests", {
   id: varchar("id")
@@ -231,6 +241,8 @@ export const userStreaks = pgTable("user_streaks", {
   totalMinutesListened: integer("total_minutes_listened").default(0),
   totalExercisesCompleted: integer("total_exercises_completed").default(0),
   totalBooksStarted: integer("total_books_started").default(0),
+  streakFreezeAvailable: boolean("streak_freeze_available").default(true),
+  lastFreezeUsedAt: timestamp("last_freeze_used_at"),
 });
 
 export const savedHighlights = pgTable("saved_highlights", {
@@ -289,7 +301,9 @@ export const analyticsEvents = pgTable("analytics_events", {
   pageUrl: text("page_url"),
   sessionId: text("session_id"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  eventTypeCreatedAtIdx: index("analytics_events_type_created_idx").on(table.eventType, table.createdAt),
+}));
 
 export const analyticsEventsRelations = relations(
   analyticsEvents,
@@ -592,7 +606,9 @@ export const userActivityLog = pgTable("user_activity_log", {
   bookId: varchar("book_id").references(() => books.id),
   sessionDuration: integer("session_duration"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  userCreatedAtIdx: index("user_activity_log_user_created_idx").on(table.userId, table.createdAt),
+}));
 
 export const userActivityLogRelations = relations(
   userActivityLog,

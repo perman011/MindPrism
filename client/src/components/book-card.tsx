@@ -20,8 +20,11 @@ export function BookCard({ book, compact, audioMode }: BookCardProps) {
         {book.coverImage ? (
           <img
             src={book.coverImage}
-            alt={book.title}
+            alt={`Cover of ${book.title} by ${book.author}`}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            loading="lazy"
+            width={compact ? 180 : 320}
+            height={compact ? 240 : 240}
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center rounded-md">
@@ -40,10 +43,10 @@ export function BookCard({ book, compact, audioMode }: BookCardProps) {
         )}
       </div>
       <div className={compact ? "pt-2.5 px-0.5" : "p-4"}>
-        <h3 className={`font-semibold text-[#111827] line-clamp-2 leading-snug ${compact ? "text-sm mb-1" : "text-base mb-1"}`} data-testid={`text-book-title-${book.id}`}>
+        <h3 className={`font-semibold font-serif text-foreground line-clamp-2 leading-snug ${compact ? "text-sm mb-1" : "text-base mb-1"}`} data-testid={`text-book-title-${book.id}`}>
           {book.title}
         </h3>
-        <p className={`text-[#6B7280] ${compact ? "text-xs" : "text-sm mb-3"}`}>{book.author}</p>
+        <p className={`text-muted-foreground ${compact ? "text-xs" : "text-sm mb-3"}`}>{book.author}</p>
         {!compact && (
           <>
             <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{book.description}</p>

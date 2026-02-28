@@ -6,23 +6,68 @@ MindPrism is a mobile-first web application designed to make psychology and self
 ## User Preferences
 I prefer clear and concise communication. When making changes, please explain the rationale briefly. For development, prioritize mobile-first design principles. I value iterative development, so incremental updates with clear descriptions are preferred.
 
+**Critical mandate:** "Make sure you do not change anything on this app I really like it" — all changes purely additive/visual; user can explicitly request removals.
+
 ## System Architecture
 MindPrism utilizes a modern web stack: React, TypeScript, Vite, TailwindCSS, and Shadcn/UI for the frontend, and Express.js with TypeScript for the backend. PostgreSQL with Drizzle ORM handles data persistence, incorporating Row-Level Security for sensitive data. Authentication is managed via Replit Auth.
 
 The content is organized into a hierarchical "Psychological Taxonomy." The application features a consumer-facing app with pages for landing, onboarding, a personalized dashboard, book discovery, audio summaries, and a "Growth Vault" for journaling and progress tracking. A comprehensive admin portal (`/admin`) is also included for content creation, editing, and user management, featuring a 3-panel editor with a Mind Tree navigator, Block Builder, and mobile preview.
 
-UI/UX uses a Headway-style light theme with cream background (#F5F0EB), white cards, and Dream Curtain (#341539) as the primary brand/accent color. Buttons are pill-shaped (48px h), cards have 16px radius and padding, inputs are 48px tall with 10px radius. The design is mobile-first, card-based, with interactive elements and animations powered by Framer Motion. Only the Inter font family is used (400-700 weights). Key interactive components include a Chakra Energy Map and an Interactive Engine that dynamically renders content. Security is managed through AES-256-GCM encryption for journal entries, RLS policies, and a Role-Based Access Control (RBAC) system.
+### Design System
+- **Theme:** Light mode default with full Dark Mode support (toggle in Vault > Settings)
+- **Colors:** "Warm Prism" extended palette — Dream Curtain (#341539) primary, with semantic colors: success (Sage Green #4CAF7D), warning (Warm Amber #E8A838), accent-teal (#3D8B8B), accent-gold (#C4A35A), primary-light (#6B3A6E), primary-lighter (#D4B8D6), primary-surface (#F5EEF5)
+- **Dark Mode:** Primary inverts to Lavender Mist (#D4B8D6); background: #0F0A14; cards: #1A1225; borders: #2A1E35. ThemeProvider component wraps App with localStorage persistence and system preference detection.
+- **Typography:** Playfair Display (serif) for page titles, book titles, hero headings. Inter (sans-serif) for all body text, UI labels, buttons, navigation.
+- **Components:** Buttons pill-shaped (48px h), cards rounded-2xl with p-4 and hover shadow transitions, inputs 48px tall with 10px radius. Cards have transition-shadow duration-200 ease-out for hover elevation.
+- **Accessibility:** ARIA labels on all icon-only buttons, aria-current on active nav, keyboard navigation in Story Engine, prefers-reduced-motion CSS media query, minimum 44px touch targets.
+- **Animation:** Framer Motion 200ms fade-in animations, reduced motion support.
+- **Charts:** 6-color palette using design tokens (chart-1 through chart-6).
 
-The admin book management supports a draft workflow for content editing, allowing published books to be edited via a draft layer before changes go live. A recommendation algorithm personalizes book suggestions based on user interests. Security middleware includes Helmet.js for CSP and other headers, `express-rate-limit` for API rate limiting, and a query logger for performance monitoring. SEO is managed with `react-helmet-async` for dynamic metadata, with most authenticated pages set to `noIndex`.
+### Features
+- **Chakra Energy Map** and Interactive Engine for dynamic content rendering
+- **Full-Text Search** with ILIKE across books/principles, debounced suggestions, recent searches (localStorage)
+- **Recommendation V2** with collaborative filtering and "Because You Read" carousel
+- **Shorts Pipeline** with admin gradient picker, rich text editing, trending sort by views, share button
+- **Audio Management** with audioDuration field, continue listening section on dashboard
+- **Social Sharing** with branded progress share card, Web Share API, milestone triggers (7/30/100 day streaks)
+- **Streak Gamification** with freeze mechanic, milestone badges (7/14/30/60/100 days), celebration modal
+- **Content Paywalling** with premiumOnly/freePreviewCards fields, PremiumGate overlay in Story Engine
+- **Analytics V2** with DAU/WAU/MAU cards, engagement chart, funnel visualization, content performance, tabbed layout (Overview/Engagement/Content/Events), plus Revenue tab for subscription analytics
+- **Content Quality Scoring** with completeness percentages and "Content Health" overview in admin
+- **Image Optimization** with lazy loading, explicit width/height, skeleton states
+- **Database Performance** with composite indexes on user_progress, journal_entries, analytics_events, books, user_activity_log; N+1 query fix for principles; query timing logging for >500ms queries
+- **PWA** features including offline mode, service worker, install prompt
+- **Push Notifications** with daily reminders, streak alerts, new content notifications
 
-Database backups are handled by a dedicated service using `pg_dump`, scheduled daily, with admin-only routes for management. User activity is logged, and aggregated personal stats are displayed in the "Growth Vault," which features a SummaryStats row (Principles Learned, Stories Read, Current Streak), a 30-day activity heatmap (StreakChart), detailed stat cards, and a two-column desktop layout (stats left, journal/highlights/settings right). Analytics track user events, providing insights in an admin dashboard with overview cards and charts.
+### Security
+- AES-256-GCM encryption for journal entries
+- RLS policies
+- RBAC: user < writer < editor < admin < super_admin
+- Helmet.js for CSP and security headers
+- express-rate-limit for API rate limiting
+- Stripe integration (graceful degradation when keys not configured)
+- Sentry error tracking (guarded by SENTRY_DSN env var)
 
-"Story Shorts" offer TikTok-style vertical video content, integrated into the dashboard, book detail pages, and a dedicated shorts section. Push notifications, managed by a service worker and scheduler, provide daily reminders, streak alerts, and new content notifications. The application also supports PWA features, including offline mode with a service worker for caching and background sync, and an install prompt. Affiliate buy buttons and social sharing features (including a branded progress share card) are integrated into book detail pages.
+### Admin Portal
+- Draft workflow for content editing with publish cycle
+- 3-panel editor with Mind Tree navigator, Block Builder, mobile preview
+- Content Quality Scoring with completeness % per book
+- User management with role assignment
+- Analytics dashboard (Overview + Revenue tabs)
+- Shorts management with gradient picker and rich text editing
 
 ## External Dependencies
 - **Authentication:** Replit Auth (OpenID Connect)
 - **Database:** PostgreSQL
 - **ORM:** Drizzle ORM
-- **Payments:** Stripe
+- **Payments:** Stripe (graceful degradation if not configured)
 - **Security:** Helmet.js, express-rate-limit
-- **Error Monitoring:** Sentry
+- **Error Monitoring:** Sentry (optional, guarded by env var)
+- **Typography:** Google Fonts (Inter + Playfair Display)
+- **Icons:** Lucide React
+- **Animation:** Framer Motion
+- **Charts:** Recharts
+
+## Key Documentation
+- `docs/PRODUCT_BACKLOG.md` — Full product backlog with 20 tickets across 8 epics
+- `docs/UI_DESIGN_SYSTEM.md` — Complete visual design guide with color palettes, typography, component tokens, animation presets, dark mode mapping

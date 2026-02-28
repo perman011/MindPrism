@@ -30,10 +30,11 @@ export function FullScreenPlayer() {
         <div className="flex items-center justify-between px-5 pt-5">
           <button
             onClick={() => setFullScreen(false)}
-            className="w-9 h-9 rounded-full bg-muted/50 flex items-center justify-center"
+            className="w-11 h-11 rounded-full bg-muted/50 flex items-center justify-center"
             data-testid="button-minimize-player"
+            aria-label="Minimize player"
           >
-            <ChevronDown className="w-5 h-5" />
+            <ChevronDown className="w-5 h-5" aria-hidden="true" />
           </button>
           <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Now Playing</p>
           <div className="w-9" />
@@ -73,25 +74,28 @@ export function FullScreenPlayer() {
               onClick={() => skip(-15)}
               className="w-12 h-12 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
               data-testid="button-rewind-15"
+              aria-label="Rewind 15 seconds"
             >
-              <SkipBack className="w-6 h-6" />
+              <SkipBack className="w-6 h-6" aria-hidden="true" />
             </button>
             <button
               onClick={togglePlay}
               className="w-16 h-16 rounded-full bg-primary flex items-center justify-center shadow-lg"
               data-testid="button-play-pause-main"
+              aria-label={isPlaying ? "Pause" : "Play"}
             >
               {isPlaying
-                ? <Pause className="w-7 h-7 text-primary-foreground" />
-                : <Play className="w-7 h-7 text-primary-foreground ml-1" />
+                ? <Pause className="w-7 h-7 text-primary-foreground" aria-hidden="true" />
+                : <Play className="w-7 h-7 text-primary-foreground ml-1" aria-hidden="true" />
               }
             </button>
             <button
               onClick={() => skip(15)}
               className="w-12 h-12 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
               data-testid="button-forward-15"
+              aria-label="Forward 15 seconds"
             >
-              <SkipForward className="w-6 h-6" />
+              <SkipForward className="w-6 h-6" aria-hidden="true" />
             </button>
           </div>
 
@@ -103,6 +107,7 @@ export function FullScreenPlayer() {
               }}
               className="px-4 py-1.5 rounded-full bg-muted text-xs font-medium"
               data-testid="button-speed-control"
+              aria-label={`Playback speed ${speed}x`}
             >
               {speed}x Speed
             </button>

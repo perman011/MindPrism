@@ -34,17 +34,19 @@ export function MiniPlayer() {
           </div>
           <button
             onClick={(e) => { e.stopPropagation(); togglePlay(); }}
-            className="w-9 h-9 rounded-full bg-primary flex items-center justify-center flex-shrink-0"
+            className="w-11 h-11 rounded-full bg-primary flex items-center justify-center flex-shrink-0"
             data-testid="mini-player-toggle"
+            aria-label={isPlaying ? "Pause" : "Play"}
           >
-            {isPlaying ? <Pause className="w-4 h-4 text-primary-foreground" /> : <Play className="w-4 h-4 text-primary-foreground ml-0.5" />}
+            {isPlaying ? <Pause className="w-4 h-4 text-primary-foreground" aria-hidden="true" /> : <Play className="w-4 h-4 text-primary-foreground ml-0.5" aria-hidden="true" />}
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); close(); }}
-            className="w-8 h-8 flex items-center justify-center text-muted-foreground"
+            className="w-11 h-11 flex items-center justify-center text-muted-foreground"
             data-testid="mini-player-close"
+            aria-label="Close player"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       </div>

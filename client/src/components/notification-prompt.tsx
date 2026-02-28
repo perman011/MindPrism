@@ -68,10 +68,11 @@ export function NotificationPrompt() {
       >
         <button
           onClick={handleDismiss}
-          className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
+          className="absolute top-3 right-3 w-11 h-11 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
           data-testid="button-dismiss-notification-prompt"
+          aria-label="Dismiss notification prompt"
         >
-          <X className="w-4 h-4 text-muted-foreground" />
+          <X className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
         </button>
 
         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-50 flex items-center justify-center overflow-hidden">

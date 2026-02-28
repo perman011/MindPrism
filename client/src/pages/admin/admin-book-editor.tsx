@@ -129,7 +129,7 @@ export default function AdminBookEditor() {
     onError: () => toast({ title: "Error", description: "Failed to save book", variant: "destructive" }),
   });
 
-  const handleBookFieldChange = useCallback((field: string, value: string | number) => {
+  const handleBookFieldChange = useCallback((field: string, value: string | number | boolean) => {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     setSaveStatus("saving");
     saveTimeoutRef.current = setTimeout(async () => {
@@ -271,12 +271,15 @@ export default function AdminBookEditor() {
             coreThesis={editableBook?.coreThesis || book.coreThesis || ""}
             coverImage={editableBook?.coverImage || book.coverImage || ""}
             audioUrl={editableBook?.audioUrl || book.audioUrl || ""}
+            audioDuration={editableBook?.audioDuration ?? book.audioDuration ?? 0}
             affiliateUrl={editableBook?.affiliateUrl || book.affiliateUrl || ""}
             readTime={editableBook?.readTime ?? book.readTime}
             listenTime={editableBook?.listenTime ?? book.listenTime}
             primaryChakra={editableBook?.primaryChakra || book.primaryChakra || ""}
             secondaryChakra={editableBook?.secondaryChakra || book.secondaryChakra || ""}
             categoryId={editableBook?.categoryId || book.categoryId || ""}
+            premiumOnly={editableBook?.premiumOnly ?? book.premiumOnly ?? false}
+            freePreviewCards={editableBook?.freePreviewCards ?? book.freePreviewCards ?? 5}
             onChange={handleBookFieldChange}
           />
 

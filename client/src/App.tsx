@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { AudioProvider } from "@/lib/audio-context";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { HelmetProvider } from "react-helmet-async";
+import { ThemeProvider } from "@/components/theme-provider";
 import { BottomNav } from "@/components/bottom-nav";
 import { MiniPlayer } from "@/components/mini-player";
 import { FullScreenPlayer } from "@/components/full-screen-player";
@@ -145,16 +146,18 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <HelmetProvider>
-        <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
-            <Toaster />
-            <OfflineBanner />
-            <InstallPrompt />
-            <AppRouter />
-          </TooltipProvider>
-        </QueryClientProvider>
-      </HelmetProvider>
+      <ThemeProvider>
+        <HelmetProvider>
+          <QueryClientProvider client={queryClient}>
+            <TooltipProvider>
+              <Toaster />
+              <OfflineBanner />
+              <InstallPrompt />
+              <AppRouter />
+            </TooltipProvider>
+          </QueryClientProvider>
+        </HelmetProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

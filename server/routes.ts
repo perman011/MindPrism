@@ -7,7 +7,7 @@ import { registerStripeRoutes } from "./stripe-routes";
 import { z } from "zod";
 import { encrypt, decrypt } from "./crypto";
 import { db } from "./db";
-import { userActivityLog, userProgress, books, categories, journalEntries, flashcardProgress, quizResults, principles, chapterSummaries, stories, shorts } from "@shared/schema";
+import { userActivityLog, userProgress, books, categories, journalEntries, flashcardProgress, quizResults, principles, chapterSummaries, stories, shorts, shortViews } from "@shared/schema";
 import { eq, and, sql as dsql, desc, gte, count, lte, asc } from "drizzle-orm";
 
 export async function registerRoutes(
@@ -114,6 +114,115 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/books/because-you-read", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+
+      const allUserProgress = await storage.getAllUserProgress(userId);
+
+      const completedOrAdvanced = allUserProgress.filter(p => {
+        if (!p.currentCardIndex || !p.totalCards) return false;
+        return p.currentCardIndex >= p.totalCards * 0.5;
+      });
+
+      if (completedOrAdvanced.length === 0) {
+        return res.json([]);
+      }
+
+      const allBooks = await storage.getBooks();
+      const publishedBooks = allBooks.filter(b => b.status === "published" || b.status === "published_with_changes" || !b.status);
+      const bookMap = new Map(publishedBooks.map(b => [b.id, b]));
+
+      const startedBookIds = new Set(
+        allUserProgress
+          .filter(p => p.currentCardIndex && p.currentCardIndex > 0)
+          .map(p => p.bookId)
+      );
+
+      const allOtherProgress = await db.select({
+        userId: userProgress.userId,
+        bookId: userProgress.bookId,
+        currentCardIndex: userProgress.currentCardIndex,
+        totalCards: userProgress.totalCards,
+      }).from(userProgress)
+        .where(dsql`${userProgress.userId} != ${userId} AND ${userProgress.currentCardIndex} > 0`);
+
+      const userBooksMap = new Map<string, Set<string>>();
+      for (const p of allOtherProgress) {
+        if (!userBooksMap.has(p.userId)) {
+          userBooksMap.set(p.userId, new Set());
+        }
+        userBooksMap.get(p.userId)!.add(p.bookId);
+      }
+
+      const myBookIds = new Set(completedOrAdvanced.map(p => p.bookId));
+
+      const collaborativeScores = new Map<string, number>();
+      const myBookIdArr = Array.from(myBookIds);
+      userBooksMap.forEach((otherBooks, otherUserId) => {
+        let overlap = 0;
+        myBookIdArr.forEach(bookId => {
+          if (otherBooks.has(bookId)) overlap++;
+        });
+        if (overlap === 0) return;
+
+        const similarity = overlap / Math.sqrt(myBookIds.size * otherBooks.size);
+
+        otherBooks.forEach(bookId => {
+          if (!startedBookIds.has(bookId) && !myBookIds.has(bookId) && bookMap.has(bookId)) {
+            collaborativeScores.set(bookId, (collaborativeScores.get(bookId) || 0) + similarity);
+          }
+        });
+      });
+
+      const completedCategories = new Set<string>();
+      for (const p of completedOrAdvanced) {
+        const book = bookMap.get(p.bookId);
+        if (book?.categoryId) {
+          completedCategories.add(book.categoryId);
+        }
+      }
+
+      const contentBasedCandidates = publishedBooks.filter(b =>
+        b.categoryId &&
+        completedCategories.has(b.categoryId) &&
+        !startedBookIds.has(b.id) &&
+        !myBookIds.has(b.id)
+      );
+
+      for (const book of contentBasedCandidates) {
+        if (!collaborativeScores.has(book.id)) {
+          collaborativeScores.set(book.id, 0.1);
+        } else {
+          collaborativeScores.set(book.id, collaborativeScores.get(book.id)! + 0.2);
+        }
+      }
+
+      const sortedByScore = Array.from(collaborativeScores.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+
+      const sourceBook = completedOrAdvanced.sort((a, b) => {
+        const aDate = a.lastAccessedAt ? new Date(a.lastAccessedAt).getTime() : 0;
+        const bDate = b.lastAccessedAt ? new Date(b.lastAccessedAt).getTime() : 0;
+        return bDate - aDate;
+      })[0];
+      const sourceBookData = sourceBook ? bookMap.get(sourceBook.bookId) : null;
+
+      const recommendations = sortedByScore
+        .map(([bookId]) => bookMap.get(bookId))
+        .filter(Boolean);
+
+      res.json({
+        sourceBook: sourceBookData ? { id: sourceBookData.id, title: sourceBookData.title } : null,
+        books: recommendations,
+      });
+    } catch (error) {
+      console.error("Error fetching because-you-read:", error);
+      res.status(500).json({ message: "Failed to fetch recommendations" });
+    }
+  });
+
   app.get("/api/books/:id", async (req, res) => {
     try {
       const book = await storage.getBook(req.params.id);
@@ -212,6 +321,20 @@ export async function registerRoutes(
       const { id, section } = req.params;
       let cards: any[] = [];
 
+      const book = await storage.getBook(id);
+      if (!book) return res.status(404).json({ message: "Book not found" });
+
+      let isPremiumUser = false;
+      try {
+        const user = (req as any).user;
+        if (user?.claims?.sub) {
+          const { authStorage } = await import("./replit_integrations/auth/storage");
+          const dbUser = await authStorage.getUser(user.claims.sub);
+          if (dbUser?.isPremium) isPremiumUser = true;
+        }
+      } catch {}
+
+
       switch (section) {
         case "chapter-summaries": {
           const chapters = await storage.getChapterSummariesByBook(id);
@@ -238,10 +361,21 @@ export async function registerRoutes(
           break;
         }
         case "principles": {
-          const bookPrinciples = await storage.getPrinciplesByBook(id);
+          const [bookPrinciples, allPrincipleStories] = await Promise.all([
+            storage.getPrinciplesByBook(id),
+            storage.getStoriesByBook(id),
+          ]);
+          const storiesByPrinciple = new Map<string, typeof allPrincipleStories>();
+          for (const s of allPrincipleStories) {
+            if (s.principleId) {
+              const existing = storiesByPrinciple.get(s.principleId) || [];
+              existing.push(s);
+              storiesByPrinciple.set(s.principleId, existing);
+            }
+          }
           for (const p of bookPrinciples) {
             cards.push({ type: "principle", data: p });
-            const pStories = await storage.getStoriesByPrinciple(p.id);
+            const pStories = storiesByPrinciple.get(p.id) || [];
             pStories.forEach((s) => {
               cards.push({ type: "story", data: s });
             });
@@ -287,6 +421,14 @@ export async function registerRoutes(
           bookStories.forEach((s) => cards.push({ type: "story", data: s }));
           bookExercises.forEach((e) => cards.push({ type: "exercise", data: e }));
         }
+      }
+
+      if (book.premiumOnly && !isPremiumUser) {
+        const limit = book.freePreviewCards ?? 5;
+        const truncated = cards.length > limit;
+        cards = cards.slice(0, limit);
+        res.json({ cards, truncated, totalCards: truncated ? cards.length + 1 : cards.length });
+        return;
       }
 
       res.json(cards);
@@ -518,6 +660,20 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error updating streak:", error);
       res.status(500).json({ message: "Failed to update streak" });
+    }
+  });
+
+  app.post("/api/streak/freeze", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const result = await storage.freezeStreak(userId);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error freezing streak:", error);
+      if (error.message === "No streak record found" || error.message === "Streak freeze not available") {
+        return res.status(400).json({ message: error.message });
+      }
+      res.status(500).json({ message: "Failed to freeze streak" });
     }
   });
 
@@ -757,6 +913,65 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/share/generate-card", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const schema = z.object({
+        type: z.enum(["progress", "book-completion", "streak-milestone"]),
+        bookId: z.string().optional(),
+        milestone: z.number().optional(),
+      });
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Invalid share data" });
+
+      const allProgress = await storage.getAllUserProgress(userId);
+      const streak = await storage.getUserStreak(userId);
+      const allBooks = await storage.getBooks();
+      const publishedBooks = allBooks.filter(b => b.status === "published" || b.status === "published_with_changes" || !b.status);
+
+      const booksStarted = allProgress.filter(p => (p.currentCardIndex ?? 0) > 0).length;
+      const booksCompleted = allProgress.filter(p => {
+        const total = p.totalCards ?? 1;
+        return total > 0 && (p.currentCardIndex ?? 0) >= total;
+      }).length;
+      const principlesMastered = allProgress.reduce((sum, p) => sum + (p.completedPrinciples?.length ?? 0), 0);
+
+      const startedBookIds = new Set(allProgress.filter(p => (p.currentCardIndex ?? 0) > 0).map(p => p.bookId));
+      const totalReadTime = publishedBooks
+        .filter(b => startedBookIds.has(b.id))
+        .reduce((sum, b) => sum + (b.readTime ?? 0), 0);
+      const totalTimeInvested = totalReadTime + (streak?.totalMinutesListened ?? 0);
+
+      const result: any = {
+        type: parsed.data.type,
+        stats: {
+          booksStarted,
+          booksCompleted,
+          principlesMastered,
+          totalTimeInvested,
+          currentStreak: streak?.currentStreak ?? 0,
+          longestStreak: streak?.longestStreak ?? 0,
+        },
+      };
+
+      if (parsed.data.type === "book-completion" && parsed.data.bookId) {
+        const book = await storage.getBook(parsed.data.bookId);
+        if (book) {
+          result.book = { title: book.title, author: book.author };
+        }
+      }
+
+      if (parsed.data.type === "streak-milestone" && parsed.data.milestone) {
+        result.milestone = parsed.data.milestone;
+      }
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error generating share card:", error);
+      res.status(500).json({ message: "Failed to generate share card" });
+    }
+  });
+
   // ===== FLASHCARD ROUTES =====
 
   app.get("/api/books/:bookId/flashcards", isAuthenticated, async (req: any, res) => {
@@ -976,8 +1191,32 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/shorts", async (_req, res) => {
+  app.get("/api/shorts", async (req, res) => {
     try {
+      const sort = req.query.sort as string | undefined;
+
+      if (sort === "trending") {
+        const trendingShorts = await db
+          .select({
+            short: shorts,
+            viewCount: dsql<number>`COALESCE(count(${shortViews.id}), 0)::int`,
+          })
+          .from(shorts)
+          .leftJoin(shortViews, eq(shorts.id, shortViews.shortId))
+          .where(eq(shorts.status, "published"))
+          .groupBy(shorts.id)
+          .orderBy(dsql`COALESCE(count(${shortViews.id}), 0) DESC`);
+
+        const allBooks = await storage.getBooks();
+        const bookMap = new Map(allBooks.map(b => [b.id, b.title]));
+        const enriched = trendingShorts.map(row => ({
+          ...row.short,
+          bookTitle: bookMap.get(row.short.bookId) ?? "",
+          viewCount: row.viewCount,
+        }));
+        return res.json(enriched);
+      }
+
       const published = await storage.getPublishedShorts();
       const allBooks = await storage.getBooks();
       const bookMap = new Map(allBooks.map(b => [b.id, b.title]));
@@ -1066,6 +1305,94 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error updating short:", error);
       res.status(500).json({ message: "Failed to update short" });
+    }
+  });
+
+  app.get("/api/search", async (req, res) => {
+    try {
+      const q = (req.query.q as string || "").trim();
+      const type = (req.query.type as string) || "all";
+
+      if (!q || q.length < 2) {
+        return res.json({ books: [], principles: [] });
+      }
+
+      const pattern = `%${q}%`;
+      const bookResults: any[] = [];
+      const principleResults: any[] = [];
+
+      if (type === "books" || type === "all") {
+        const matchedBooks = await db
+          .select({
+            id: books.id,
+            title: books.title,
+            author: books.author,
+            description: books.description,
+            coverImage: books.coverImage,
+            categoryId: books.categoryId,
+            readTime: books.readTime,
+          })
+          .from(books)
+          .where(
+            and(
+              dsql`(${books.status} = 'published' OR ${books.status} = 'published_with_changes' OR ${books.status} IS NULL)`,
+              dsql`(${books.title} ILIKE ${pattern} OR ${books.author} ILIKE ${pattern} OR ${books.description} ILIKE ${pattern})`
+            )
+          )
+          .limit(20);
+
+        for (const book of matchedBooks) {
+          const highlightField = (text: string) => {
+            if (!text) return text;
+            const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            return text.replace(regex, '<mark>$1</mark>');
+          };
+          bookResults.push({
+            ...book,
+            highlightedTitle: highlightField(book.title),
+            highlightedAuthor: highlightField(book.author),
+            highlightedDescription: highlightField(book.description),
+          });
+        }
+      }
+
+      if (type === "principles" || type === "all") {
+        const matchedPrinciples = await db
+          .select({
+            id: principles.id,
+            title: principles.title,
+            content: principles.content,
+            bookId: principles.bookId,
+            bookTitle: books.title,
+          })
+          .from(principles)
+          .innerJoin(books, eq(principles.bookId, books.id))
+          .where(
+            and(
+              dsql`(${books.status} = 'published' OR ${books.status} = 'published_with_changes' OR ${books.status} IS NULL)`,
+              dsql`(${principles.title} ILIKE ${pattern} OR ${principles.content} ILIKE ${pattern})`
+            )
+          )
+          .limit(20);
+
+        for (const p of matchedPrinciples) {
+          const highlightField = (text: string) => {
+            if (!text) return text;
+            const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            return text.replace(regex, '<mark>$1</mark>');
+          };
+          principleResults.push({
+            ...p,
+            highlightedTitle: highlightField(p.title),
+            highlightedContent: highlightField(p.content),
+          });
+        }
+      }
+
+      res.json({ books: bookResults, principles: principleResults });
+    } catch (error) {
+      console.error("Error in search:", error);
+      res.status(500).json({ message: "Search failed" });
     }
   });
 

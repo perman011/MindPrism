@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CHAKRA_MAP, type ChakraType, type Category } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
@@ -23,18 +24,21 @@ interface BookSetupEditorProps {
   coreThesis: string;
   coverImage: string;
   audioUrl: string;
+  audioDuration: number;
   affiliateUrl: string;
   readTime: number;
   listenTime: number;
   primaryChakra: string;
   secondaryChakra: string;
   categoryId: string;
-  onChange: (field: string, value: string | number) => void;
+  premiumOnly: boolean;
+  freePreviewCards: number;
+  onChange: (field: string, value: string | number | boolean) => void;
 }
 
 export function BookSetupEditor({
-  title, author, description, coreThesis, coverImage, audioUrl, affiliateUrl,
-  readTime, listenTime, primaryChakra, secondaryChakra, categoryId, onChange,
+  title, author, description, coreThesis, coverImage, audioUrl, audioDuration, affiliateUrl,
+  readTime, listenTime, primaryChakra, secondaryChakra, categoryId, premiumOnly, freePreviewCards, onChange,
 }: BookSetupEditorProps) {
   const { data: categories } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
@@ -172,6 +176,24 @@ export function BookSetupEditor({
           </div>
         </div>
 
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          <div>
+            <Label htmlFor="audioDuration" className="text-xs font-semibold">Audio Duration (seconds)</Label>
+            <Input
+              id="audioDuration"
+              type="number"
+              value={audioDuration}
+              onChange={(e) => onChange("audioDuration", parseInt(e.target.value) || 0)}
+              placeholder="e.g. 600"
+              data-testid="input-audio-duration"
+            />
+            <p className="text-[10px] text-muted-foreground mt-1">
+              {audioDuration > 0 ? `${Math.floor(audioDuration / 60)}m ${audioDuration % 60}s` : "Not set"}
+            </p>
+          </div>
+          <div />
+        </div>
+
         <div className="mt-4">
           <Label htmlFor="affiliateUrl" className="text-xs font-semibold">Affiliate Buy Link</Label>
           <Input
@@ -206,6 +228,38 @@ export function BookSetupEditor({
             />
           </div>
         </div>
+      </section>
+
+      <section id="section-premium">
+        <h2 className="text-lg font-bold mb-4 border-b pb-2">Premium Settings</h2>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <Label className="text-xs font-semibold">Premium Only</Label>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Restrict full content to premium subscribers</p>
+          </div>
+          <Switch
+            checked={premiumOnly}
+            onCheckedChange={(checked) => onChange("premiumOnly", checked)}
+            data-testid="switch-premium-only"
+          />
+        </div>
+        {premiumOnly && (
+          <div className="mt-4">
+            <Label htmlFor="freePreviewCards" className="text-xs font-semibold">Free Preview Cards</Label>
+            <Input
+              id="freePreviewCards"
+              type="number"
+              min={0}
+              max={50}
+              value={freePreviewCards}
+              onChange={(e) => onChange("freePreviewCards", parseInt(e.target.value) || 0)}
+              data-testid="input-free-preview-cards"
+            />
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Number of cards non-premium users can view before hitting the paywall.
+            </p>
+          </div>
+        )}
       </section>
 
       <section id="section-thesis">

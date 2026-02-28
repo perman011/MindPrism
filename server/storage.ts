@@ -78,6 +78,7 @@ export interface IStorage {
   updateUserStreak(userId: string): Promise<UserStreak>;
   addListeningTime(userId: string, minutes: number): Promise<UserStreak>;
   incrementExercisesCompleted(userId: string): Promise<UserStreak>;
+  freezeStreak(userId: string): Promise<UserStreak>;
 
   getSavedHighlights(userId: string): Promise<SavedHighlight[]>;
   createSavedHighlight(highlight: InsertSavedHighlight): Promise<SavedHighlight>;
@@ -132,9 +133,19 @@ export interface IStorage {
   getShortViewCount(shortId: string): Promise<number>;
 }
 
+async function withQueryTiming<T>(label: string, fn: () => Promise<T>): Promise<T> {
+  const start = performance.now();
+  const result = await fn();
+  const duration = performance.now() - start;
+  if (duration > 500) {
+    console.warn(`[SLOW QUERY] ${label} took ${duration.toFixed(1)}ms`);
+  }
+  return result;
+}
+
 export class DatabaseStorage implements IStorage {
   async getCategories(): Promise<Category[]> {
-    return db.select().from(categories);
+    return withQueryTiming("getCategories", () => db.select().from(categories));
   }
 
   async createCategory(cat: InsertCategory): Promise<Category> {
@@ -143,16 +154,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getBooks(): Promise<Book[]> {
-    return db.select().from(books);
+    return withQueryTiming("getBooks", () => db.select().from(books));
   }
 
   async getBook(id: string): Promise<Book | undefined> {
-    const [book] = await db.select().from(books).where(eq(books.id, id));
-    return book;
+    return withQueryTiming("getBook", async () => {
+      const [book] = await db.select().from(books).where(eq(books.id, id));
+      return book;
+    });
   }
 
   async getBooksByCategory(categoryId: string): Promise<Book[]> {
-    return db.select().from(books).where(eq(books.categoryId, categoryId));
+    return withQueryTiming("getBooksByCategory", () =>
+      db.select().from(books).where(eq(books.categoryId, categoryId))
+    );
   }
 
   async createBook(book: InsertBook): Promise<Book> {
@@ -161,7 +176,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPrinciplesByBook(bookId: string): Promise<Principle[]> {
-    return db.select().from(principles).where(eq(principles.bookId, bookId)).orderBy(asc(principles.orderIndex));
+    return withQueryTiming("getPrinciplesByBook", () =>
+      db.select().from(principles).where(eq(principles.bookId, bookId)).orderBy(asc(principles.orderIndex))
+    );
   }
 
   async createPrinciple(p: InsertPrinciple): Promise<Principle> {
@@ -170,11 +187,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getStoriesByBook(bookId: string): Promise<Story[]> {
-    return db.select().from(stories).where(eq(stories.bookId, bookId)).orderBy(asc(stories.orderIndex));
+    return withQueryTiming("getStoriesByBook", () =>
+      db.select().from(stories).where(eq(stories.bookId, bookId)).orderBy(asc(stories.orderIndex))
+    );
   }
 
   async getStoriesByPrinciple(principleId: string): Promise<Story[]> {
-    return db.select().from(stories).where(eq(stories.principleId, principleId)).orderBy(asc(stories.orderIndex));
+    return withQueryTiming("getStoriesByPrinciple", () =>
+      db.select().from(stories).where(eq(stories.principleId, principleId)).orderBy(asc(stories.orderIndex))
+    );
   }
 
   async createStory(s: InsertStory): Promise<Story> {
@@ -254,9 +275,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllUserProgress(userId: string): Promise<UserProgress[]> {
-    return db.select().from(userProgress)
-      .where(eq(userProgress.userId, userId))
-      .orderBy(desc(userProgress.lastAccessedAt));
+    return withQueryTiming("getAllUserProgress", () =>
+      db.select().from(userProgress)
+        .where(eq(userProgress.userId, userId))
+        .orderBy(desc(userProgress.lastAccessedAt))
+    );
   }
 
   async upsertUserProgress(data: InsertUserProgress): Promise<UserProgress> {
@@ -328,9 +351,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getJournalEntries(userId: string): Promise<JournalEntry[]> {
-    return db.select().from(journalEntries)
-      .where(eq(journalEntries.userId, userId))
-      .orderBy(desc(journalEntries.createdAt));
+    return withQueryTiming("getJournalEntries", () =>
+      db.select().from(journalEntries)
+        .where(eq(journalEntries.userId, userId))
+        .orderBy(desc(journalEntries.createdAt))
+    );
   }
 
   async getUserInterests(userId: string): Promise<UserInterest | undefined> {
@@ -417,6 +442,26 @@ export class DatabaseStorage implements IStorage {
     const today = new Date().toISOString().split("T")[0];
     const [result] = await db.insert(userStreaks)
       .values({ userId, currentStreak: 0, longestStreak: 0, lastActiveDate: today, totalMinutesListened: 0, totalExercisesCompleted: 1, totalBooksStarted: 0 })
+      .returning();
+    return result;
+  }
+
+  async freezeStreak(userId: string): Promise<UserStreak> {
+    const existing = await this.getUserStreak(userId);
+    if (!existing) {
+      throw new Error("No streak record found");
+    }
+    if (!existing.streakFreezeAvailable) {
+      throw new Error("Streak freeze not available");
+    }
+    const now = new Date();
+    const [result] = await db.update(userStreaks)
+      .set({
+        streakFreezeAvailable: false,
+        lastFreezeUsedAt: now,
+        lastActiveDate: now.toISOString().split("T")[0],
+      })
+      .where(eq(userStreaks.id, existing.id))
       .returning();
     return result;
   }
@@ -605,9 +650,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPublishedShorts(): Promise<Short[]> {
-    return db.select().from(shorts)
-      .where(eq(shorts.status, "published"))
-      .orderBy(desc(shorts.createdAt));
+    return withQueryTiming("getPublishedShorts", () =>
+      db.select().from(shorts)
+        .where(eq(shorts.status, "published"))
+        .orderBy(desc(shorts.createdAt))
+    );
   }
 
   async getShortsByBook(bookId: string): Promise<Short[]> {

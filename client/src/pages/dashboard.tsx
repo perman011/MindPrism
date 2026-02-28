@@ -7,7 +7,7 @@ import type { Book, Category, UserStreak, UserProgress, ChakraProgress, ChakraTy
 import { CHAKRA_MAP } from "@shared/schema";
 import { BookCard } from "@/components/book-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Brain, Flame, ArrowRight, Sparkles, BookOpen, ChevronRight, ChevronLeft, X, Lightbulb, Film } from "lucide-react";
+import { Brain, Flame, ArrowRight, Sparkles, BookOpen, ChevronRight, ChevronLeft, X, Lightbulb, Film, Headphones, Play, Trophy, Star, Shield, Zap, Award } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import type { Short } from "@shared/schema";
 import { ShortsPlayer, ShortCard } from "@/components/shorts-player";
@@ -19,6 +19,46 @@ import { useAudio } from "@/lib/audio-context";
 import { ChakraAvatar } from "@/components/chakra-avatar";
 import { trackPageView } from "@/lib/analytics";
 import { AnimatePresence, motion } from "framer-motion";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ShareMilestonePrompt, useShareTriggers } from "@/components/progress-share-card";
+
+const STREAK_MILESTONES = [
+  { days: 7, label: "1 Week", icon: Flame, color: "#E8A838" },
+  { days: 14, label: "2 Weeks", icon: Star, color: "#C4A35A" },
+  { days: 30, label: "1 Month", icon: Shield, color: "#4CAF7D" },
+  { days: 60, label: "2 Months", icon: Zap, color: "#3D8B8B" },
+  { days: 100, label: "100 Days", icon: Trophy, color: "#9B59B6" },
+];
+
+function CelebrationModal({ milestone, open, onClose }: { milestone: typeof STREAK_MILESTONES[0] | null; open: boolean; onClose: () => void }) {
+  if (!milestone) return null;
+  const Icon = milestone.icon;
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent className="max-w-sm text-center p-8" data-testid="modal-celebration">
+        <motion.div
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", duration: 0.6, bounce: 0.4 }}
+          className="flex flex-col items-center gap-4"
+        >
+          <div
+            className="w-20 h-20 rounded-full flex items-center justify-center"
+            style={{ background: `linear-gradient(135deg, ${milestone.color}33, ${milestone.color}11)`, border: `2px solid ${milestone.color}55` }}
+          >
+            <Icon className="w-10 h-10" style={{ color: milestone.color }} />
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1" data-testid="text-celebration-label">Milestone Achieved</p>
+            <h2 className="text-2xl font-bold font-serif" data-testid="text-celebration-title">{milestone.label} Streak</h2>
+            <p className="text-sm text-muted-foreground mt-2">{milestone.days} consecutive days of learning</p>
+          </div>
+          <Button onClick={onClose} className="mt-2" data-testid="button-celebration-close">Continue</Button>
+        </motion.div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function HorizontalScroll({ children, title, accentLabel, actionHref, actionLabel, testId }: {
   children: React.ReactNode;
@@ -130,6 +170,14 @@ export default function Dashboard() {
   const { play } = useAudio();
   const [, navigate] = useLocation();
   const [activeChakra, setActiveChakra] = useState<ChakraType | null>(null);
+  const [celebrationMilestone, setCelebrationMilestone] = useState<typeof STREAK_MILESTONES[0] | null>(null);
+  const [celebrationOpen, setCelebrationOpen] = useState(false);
+  const [shownMilestones, setShownMilestones] = useState<Set<number>>(() => {
+    try {
+      const stored = localStorage.getItem("mindprism_shown_milestones");
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch { return new Set(); }
+  });
 
   useEffect(() => {
     trackPageView("dashboard");
@@ -150,6 +198,27 @@ export default function Dashboard() {
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
+  useEffect(() => {
+    if (!streak?.currentStreak) return;
+    const current = streak.currentStreak;
+    for (const ms of STREAK_MILESTONES) {
+      if (current >= ms.days && !shownMilestones.has(ms.days)) {
+        setCelebrationMilestone(ms);
+        setCelebrationOpen(true);
+        const updated = new Set(shownMilestones);
+        updated.add(ms.days);
+        setShownMilestones(updated);
+        localStorage.setItem("mindprism_shown_milestones", JSON.stringify(Array.from(updated)));
+        break;
+      }
+    }
+  }, [streak?.currentStreak]);
+
+  const { pendingTrigger: shareTrigger, dismissTrigger: dismissShareTrigger } = useShareTriggers(
+    undefined,
+    streak?.currentStreak != null ? { currentStreak: streak.currentStreak } : undefined
+  );
+
   const { data: allProgress } = useQuery<UserProgress[]>({
     queryKey: ["/api/progress"],
     queryFn: getQueryFn({ on401: "returnNull" }),
@@ -162,6 +231,11 @@ export default function Dashboard() {
 
   const { data: recommendedBooks } = useQuery<Book[]>({
     queryKey: ["/api/books/recommended"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+  });
+
+  const { data: becauseYouRead } = useQuery<{ sourceBook: { id: string; title: string } | null; books: Book[] } | null>({
+    queryKey: ["/api/books/because-you-read"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
@@ -207,13 +281,21 @@ export default function Dashboard() {
       <div className="px-5 pt-8 pb-5 flex items-center justify-between gap-3">
         <div className="flex-1">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{greeting()}</p>
-          <h1 className="text-2xl font-bold text-[#111827] tracking-tight" data-testid="text-welcome">
+          <h1 className="text-2xl font-bold font-serif text-[#111827] tracking-tight" data-testid="text-welcome">
             {user?.firstName ?? "Explorer"}
           </h1>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 bg-primary/10 px-4 py-2.5 rounded-full border border-primary/20" data-testid="badge-streak">
-            <span className="text-base">🔥</span>
+            <motion.div
+              animate={(streak?.currentStreak ?? 0) > 0 ? {
+                scale: [1, 1.2, 1],
+                rotate: [0, -5, 5, 0],
+              } : {}}
+              transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
+            >
+              <Flame className="w-4 h-4 text-orange-500" />
+            </motion.div>
             <span className="text-sm font-bold text-primary">{streak?.currentStreak ?? 0} day{(streak?.currentStreak ?? 0) !== 1 ? "s" : ""}</span>
           </div>
           <Link href="/vault">
@@ -224,6 +306,12 @@ export default function Dashboard() {
           </Link>
         </div>
       </div>
+
+      {shareTrigger && (
+        <div className="px-5 mb-4">
+          <ShareMilestonePrompt trigger={shareTrigger} onDismiss={dismissShareTrigger} />
+        </div>
+      )}
 
       <section className="mb-8 px-5" data-testid="section-energy-map">
         <p className="text-[11px] font-semibold text-[#111827] uppercase tracking-widest mb-2 px-1">My Energy Map</p>
@@ -299,7 +387,7 @@ export default function Dashboard() {
                       >
                         <div className="w-32 h-40 rounded-xl overflow-hidden mb-2 ring-1 ring-border">
                           {book.coverImage ? (
-                            <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
+                            <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" loading="lazy" width={128} height={160} />
                           ) : (
                             <div
                               className="w-full h-full flex items-center justify-center"
@@ -345,7 +433,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex-1">
                   <p className="text-[10px] font-semibold text-purple-700 uppercase tracking-widest mb-1.5">Daily Insight</p>
-                  <p className="text-base font-bold mb-1.5" data-testid="text-insight-title">{dailyInsight.title}</p>
+                  <p className="text-base font-bold font-serif mb-1.5" data-testid="text-insight-title">{dailyInsight.title}</p>
                   <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3" data-testid="text-insight-content">{dailyInsight.content}</p>
                   <p className="text-[10px] text-muted-foreground/60 mt-2">From: {dailyInsight.bookTitle}</p>
                 </div>
@@ -383,6 +471,54 @@ export default function Dashboard() {
         </section>
       )}
 
+      {allBooks.filter(b => b.audioUrl).length > 0 && (
+        <section className="mb-10" data-testid="section-continue-listening">
+          <div className="flex items-center justify-between gap-2 px-5 mb-4">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-[#341539] mb-1">Continue listening</p>
+              <h2 className="text-xl font-bold text-[#111827]">Pick Up Where You Left Off</h2>
+            </div>
+            <Link href="/audio">
+              <button className="text-xs text-primary font-medium flex items-center gap-0.5" data-testid="link-continue-listening-action">
+                All Audio
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </Link>
+          </div>
+          <div className="px-5 space-y-2">
+            {allBooks.filter(b => b.audioUrl).slice(0, 3).map((book) => (
+              <button
+                key={book.id}
+                onClick={() => play(book)}
+                className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-card-border hover-elevate transition-all text-left"
+                data-testid={`continue-listening-${book.id}`}
+              >
+                <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                  {book.coverImage ? (
+                    <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" loading="lazy" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                      <Headphones className="w-5 h-5 text-primary/30" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-sm truncate">{book.title}</h3>
+                  <p className="text-[10px] text-muted-foreground">
+                    {book.audioDuration
+                      ? `${Math.floor(book.audioDuration / 60)}:${String(book.audioDuration % 60).padStart(2, '0')}`
+                      : `${book.listenTime} min`}
+                  </p>
+                </div>
+                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Play className="w-4 h-4 text-primary ml-0.5" />
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
       {inProgressBooks.length > 0 && (
         <HorizontalScroll title="Jump Back In" accentLabel="Based on your activity" testId="section-resume">
           {inProgressBooks.map((prog) => {
@@ -394,7 +530,7 @@ export default function Dashboard() {
                 <div className="flex-shrink-0 w-40 cursor-pointer" data-testid={`resume-book-${book.id}`}>
                   <div className="relative w-40 h-48 rounded-xl overflow-hidden mb-2 ring-1 ring-border">
                     {book.coverImage ? (
-                      <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
+                      <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" loading="lazy" width={160} height={192} />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
                         <span className="text-xl font-bold text-primary/30">{book.title[0]}</span>
@@ -426,6 +562,38 @@ export default function Dashboard() {
         </HorizontalScroll>
       )}
 
+      {becauseYouRead && becauseYouRead.sourceBook && becauseYouRead.books && becauseYouRead.books.length > 0 && (
+        <HorizontalScroll
+          title={`Because You Read "${becauseYouRead.sourceBook.title}"`}
+          accentLabel="Readers also enjoyed"
+          actionHref="/discover"
+          actionLabel="More"
+          testId="section-because-you-read"
+        >
+          {becauseYouRead.books.map((book) => (
+            <div key={book.id} className="flex-shrink-0 w-44" data-testid={`because-you-read-book-${book.id}`}>
+              <BookCard book={book} compact />
+            </div>
+          ))}
+        </HorizontalScroll>
+      )}
+
+      {booksLoading && (
+        <section className="mb-10" data-testid="section-all-books-skeleton">
+          <div className="px-5 mb-4">
+            <Skeleton className="h-6 w-28" />
+          </div>
+          <div className="flex gap-4 px-5">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex-shrink-0 w-[180px] space-y-2">
+                <Skeleton className="aspect-[3/4] rounded-md" />
+                <Skeleton className="h-3 w-3/4" />
+                <Skeleton className="h-2.5 w-1/2" />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
       {allBooks.length > 0 && (
         <BookSlider books={allBooks} title="All Books" testId="section-all-books" />
       )}
@@ -478,6 +646,38 @@ export default function Dashboard() {
         </section>
       )}
 
+      {(streak?.currentStreak ?? 0) > 0 && (
+        <section className="mb-10 px-5" data-testid="section-streak-milestones">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">Your Journey</p>
+          <h2 className="text-xl font-bold mb-4">Streak Milestones</h2>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {STREAK_MILESTONES.map((ms) => {
+              const achieved = (streak?.currentStreak ?? 0) >= ms.days;
+              const Icon = ms.icon;
+              return (
+                <div
+                  key={ms.days}
+                  className={`flex-shrink-0 flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${
+                    achieved ? "border-transparent" : "border-border opacity-40"
+                  }`}
+                  style={achieved ? { background: `linear-gradient(135deg, ${ms.color}15, ${ms.color}05)`, borderColor: `${ms.color}30` } : {}}
+                  data-testid={`milestone-${ms.days}`}
+                >
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center"
+                    style={achieved ? { backgroundColor: `${ms.color}20` } : { backgroundColor: "var(--muted)" }}
+                  >
+                    <Icon className="w-5 h-5" style={{ color: achieved ? ms.color : "var(--muted-foreground)" }} />
+                  </div>
+                  <span className="text-[10px] font-semibold whitespace-nowrap">{ms.label}</span>
+                  <span className="text-[9px] text-muted-foreground">{ms.days}d</span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {shortsPlayerOpen && publishedShorts && (
         <ShortsPlayer
           shorts={publishedShorts}
@@ -485,6 +685,12 @@ export default function Dashboard() {
           onClose={() => setShortsPlayerOpen(false)}
         />
       )}
+
+      <CelebrationModal
+        milestone={celebrationMilestone}
+        open={celebrationOpen}
+        onClose={() => setCelebrationOpen(false)}
+      />
     </div>
   );
 

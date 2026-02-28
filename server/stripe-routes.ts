@@ -13,11 +13,41 @@ function getStripeWebhookSecret(): string | null {
   return process.env.STRIPE_WEBHOOK_SECRET || null;
 }
 
+function isStripeConfigured(): boolean {
+  return !!(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET);
+}
+
 export function registerStripeRoutes(app: Express) {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    console.warn("[Stripe] STRIPE_SECRET_KEY is not set. Payment features will be unavailable.");
+  }
+  if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    console.warn("[Stripe] STRIPE_WEBHOOK_SECRET is not set. Webhook verification will fail.");
+  }
+  if (!process.env.STRIPE_MONTHLY_PRICE_ID) {
+    console.warn("[Stripe] STRIPE_MONTHLY_PRICE_ID is not set. Monthly subscriptions will be unavailable.");
+  }
+  if (!process.env.STRIPE_YEARLY_PRICE_ID) {
+    console.warn("[Stripe] STRIPE_YEARLY_PRICE_ID is not set. Yearly subscriptions will be unavailable.");
+  }
+
+  app.get("/api/stripe/status", (_req: Request, res: Response) => {
+    const configured = isStripeConfigured();
+    res.json({
+      configured,
+      message: configured
+        ? "Stripe is configured and ready."
+        : "Stripe is not configured. Set STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET environment variables to enable payments.",
+    });
+  });
+
   app.post("/api/stripe/create-checkout-session", isAuthenticated, async (req: any, res: Response) => {
     const stripeKey = getStripeKey();
     if (!stripeKey) {
-      return res.status(503).json({ message: "Stripe is not configured. Contact the administrator to set up payments." });
+      return res.status(503).json({
+        code: "STRIPE_NOT_CONFIGURED",
+        message: "Stripe is not configured. Contact the administrator to set up payments.",
+      });
     }
 
     try {
@@ -33,7 +63,10 @@ export function registerStripeRoutes(app: Express) {
         : process.env.STRIPE_MONTHLY_PRICE_ID;
 
       if (!priceId) {
-        return res.status(503).json({ message: "Stripe price IDs are not configured." });
+        return res.status(503).json({
+          code: "STRIPE_PRICE_NOT_CONFIGURED",
+          message: `Stripe ${plan || "monthly"} price ID is not configured.`,
+        });
       }
 
       let customerId = dbUser.stripeCustomerId;
@@ -66,7 +99,10 @@ export function registerStripeRoutes(app: Express) {
   app.post("/api/stripe/create-portal-session", isAuthenticated, async (req: any, res: Response) => {
     const stripeKey = getStripeKey();
     if (!stripeKey) {
-      return res.status(503).json({ message: "Stripe is not configured." });
+      return res.status(503).json({
+        code: "STRIPE_NOT_CONFIGURED",
+        message: "Stripe is not configured. Contact the administrator to set up payments.",
+      });
     }
 
     try {
@@ -95,13 +131,27 @@ export function registerStripeRoutes(app: Express) {
     const stripeKey = getStripeKey();
     const webhookSecret = getStripeWebhookSecret();
     if (!stripeKey || !webhookSecret) {
-      return res.status(503).json({ message: "Stripe webhooks not configured" });
+      console.warn("[Stripe] Webhook received but Stripe is not configured. Ignoring.");
+      return res.status(503).json({
+        code: "STRIPE_NOT_CONFIGURED",
+        message: "Stripe webhooks not configured",
+      });
+    }
+
+    const sig = req.headers["stripe-signature"] as string;
+    if (!sig) {
+      console.warn("[Stripe] Webhook received without stripe-signature header.");
+      return res.status(400).json({ message: "Missing stripe-signature header" });
+    }
+
+    if (!req.rawBody) {
+      console.error("[Stripe] Raw body not available for webhook verification. Ensure express.json verify middleware is configured.");
+      return res.status(500).json({ message: "Server configuration error: raw body not available" });
     }
 
     try {
       const stripe = (await import("stripe")).default;
       const stripeClient = new stripe(stripeKey);
-      const sig = req.headers["stripe-signature"] as string;
       const event = stripeClient.webhooks.constructEvent(
         req.rawBody as string,
         sig,
@@ -144,9 +194,14 @@ export function registerStripeRoutes(app: Express) {
         }
       }
 
+      console.log(`[Stripe] Successfully processed webhook event: ${event.type}`);
       res.json({ received: true });
     } catch (error: any) {
-      console.error("Stripe webhook error:", error.message);
+      if (error.type === "StripeSignatureVerificationError") {
+        console.error("[Stripe] Webhook signature verification failed:", error.message);
+        return res.status(400).json({ message: "Webhook signature verification failed" });
+      }
+      console.error("[Stripe] Webhook processing error:", error.message);
       res.status(400).json({ message: `Webhook error: ${error.message}` });
     }
   });

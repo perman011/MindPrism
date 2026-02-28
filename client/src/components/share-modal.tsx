@@ -86,10 +86,11 @@ export function ShareModal({ open, onClose, bookTitle, bookAuthor, bookId }: Sha
               <h3 className="text-lg font-bold text-foreground">Share This Book</h3>
               <button
                 onClick={onClose}
-                className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"
+                className="w-11 h-11 rounded-full bg-muted flex items-center justify-center"
                 data-testid="button-close-share"
+                aria-label="Close share dialog"
               >
-                <X className="w-4 h-4 text-muted-foreground" />
+                <X className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
               </button>
             </div>
 

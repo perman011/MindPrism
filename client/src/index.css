@@ -38,12 +38,23 @@
   --destructive-foreground: 0 0% 100%;
   --input: 220 13% 91%;
   --ring: 292 46% 15%;
+  --primary-light: 298 30% 33%;
+  --primary-lighter: 298 28% 78%;
+  --primary-surface: 300 25% 95%;
+  --success: 150 40% 49%;
+  --success-foreground: 0 0% 100%;
+  --warning: 38 78% 56%;
+  --warning-foreground: 0 0% 100%;
+  --accent-teal: 180 39% 39%;
+  --accent-gold: 42 46% 56%;
   --chart-1: 292 46% 15%;
-  --chart-2: 142 71% 45%;
-  --chart-3: 24 95% 53%;
-  --chart-4: 262 83% 58%;
-  --chart-5: 0 84% 60%;
+  --chart-2: 298 30% 33%;
+  --chart-3: 150 40% 49%;
+  --chart-4: 180 39% 39%;
+  --chart-5: 38 78% 56%;
+  --chart-6: 42 46% 56%;
   --font-sans: 'Inter', system-ui, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
   --radius: 0.875rem;
   --shadow-2xs: 0 1px 2px 0 rgb(0 0 0 / 0.03);
   --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -84,48 +95,58 @@
   --opaque-button-border-intensity: 9;
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
-  --background: 30 23% 94%;
-  --foreground: 221 39% 11%;
-  --border: 220 13% 91%;
-  --card: 0 0% 100%;
-  --card-foreground: 221 39% 11%;
-  --card-border: 220 13% 91%;
-  --sidebar: 0 0% 100%;
-  --sidebar-foreground: 221 39% 11%;
-  --sidebar-border: 220 13% 91%;
-  --sidebar-primary: 292 46% 15%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 292 10% 92%;
-  --sidebar-accent-foreground: 292 46% 15%;
-  --sidebar-ring: 292 46% 15%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 221 39% 11%;
-  --popover-border: 220 13% 91%;
-  --primary: 292 46% 15%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 220 14% 96%;
-  --secondary-foreground: 221 39% 11%;
-  --muted: 220 14% 96%;
-  --muted-foreground: 220 9% 46%;
-  --accent: 292 46% 15%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 84% 60%;
+  --background: 270 30% 5%;
+  --foreground: 300 10% 94%;
+  --border: 280 25% 16%;
+  --card: 280 28% 10%;
+  --card-foreground: 300 10% 94%;
+  --card-border: 280 25% 16%;
+  --sidebar: 280 28% 10%;
+  --sidebar-foreground: 300 10% 94%;
+  --sidebar-border: 280 25% 16%;
+  --sidebar-primary: 298 28% 78%;
+  --sidebar-primary-foreground: 270 30% 5%;
+  --sidebar-accent: 280 20% 18%;
+  --sidebar-accent-foreground: 298 28% 78%;
+  --sidebar-ring: 298 28% 78%;
+  --popover: 280 28% 10%;
+  --popover-foreground: 300 10% 94%;
+  --popover-border: 280 25% 16%;
+  --primary: 298 28% 78%;
+  --primary-foreground: 270 30% 5%;
+  --secondary: 280 20% 14%;
+  --secondary-foreground: 300 10% 94%;
+  --muted: 280 15% 14%;
+  --muted-foreground: 290 8% 59%;
+  --accent: 298 28% 78%;
+  --accent-foreground: 270 30% 5%;
+  --destructive: 0 70% 50%;
   --destructive-foreground: 0 0% 100%;
-  --input: 220 13% 91%;
-  --ring: 292 46% 15%;
-  --chart-1: 292 46% 15%;
-  --chart-2: 142 71% 45%;
-  --chart-3: 24 95% 53%;
-  --chart-4: 262 83% 58%;
-  --chart-5: 0 84% 60%;
-  --shadow-2xs: 0 1px 2px 0 rgb(0 0 0 / 0.03);
-  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.08);
-  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.08);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.05);
-  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.15);
+  --input: 280 25% 16%;
+  --ring: 298 28% 78%;
+  --primary-light: 298 25% 45%;
+  --primary-lighter: 298 20% 35%;
+  --primary-surface: 280 20% 14%;
+  --success: 150 35% 42%;
+  --success-foreground: 0 0% 100%;
+  --warning: 38 70% 50%;
+  --warning-foreground: 0 0% 100%;
+  --accent-teal: 180 35% 45%;
+  --accent-gold: 42 40% 50%;
+  --chart-1: 298 28% 78%;
+  --chart-2: 298 25% 45%;
+  --chart-3: 150 35% 42%;
+  --chart-4: 180 35% 45%;
+  --chart-5: 38 70% 50%;
+  --chart-6: 42 40% 50%;
+  --shadow-2xs: 0 1px 2px 0 rgb(0 0 0 / 0.15);
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.2);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.25), 0 1px 2px -1px rgb(0 0 0 / 0.2);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.25), 0 1px 2px -1px rgb(0 0 0 / 0.2);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.2);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.2);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.2);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.4);
 
   --sidebar-primary-border: hsl(var(--sidebar-primary));
   --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
@@ -237,6 +258,17 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @keyframes featherFall {
   0% {
     transform: translateY(-60px);
@@ -277,4 +309,15 @@
 
 .feather-spin {
   animation: featherSpin ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

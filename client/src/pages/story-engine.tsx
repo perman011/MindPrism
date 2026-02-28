@@ -3,6 +3,8 @@ import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import type { Book, Principle, Story, Exercise, CommonMistake, ActionItem, ChakraType } from "@shared/schema";
 import { CHAKRA_MAP } from "@shared/schema";
 import { ChakraEnergyBurst } from "@/components/chakra-energy-burst";
+import { PremiumGate } from "@/components/premium-gate";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -132,6 +134,8 @@ function MentalModelCard({ card }: { card: CardItem }) {
         className="w-full"
         onClick={() => setRevealedSteps((prev) => Math.min(prev + 1, 1))}
         data-testid={`button-reveal-step-${d.stepIndex}`}
+        aria-label={`Reveal explanation for ${d.label}`}
+        aria-expanded={revealedSteps > 0}
       >
         <div
           className={`transition-all duration-500 ${
@@ -554,6 +558,11 @@ function InfographicCard({ card, onNext }: { card: CardItem; onNext: () => void 
         className="bg-indigo-500/5 border border-indigo-500/20 rounded-2xl p-6 cursor-pointer transition-all duration-500"
         onClick={() => !isRevealed && setRevealedSteps((prev) => [...prev, stepIndex])}
         data-testid={`infographic-step-reveal-${stepIndex}`}
+        role="button"
+        aria-expanded={isRevealed}
+        aria-label={`Reveal step ${stepIndex + 1}: ${d.label}`}
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (!isRevealed) setRevealedSteps((prev) => [...prev, stepIndex]); } }}
       >
         <h3 className="text-xl font-bold mb-3 text-purple-700 dark:text-purple-500">{d.label}</h3>
 
@@ -649,6 +658,7 @@ function ActionItemsCard({ card }: { card: CardItem }) {
                   }}
                   data-testid={`calendar-add-${item.id}`}
                   title="Add to Calendar"
+                  aria-label="Add to Calendar"
                 >
                   <CalendarPlus className="w-4 h-4 text-sky-400" />
                 </button>
@@ -673,17 +683,21 @@ export default function StoryEngine() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const { user } = useAuth();
 
   const { data: book } = useQuery<Book>({
     queryKey: ["/api/books", id],
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
-  const { data: cards, isLoading } = useQuery<CardItem[]>({
+  const { data: cardsResponse, isLoading } = useQuery<CardItem[] | { cards: CardItem[]; truncated: boolean; totalCards: number }>({
     queryKey: ["/api/books", id, "cards", section],
     queryFn: getQueryFn({ on401: "throw" }),
     enabled: !!id && !!section,
   });
+
+  const cards = Array.isArray(cardsResponse) ? cardsResponse : cardsResponse?.cards;
+  const isContentTruncated = !Array.isArray(cardsResponse) && cardsResponse?.truncated;
 
   const saveProgressMutation = useMutation({
     mutationFn: async ({ cardIndex, totalCards }: { cardIndex: number; totalCards: number }) => {
@@ -781,7 +795,19 @@ export default function StoryEngine() {
 
   const currentCard = cards[currentIndex];
 
+  const isAtPaywall = isContentTruncated && currentIndex === totalCards - 1;
+
   const renderCard = () => {
+    if (isAtPaywall) {
+      return (
+        <PremiumGate isPremium={user?.isPremium ?? false}>
+          <div className="text-center py-12">
+            <h2 className="text-xl font-bold mb-2">Continue Reading</h2>
+            <p className="text-muted-foreground">Upgrade to access the full content of this book.</p>
+          </div>
+        </PremiumGate>
+      );
+    }
     if (shouldSkipCard || !currentCard) return null;
     switch (section) {
       case "chapter-summaries":
@@ -804,8 +830,8 @@ export default function StoryEngine() {
   };
 
   return (
-    <div className="fixed inset-0 z-[200] bg-background flex flex-col" data-testid="story-engine">
-      <div className="flex items-center gap-1.5 px-3 pt-3 pb-2">
+    <div className="fixed inset-0 z-[200] bg-background flex flex-col" data-testid="story-engine" role="region" aria-label={`${meta.label} journey for ${book.title}`}>
+      <div className="flex items-center gap-1.5 px-3 pt-3 pb-2" role="progressbar" aria-valuenow={currentIndex + 1} aria-valuemin={1} aria-valuemax={totalCards} aria-label={`Progress: card ${currentIndex + 1} of ${totalCards}`}>
         {cards.map((_, i) => (
           <div
             key={i}
@@ -813,6 +839,7 @@ export default function StoryEngine() {
               i < currentIndex ? "bg-primary" : i === currentIndex ? "bg-primary/70" : "bg-muted"
             }`}
             data-testid={`progress-segment-${i}`}
+            aria-hidden="true"
           />
         ))}
       </div>
@@ -828,28 +855,30 @@ export default function StoryEngine() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setLocation("/")}
-            className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center"
+            className="w-11 h-11 rounded-full bg-muted/50 flex items-center justify-center"
             data-testid="button-home-journey"
+            aria-label="Go to home"
           >
-            <BookOpen className="w-3.5 h-3.5" />
+            <BookOpen className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
           <button
             onClick={() => setLocation(`/book/${id}`)}
-            className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center"
+            className="w-11 h-11 rounded-full bg-muted/50 flex items-center justify-center"
             data-testid="button-exit-journey"
+            aria-label="Exit journey"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center px-6 py-4 overflow-y-auto">
+      <div className="flex-1 flex items-center justify-center px-6 py-4 overflow-y-auto" role="main" aria-live="polite">
         <div className="w-full max-w-lg">
           {renderCard()}
         </div>
       </div>
 
-      <div className="flex items-center justify-between px-6 py-4 bg-background/90 backdrop-blur-sm border-t border-border/30">
+      <div className="flex items-center justify-between px-6 py-4 bg-background/90 backdrop-blur-sm border-t border-border/30" role="navigation" aria-label="Card navigation">
         <Button
           variant="ghost"
           size="sm"

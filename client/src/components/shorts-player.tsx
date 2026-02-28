@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
 import type { Short } from "@shared/schema";
-import { X, Play, Pause, Volume2, Image, Headphones, Video } from "lucide-react";
+import { X, Play, Pause, Volume2, Image, Headphones, Video, Share2 } from "lucide-react";
 import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 
 function AudioShort({ short, isActive }: { short: Short; isActive: boolean }) {
@@ -90,8 +90,9 @@ function AudioShort({ short, isActive }: { short: Short; isActive: boolean }) {
         onClick={togglePlay}
         className="w-16 h-16 rounded-full bg-primary flex items-center justify-center active:scale-95 transition-transform"
         data-testid="button-audio-toggle"
+        aria-label={playing ? "Pause audio" : "Play audio"}
       >
-        {playing ? <Pause className="w-7 h-7 text-black" /> : <Play className="w-7 h-7 text-black ml-1" />}
+        {playing ? <Pause className="w-7 h-7 text-black" aria-hidden="true" /> : <Play className="w-7 h-7 text-black ml-1" aria-hidden="true" />}
       </button>
     </div>
   );
@@ -188,8 +189,9 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
           onClick={onClose}
           className="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/10 flex items-center justify-center"
           data-testid="button-close-shorts"
+          aria-label="Close shorts"
         >
-          <X className="w-6 h-6 text-white" />
+          <X className="w-6 h-6 text-white" aria-hidden="true" />
         </button>
       </div>
     );
@@ -217,13 +219,51 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
         ))}
       </div>
 
-      <button
-        onClick={onClose}
-        className="absolute top-10 right-3 z-30 w-11 h-11 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"
-        data-testid="button-close-shorts"
+      <div className="absolute top-10 right-3 z-30 flex flex-col gap-2">
+        <button
+          onClick={onClose}
+          className="w-11 h-11 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"
+          data-testid="button-close-shorts"
+          aria-label="Close shorts"
+        >
+          <X className="w-6 h-6 text-white" aria-hidden="true" />
+        </button>
+        <button
+          onClick={() => {
+            if (!currentShort) return;
+            const shareData = {
+              title: currentShort.title,
+              text: currentShort.content,
+              url: `${window.location.origin}/shorts?id=${currentShort.id}`,
+            };
+            if (navigator.share) {
+              navigator.share(shareData).catch(() => {});
+            } else {
+              navigator.clipboard.writeText(shareData.url).then(() => {
+                const el = document.getElementById("share-toast");
+                if (el) {
+                  el.style.opacity = "1";
+                  setTimeout(() => { el.style.opacity = "0"; }, 2000);
+                }
+              }).catch(() => {});
+            }
+          }}
+          className="w-11 h-11 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"
+          data-testid="button-share-short"
+          aria-label="Share short"
+        >
+          <Share2 className="w-5 h-5 text-white" aria-hidden="true" />
+        </button>
+      </div>
+
+      <div
+        id="share-toast"
+        className="absolute top-24 right-3 z-30 px-3 py-1.5 rounded-md bg-black/60 backdrop-blur-sm text-white text-xs transition-opacity duration-300"
+        style={{ opacity: 0 }}
+        data-testid="text-share-copied"
       >
-        <X className="w-6 h-6 text-white" />
-      </button>
+        Link copied
+      </div>
 
       <AnimatePresence initial={false} custom={direction} mode="wait">
         <motion.div

@@ -51,6 +51,19 @@ export default {
           foreground: "hsl(var(--destructive-foreground) / <alpha-value>)",
           border: "var(--destructive-border)",
         },
+        success: {
+          DEFAULT: "hsl(var(--success) / <alpha-value>)",
+          foreground: "hsl(var(--success-foreground) / <alpha-value>)",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning) / <alpha-value>)",
+          foreground: "hsl(var(--warning-foreground) / <alpha-value>)",
+        },
+        "primary-light": "hsl(var(--primary-light) / <alpha-value>)",
+        "primary-lighter": "hsl(var(--primary-lighter) / <alpha-value>)",
+        "primary-surface": "hsl(var(--primary-surface) / <alpha-value>)",
+        "accent-teal": "hsl(var(--accent-teal) / <alpha-value>)",
+        "accent-gold": "hsl(var(--accent-gold) / <alpha-value>)",
         ring: "hsl(var(--ring) / <alpha-value>)",
         chart: {
           "1": "hsl(var(--chart-1) / <alpha-value>)",
@@ -58,6 +71,7 @@ export default {
           "3": "hsl(var(--chart-3) / <alpha-value>)",
           "4": "hsl(var(--chart-4) / <alpha-value>)",
           "5": "hsl(var(--chart-5) / <alpha-value>)",
+          "6": "hsl(var(--chart-6) / <alpha-value>)",
         },
         sidebar: {
           ring: "hsl(var(--sidebar-ring) / <alpha-value>)",
@@ -84,6 +98,7 @@ export default {
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        serif: ['Playfair Display', 'Georgia', 'serif'],
       },
       keyframes: {
         "accordion-down": {

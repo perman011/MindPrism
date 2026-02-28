@@ -68,7 +68,9 @@ export default function AudioPage() {
                   <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />
-                      {book.listenTime} min
+                      {book.audioDuration
+                        ? `${Math.floor(book.audioDuration / 60)}:${String(book.audioDuration % 60).padStart(2, '0')}`
+                        : `${book.listenTime} min`}
                     </span>
                     <span className="flex items-center gap-1">
                       <Headphones className="w-3 h-3" />

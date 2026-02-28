@@ -7,8 +7,12 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PenLine, LogOut, Settings, Calendar, Bookmark, BarChart3 } from "lucide-react";
+import { PenLine, LogOut, Settings, Calendar, Bookmark, BarChart3, Sun, Moon, Monitor, Flame, Star, Shield, Zap, Trophy, Snowflake } from "lucide-react";
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/components/theme-provider";
 import { ChakraAvatar } from "@/components/chakra-avatar";
 import { CHAKRA_MAP, type ChakraType } from "@shared/schema";
 import { NotificationSettings } from "@/components/notification-settings";
@@ -26,6 +30,7 @@ interface VaultStats {
 
 export default function Vault() {
   const { user, logout } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<"stats" | "journal" | "highlights" | "settings">("stats");
 
   const { data: streak } = useQuery<UserStreak | null>({
@@ -54,6 +59,26 @@ export default function Vault() {
   });
 
   const [selectedChakra, setSelectedChakra] = useState<ChakraType | null>(null);
+  const { toast } = useToast();
+
+  const STREAK_MILESTONES = [
+    { days: 7, label: "1 Week", icon: Flame, color: "#E8A838" },
+    { days: 14, label: "2 Weeks", icon: Star, color: "#C4A35A" },
+    { days: 30, label: "1 Month", icon: Shield, color: "#4CAF7D" },
+    { days: 60, label: "2 Months", icon: Zap, color: "#3D8B8B" },
+    { days: 100, label: "100 Days", icon: Trophy, color: "#9B59B6" },
+  ];
+
+  const freezeMutation = useMutation({
+    mutationFn: () => apiRequest("POST", "/api/streak/freeze"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/streak"] });
+      toast({ title: "Streak Frozen", description: "Your streak has been preserved for today." });
+    },
+    onError: () => {
+      toast({ title: "Cannot Freeze", description: "Streak freeze is not available.", variant: "destructive" });
+    },
+  });
 
   const initials = user
     ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase() || "U"
@@ -85,7 +110,7 @@ export default function Vault() {
             <AvatarFallback className="text-lg font-bold bg-primary/10 text-primary">{initials}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold text-foreground tracking-tight" data-testid="text-vault-name">
+            <h1 className="text-2xl font-bold font-serif text-foreground tracking-tight" data-testid="text-vault-name">
               {user?.firstName} {user?.lastName}
             </h1>
             <p className="text-sm text-muted-foreground mt-0.5">{user?.email}</p>
@@ -106,6 +131,55 @@ export default function Vault() {
         <div className="mb-8">
           <StreakChart data={vaultStats?.monthlyActivity ?? []} />
         </div>
+
+        <Card className="p-5 mb-8" data-testid="card-streak-milestones">
+          <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-4">Streak Milestones</h3>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {STREAK_MILESTONES.map((ms) => {
+              const achieved = (streak?.currentStreak ?? 0) >= ms.days;
+              const Icon = ms.icon;
+              return (
+                <div
+                  key={ms.days}
+                  className={`flex-shrink-0 flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${
+                    achieved ? "border-transparent" : "border-border opacity-40"
+                  }`}
+                  style={achieved ? { background: `linear-gradient(135deg, ${ms.color}15, ${ms.color}05)`, borderColor: `${ms.color}30` } : {}}
+                  data-testid={`vault-milestone-${ms.days}`}
+                >
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center"
+                    style={achieved ? { backgroundColor: `${ms.color}20` } : { backgroundColor: "var(--muted)" }}
+                  >
+                    <Icon className="w-5 h-5" style={{ color: achieved ? ms.color : "var(--muted-foreground)" }} />
+                  </div>
+                  <span className="text-[10px] font-semibold whitespace-nowrap">{ms.label}</span>
+                  {achieved && <span className="text-[9px] text-muted-foreground">Earned</span>}
+                </div>
+              );
+            })}
+          </div>
+          {streak?.streakFreezeAvailable && (streak?.currentStreak ?? 0) > 0 && (
+            <div className="mt-4 pt-4 border-t border-border flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Snowflake className="w-4 h-4 text-blue-400" />
+                <div>
+                  <p className="text-xs font-semibold">Streak Freeze</p>
+                  <p className="text-[10px] text-muted-foreground">Preserve your streak for a day off</p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => freezeMutation.mutate()}
+                disabled={freezeMutation.isPending}
+                data-testid="button-freeze-streak"
+              >
+                {freezeMutation.isPending ? "Freezing..." : "Use Freeze"}
+              </Button>
+            </div>
+          )}
+        </Card>
 
         <Card className="p-5 mb-8 bg-[#F5F0EB] dark:bg-card border-primary/10">
           <h3 className="text-[11px] font-semibold uppercase tracking-widest text-primary mb-4 text-center">My Personal Aura</h3>
@@ -262,6 +336,32 @@ export default function Vault() {
                 <h2 className="text-lg font-bold mb-1">Settings</h2>
                 <p className="text-[11px] text-muted-foreground mb-4">Manage your account and preferences</p>
                 <div className="space-y-4">
+                  <Card className="p-5" data-testid="theme-settings">
+                    <h3 className="font-semibold text-sm mb-4">Appearance</h3>
+                    <div className="flex gap-2">
+                      {([
+                        { value: "light" as const, icon: Sun, label: "Light" },
+                        { value: "dark" as const, icon: Moon, label: "Dark" },
+                        { value: "system" as const, icon: Monitor, label: "System" },
+                      ]).map((opt) => (
+                        <button
+                          key={opt.value}
+                          onClick={() => setTheme(opt.value)}
+                          className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl transition-all duration-150 ${
+                            theme === opt.value
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                          }`}
+                          data-testid={`button-theme-${opt.value}`}
+                          aria-label={`Set ${opt.label} theme`}
+                          aria-pressed={theme === opt.value}
+                        >
+                          <opt.icon className="w-4 h-4" />
+                          <span className="text-xs font-medium">{opt.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </Card>
                   <NotificationSettings />
                   <Card className="p-5">
                     <h3 className="font-semibold text-sm mb-4">Account</h3>

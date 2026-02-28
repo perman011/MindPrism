@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Save, Trash2, Image, Headphones, Video } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Image, Headphones, Video, Check } from "lucide-react";
 import { Link, useLocation, useParams } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
@@ -103,6 +103,15 @@ export default function AdminShortEditor() {
     },
   });
 
+  const DREAM_CURTAIN_GRADIENTS = [
+    { name: "Midnight Amethyst", value: "linear-gradient(135deg, #341539 0%, #0F0F1A 100%)" },
+    { name: "Deep Ocean", value: "linear-gradient(135deg, #0D1B2A 0%, #1B2838 50%, #2C3E50 100%)" },
+    { name: "Twilight Rose", value: "linear-gradient(135deg, #4A1942 0%, #2D1B4E 50%, #1A1A2E 100%)" },
+    { name: "Forest Dusk", value: "linear-gradient(135deg, #1A3A2A 0%, #0F2027 50%, #2C5364 100%)" },
+    { name: "Golden Ember", value: "linear-gradient(135deg, #3E2723 0%, #4E342E 50%, #1A1A2E 100%)" },
+    { name: "Cosmic Lavender", value: "linear-gradient(135deg, #2E1065 0%, #581C87 50%, #0F0F1A 100%)" },
+  ];
+
   const canSave = bookId && title.trim() && content.trim() && mediaType;
   const needsThumbnail = mediaType === "audio" || mediaType === "video";
 
@@ -183,11 +192,49 @@ export default function AdminShortEditor() {
 
               <div>
                 <Label htmlFor="content" className="text-sm font-medium mb-2 block">Content *</Label>
+                <div className="flex gap-1 mb-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const textarea = document.getElementById("content") as HTMLTextAreaElement;
+                      if (!textarea) return;
+                      const start = textarea.selectionStart;
+                      const end = textarea.selectionEnd;
+                      const selected = content.substring(start, end);
+                      const newContent = content.substring(0, start) + `**${selected}**` + content.substring(end);
+                      setContent(newContent.slice(0, 500));
+                    }}
+                    data-testid="button-bold"
+                    aria-label="Bold"
+                  >
+                    <strong>B</strong>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const textarea = document.getElementById("content") as HTMLTextAreaElement;
+                      if (!textarea) return;
+                      const start = textarea.selectionStart;
+                      const end = textarea.selectionEnd;
+                      const selected = content.substring(start, end);
+                      const newContent = content.substring(0, start) + `*${selected}*` + content.substring(end);
+                      setContent(newContent.slice(0, 500));
+                    }}
+                    data-testid="button-italic"
+                    aria-label="Italic"
+                  >
+                    <em>I</em>
+                  </Button>
+                </div>
                 <Textarea
                   id="content"
                   value={content}
                   onChange={(e) => setContent(e.target.value.slice(0, 500))}
-                  placeholder="Short content text"
+                  placeholder="Short content text. Use **bold** and *italic* for formatting."
                   rows={4}
                   maxLength={500}
                   data-testid="input-content"
@@ -249,12 +296,36 @@ export default function AdminShortEditor() {
               </div>
 
               <div>
-                <Label htmlFor="backgroundGradient" className="text-sm font-medium mb-2 block">Background Gradient</Label>
+                <Label className="text-sm font-medium mb-3 block">Background Gradient</Label>
+                <div className="grid grid-cols-3 gap-3 mb-3">
+                  {DREAM_CURTAIN_GRADIENTS.map((g) => (
+                    <button
+                      key={g.name}
+                      type="button"
+                      onClick={() => setBackgroundGradient(g.value)}
+                      className={`relative rounded-md overflow-visible aspect-[4/3] border-2 transition-all ${
+                        backgroundGradient === g.value
+                          ? "border-primary ring-2 ring-primary/30"
+                          : "border-border"
+                      }`}
+                      data-testid={`gradient-${g.name.toLowerCase().replace(/\s+/g, "-")}`}
+                      aria-label={`Select ${g.name} gradient`}
+                    >
+                      <div className="absolute inset-0 rounded-md" style={{ background: g.value }} />
+                      <span className="absolute bottom-1 left-1 right-1 text-[10px] text-white/80 text-center truncate">{g.name}</span>
+                      {backgroundGradient === g.value && (
+                        <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                          <Check className="w-3 h-3 text-primary-foreground" />
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
                 <Input
                   id="backgroundGradient"
                   value={backgroundGradient}
                   onChange={(e) => setBackgroundGradient(e.target.value)}
-                  placeholder="linear-gradient(135deg, #34153930, #0F0F1A)"
+                  placeholder="Or enter a custom gradient..."
                   data-testid="input-gradient"
                 />
               </div>
