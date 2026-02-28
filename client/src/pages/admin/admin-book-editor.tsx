@@ -536,11 +536,6 @@ export default function AdminBookEditor() {
           <ChapterEditor bookId={bookId} chapters={chapters} />
           <MentalModelEditor bookId={bookId} models={mentalModels} />
           <PrincipleEditor bookId={bookId} principles={principles} stories={stories} />
-          <MistakeEditor bookId={bookId} mistakes={mistakes} />
-          <InfographicEditor bookId={bookId} infographics={infographics} />
-          <ExerciseEditor bookId={bookId} exercises={exercises} />
-          <ActionItemEditor bookId={bookId} actionItems={actionItems} />
-          <ShortsEditor bookId={bookId} shorts={bookShorts} />
         </div>
 
         <div className="w-[375px] flex-shrink-0 overflow-hidden">

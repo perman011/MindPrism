@@ -49,11 +49,6 @@ export function MindTree({ counts, activeSection, onSectionClick, bookTitle }: M
     { id: "chapters", label: "Chapter Summaries", icon: BookOpen, section: "chapters" },
     { id: "mental-models", label: "Mental Models", icon: Brain, section: "mental-models" },
     { id: "principles", label: "Principles & Stories", icon: Lightbulb, section: "principles" },
-    { id: "common-mistakes", label: "Common Mistakes", icon: AlertTriangle, section: "common-mistakes" },
-    { id: "infographics", label: "Infographics", icon: BarChart3, section: "infographics" },
-    { id: "exercises", label: "Exercises", icon: Dumbbell, section: "exercises" },
-    { id: "action-items", label: "Action Items", icon: ListChecks, section: "action-items" },
-    { id: "shorts", label: "Story Shorts", icon: Film, section: "shorts" },
   ];
 
   const getCount = (sectionId: string): number => {
@@ -62,11 +57,6 @@ export function MindTree({ counts, activeSection, onSectionClick, bookTitle }: M
       chapters: counts.chapterSummaries,
       "mental-models": counts.mentalModels,
       principles: counts.principles,
-      "common-mistakes": counts.commonMistakes,
-      infographics: counts.infographics,
-      exercises: counts.exercises,
-      "action-items": counts.actionItems,
-      "shorts": counts.shorts ?? 0,
     };
     return map[sectionId] ?? 0;
   };
