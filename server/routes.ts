@@ -468,16 +468,6 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/daily-spark", async (_req, res) => {
-    try {
-      const spark = await storage.getDailySpark();
-      res.json(spark ?? null);
-    } catch (error) {
-      console.error("Error fetching daily spark:", error);
-      res.status(500).json({ message: "Failed to fetch daily spark" });
-    }
-  });
-
   app.get("/api/streak", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;

@@ -218,16 +218,6 @@ export const userInterests = pgTable("user_interests", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const dailySparks = pgTable("daily_sparks", {
-  id: varchar("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  quote: text("quote").notNull(),
-  author: text("author").notNull(),
-  bookId: varchar("book_id").references(() => books.id),
-  category: text("category"),
-});
-
 export const userStreaks = pgTable("user_streaks", {
   id: varchar("id")
     .primaryKey()
@@ -487,9 +477,6 @@ export const insertCategorySchema = createInsertSchema(categories).omit({
 export const insertUserInterestsSchema = createInsertSchema(userInterests).omit(
   { id: true },
 );
-export const insertDailySparkSchema = createInsertSchema(dailySparks).omit({
-  id: true,
-});
 export const insertUserStreakSchema = createInsertSchema(userStreaks).omit({
   id: true,
 });
@@ -536,8 +523,6 @@ export type Category = typeof categories.$inferSelect;
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
 export type InsertUserInterests = z.infer<typeof insertUserInterestsSchema>;
 export type UserInterest = typeof userInterests.$inferSelect;
-export type InsertDailySpark = z.infer<typeof insertDailySparkSchema>;
-export type DailySpark = typeof dailySparks.$inferSelect;
 export type InsertUserStreak = z.infer<typeof insertUserStreakSchema>;
 export type UserStreak = typeof userStreaks.$inferSelect;
 export type InsertSavedHighlight = z.infer<typeof insertSavedHighlightSchema>;

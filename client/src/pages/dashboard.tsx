@@ -3,7 +3,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
-import type { Book, Category, DailySpark, UserStreak, UserProgress, ChakraProgress, ChakraType } from "@shared/schema";
+import type { Book, Category, UserStreak, UserProgress, ChakraProgress, ChakraType } from "@shared/schema";
 import { CHAKRA_MAP } from "@shared/schema";
 import { BookCard } from "@/components/book-card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -145,11 +145,6 @@ export default function Dashboard() {
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
-  const { data: dailySpark } = useQuery<DailySpark | null>({
-    queryKey: ["/api/daily-spark"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
-  });
-
   const { data: streak } = useQuery<UserStreak | null>({
     queryKey: ["/api/streak"],
     queryFn: getQueryFn({ on401: "returnNull" }),
@@ -206,7 +201,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background">
       <SEOHead
         title="Dashboard"
-        description="Your personalized psychology learning dashboard. Track your streaks, explore daily sparks, and continue your growth journey."
+        description="Your personalized psychology learning dashboard. Track your streaks, explore insights, and continue your growth journey."
         noIndex
       />
       <div className="px-5 pt-8 pb-5 flex items-center justify-between gap-3">
@@ -344,25 +339,6 @@ export default function Dashboard() {
           </motion.section>
         )}
       </AnimatePresence>
-
-      {dailySpark && (
-        <div className="px-5 mb-8">
-          <Card className="p-6 bg-gradient-to-br from-primary/8 via-primary/4 to-accent/8 border-primary/15" data-testid="card-daily-spark">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-md bg-primary/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Sparkles className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1">
-                <p className="text-[10px] font-semibold text-primary uppercase tracking-widest mb-2">Daily Spark</p>
-                <p className="font-serif text-lg leading-relaxed mb-3" data-testid="text-spark-quote">
-                  "{dailySpark.quote}"
-                </p>
-                <p className="text-xs text-muted-foreground font-medium">— {dailySpark.author}</p>
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
 
       {dailyInsight && (
         <div className="px-5 mb-8">

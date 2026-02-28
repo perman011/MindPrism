@@ -352,19 +352,5 @@ export async function seedDatabase() {
     { label: "3. Attitudinal Values", explanation: "Find meaning through the stance you take toward unavoidable suffering. When you can't change the situation, you can still choose your response." },
   ], orderIndex: 1 });
 
-  // --- Daily Sparks ---
-  await storage.createDailySpark({ quote: "We are what we repeatedly do. Excellence, then, is not an act, but a habit.", author: "Aristotle", bookId: book1.id, category: "habits" });
-  await storage.createDailySpark({ quote: "The happiness of your life depends upon the quality of your thoughts.", author: "Marcus Aurelius", bookId: book2.id, category: "mindset" });
-  await storage.createDailySpark({ quote: "Realize deeply that the present moment is all you have.", author: "Eckhart Tolle", bookId: book3.id, category: "mindfulness" });
-  await storage.createDailySpark({ quote: "In a very real sense we have two minds, one that thinks and one that feels.", author: "Daniel Goleman", bookId: book4.id, category: "emotions" });
-  await storage.createDailySpark({ quote: "When we are no longer able to change a situation, we are challenged to change ourselves.", author: "Viktor E. Frankl", bookId: book5.id, category: "meaning" });
-  await storage.createDailySpark({ quote: "Between stimulus and response there is a space. In that space is our power to choose our response.", author: "Viktor E. Frankl", bookId: book5.id, category: "meaning" });
-  await storage.createDailySpark({ quote: "You do not rise to the level of your goals. You fall to the level of your systems.", author: "James Clear", bookId: book1.id, category: "habits" });
-  await storage.createDailySpark({ quote: "Nothing in life is as important as you think it is, while you are thinking about it.", author: "Daniel Kahneman", bookId: book2.id, category: "mindset" });
-  await storage.createDailySpark({ quote: "Life is not primarily a quest for pleasure or a quest for power, but a quest for meaning.", author: "Viktor E. Frankl", bookId: book5.id, category: "meaning" });
-  await storage.createDailySpark({ quote: "The mind is everything. What you think you become.", author: "Buddha", category: "mindfulness" });
-  await storage.createDailySpark({ quote: "Every action you take is a vote for the type of person you wish to become.", author: "James Clear", bookId: book1.id, category: "habits" });
-  await storage.createDailySpark({ quote: "The ability to observe without evaluating is the highest form of intelligence.", author: "Jiddu Krishnamurti", category: "mindfulness" });
-
   console.log("Database seeded successfully with new taxonomy!");
 }

@@ -7,7 +7,6 @@ import {
   type JournalEntry, type InsertJournalEntry,
   type Category, type InsertCategory,
   type UserInterest, type InsertUserInterests,
-  type DailySpark, type InsertDailySpark,
   type UserStreak, type InsertUserStreak,
   type SavedHighlight, type InsertSavedHighlight,
   type ChapterSummary, type InsertChapterSummary,
@@ -20,7 +19,7 @@ import {
   type Short, type InsertShort,
   type ShortView, type InsertShortView,
   books, principles, stories, exercises, userProgress, journalEntries, categories,
-  userInterests, dailySparks, userStreaks, savedHighlights,
+  userInterests, userStreaks, savedHighlights,
   chapterSummaries, mentalModels, commonMistakes, actionItems, infographics, comments,
   chakraProgress, shorts, shortViews,
 } from "@shared/schema";
@@ -74,9 +73,6 @@ export interface IStorage {
 
   getUserInterests(userId: string): Promise<UserInterest | undefined>;
   saveUserInterests(data: InsertUserInterests): Promise<UserInterest>;
-
-  getDailySpark(): Promise<DailySpark | undefined>;
-  createDailySpark(spark: InsertDailySpark): Promise<DailySpark>;
 
   getUserStreak(userId: string): Promise<UserStreak | undefined>;
   updateUserStreak(userId: string): Promise<UserStreak>;
@@ -358,18 +354,6 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
-  async getDailySpark(): Promise<DailySpark | undefined> {
-    const allSparks = await db.select().from(dailySparks);
-    if (allSparks.length === 0) return undefined;
-    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
-    return allSparks[dayOfYear % allSparks.length];
-  }
-
-  async createDailySpark(spark: InsertDailySpark): Promise<DailySpark> {
-    const [result] = await db.insert(dailySparks).values(spark).returning();
-    return result;
-  }
-
   async getUserStreak(userId: string): Promise<UserStreak | undefined> {
     const [result] = await db.select().from(userStreaks)
       .where(eq(userStreaks.userId, userId));
@@ -475,7 +459,6 @@ export class DatabaseStorage implements IStorage {
     await db.delete(exercises).where(eq(exercises.bookId, id));
     await db.delete(stories).where(eq(stories.bookId, id));
     await db.delete(principles).where(eq(principles.bookId, id));
-    await db.delete(dailySparks).where(eq(dailySparks.bookId, id));
     await db.delete(books).where(eq(books.id, id));
   }
 
