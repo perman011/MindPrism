@@ -221,6 +221,40 @@ export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).om
 export type InsertAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
 export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
 
+export const shorts = pgTable("shorts", {
+  id: varchar("id", { length: 255 }).primaryKey().default(sql`gen_random_uuid()`),
+  bookId: varchar("book_id", { length: 255 }).notNull().references(() => books.id),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  mediaType: text("media_type").notNull(),
+  mediaUrl: text("media_url"),
+  thumbnailUrl: text("thumbnail_url"),
+  backgroundGradient: text("background_gradient"),
+  duration: integer("duration"),
+  orderIndex: integer("order_index").notNull().default(0),
+  status: text("status").notNull().default("draft"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const shortViews = pgTable("short_views", {
+  id: varchar("id", { length: 255 }).primaryKey().default(sql`gen_random_uuid()`),
+  shortId: varchar("short_id", { length: 255 }).notNull().references(() => shorts.id),
+  userId: text("user_id"),
+  viewedAt: timestamp("viewed_at").defaultNow(),
+});
+
+export const shortsRelations = relations(shorts, ({ one }) => ({
+  book: one(books, { fields: [shorts.bookId], references: [books.id] }),
+}));
+
+export const shortViewsRelations = relations(shortViews, ({ one }) => ({
+  short: one(shorts, { fields: [shortViews.shortId], references: [shorts.id] }),
+}));
+
+export type Short = typeof shorts.$inferSelect;
+export type ShortView = typeof shortViews.$inferSelect;
+
 export const booksRelations = relations(books, ({ one, many }) => ({
   category: one(categories, { fields: [books.categoryId], references: [categories.id] }),
   principles: many(principles),
@@ -232,6 +266,7 @@ export const booksRelations = relations(books, ({ one, many }) => ({
   actionItems: many(actionItems),
   infographics: many(infographics),
   versions: many(bookVersions),
+  shorts: many(shorts),
 }));
 
 export const bookVersionsRelations = relations(bookVersions, ({ one }) => ({
