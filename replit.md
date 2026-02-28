@@ -27,6 +27,7 @@ The content is organized into a hierarchical "Psychological Taxonomy." The appli
 - **Chakra Energy Map** and Interactive Engine for dynamic content rendering
 - **Full-Text Search** with ILIKE across books/principles, debounced suggestions, recent searches (localStorage)
 - **Recommendation V2** with collaborative filtering and "Because You Read" carousel
+- **Dashboard Mode Toggle** — pill-shaped Chakra/Reels segmented control switches between ChakraAvatar energy map and inline shorts/reels grid
 - **Shorts Pipeline** with admin gradient picker, rich text editing, trending sort by views, share button
 - **Audio Management** with audioDuration field, continue listening section on dashboard
 - **Social Sharing** with branded progress share card, Web Share API, milestone triggers (7/30/100 day streaks)
@@ -54,7 +55,7 @@ The content is organized into a hierarchical "Psychological Taxonomy." The appli
 - Content Quality Scoring with completeness % per book
 - User management with role assignment
 - Analytics dashboard (Overview + Revenue tabs)
-- Shorts management with gradient picker and rich text editing
+- Shorts management with gradient picker and rich text editing (standalone page + inline ShortsEditor in book editor workspace)
 
 ## External Dependencies
 - **Authentication:** Replit Auth (OpenID Connect)

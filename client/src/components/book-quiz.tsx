@@ -98,7 +98,7 @@ export function BookQuiz({ bookId, bookTitle, onClose, onCelebrate }: BookQuizPr
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F5F0EB] p-5">
+      <div className="min-h-screen bg-background p-5">
         <Skeleton className="h-8 w-32 mb-4" />
         <Skeleton className="h-48 w-full rounded-xl mb-4" />
         <Skeleton className="h-12 w-full rounded-xl" />
@@ -108,7 +108,7 @@ export function BookQuiz({ bookId, bookTitle, onClose, onCelebrate }: BookQuizPr
 
   if (!quiz || quiz.questions.length === 0) {
     return (
-      <div className="min-h-screen bg-[#F5F0EB] flex flex-col items-center justify-center p-6">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
         <Brain className="w-16 h-16 text-muted-foreground/20 mb-4" />
         <h2 className="text-xl font-bold mb-2">No Quiz Available</h2>
         <p className="text-sm text-muted-foreground text-center mb-6">
@@ -126,7 +126,7 @@ export function BookQuiz({ bookId, bookTitle, onClose, onCelebrate }: BookQuizPr
     const passed = percentage >= 80;
 
     return (
-      <div className="min-h-screen bg-[#F5F0EB] flex flex-col items-center justify-center p-6" data-testid="quiz-results">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6" data-testid="quiz-results">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -149,7 +149,7 @@ export function BookQuiz({ bookId, bookTitle, onClose, onCelebrate }: BookQuizPr
             <span className={`text-4xl font-bold ${passed ? "text-primary" : "text-white"}`}>{percentage}%</span>
           </div>
 
-          <Card className="p-4 mb-6 bg-[#F5F0EB] border-primary/10">
+          <Card className="p-4 mb-6 bg-background border-primary/10">
             <div className="flex justify-around">
               <div className="text-center">
                 <p className="text-lg font-bold text-emerald-400">{score}</p>
@@ -203,7 +203,7 @@ export function BookQuiz({ bookId, bookTitle, onClose, onCelebrate }: BookQuizPr
   const progressPercent = Math.round(((currentIndex + 1) / quiz.questions.length) * 100);
 
   return (
-    <div className="min-h-screen bg-[#F5F0EB] flex flex-col" data-testid="book-quiz">
+    <div className="min-h-screen bg-background flex flex-col" data-testid="book-quiz">
       <div className="px-5 pt-4 pb-2 flex items-center justify-between">
         <button onClick={onClose} className="flex items-center gap-1.5 text-sm text-muted-foreground" data-testid="button-quiz-back">
           <ArrowLeft className="w-4 h-4" /> Back

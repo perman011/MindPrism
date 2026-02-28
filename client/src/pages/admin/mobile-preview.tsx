@@ -11,8 +11,8 @@ interface MobilePreviewProps {
 
 export function MobilePreview({ bookTitle, bookAuthor, coreThesis, activeSection, sectionData }: MobilePreviewProps) {
   return (
-    <div className="h-full flex flex-col bg-[#F5F0EB] border-l border-border" data-testid="mobile-preview">
-      <div className="p-3 border-b border-border bg-[#F5F0EB]">
+    <div className="h-full flex flex-col bg-background border-l border-border" data-testid="mobile-preview">
+      <div className="p-3 border-b border-border bg-background">
         <div className="flex items-center gap-2">
           <Smartphone className="w-4 h-4 text-muted-foreground" />
           <p className="text-xs font-semibold">Live Preview</p>
@@ -20,7 +20,7 @@ export function MobilePreview({ bookTitle, bookAuthor, coreThesis, activeSection
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 flex items-start justify-center">
-        <div className="w-[320px] bg-[#F5F0EB] rounded-[2rem] shadow-xl border-[6px] border-[#FFFFFF] overflow-hidden" data-testid="phone-frame">
+        <div className="w-[320px] bg-background rounded-[2rem] shadow-xl border-[6px] border-[#FFFFFF] overflow-hidden" data-testid="phone-frame">
           <div className="h-6 bg-[#FFFFFF] flex items-center justify-center">
             <div className="w-16 h-3 bg-white rounded-full" />
           </div>

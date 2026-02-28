@@ -226,7 +226,7 @@ export default function AnalyticsDashboard() {
   });
 
   return (
-    <div className="min-h-screen bg-[#F5F0EB]">
+    <div className="min-h-screen bg-background">
       <SEOHead title="Analytics | Admin" noIndex />
 
       <div className="border-b border-zinc-800 bg-white/80 backdrop-blur-sm sticky top-0 z-10">

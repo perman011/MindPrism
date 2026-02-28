@@ -62,7 +62,7 @@ export function CommentThread({ bookId, blockType, blockId, onClose }: CommentTh
   });
 
   return (
-    <div className="fixed right-0 top-0 h-full w-80 bg-[#F5F0EB] shadow-2xl border-l border-border z-50 flex flex-col" data-testid="comment-thread">
+    <div className="fixed right-0 top-0 h-full w-80 bg-background shadow-2xl border-l border-border z-50 flex flex-col" data-testid="comment-thread">
       <div className="p-4 border-b flex items-center justify-between">
         <div className="flex items-center gap-2">
           <MessageSquare className="w-4 h-4 text-primary" />

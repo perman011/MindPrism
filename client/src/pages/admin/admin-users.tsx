@@ -92,7 +92,7 @@ export default function AdminUsers() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F5F0EB] p-8">
+      <div className="min-h-screen bg-background p-8">
         <SEOHead title="Admin - Users" noIndex />
         <div className="max-w-5xl mx-auto">
           <Skeleton className="h-10 w-64 mb-8" />
@@ -105,7 +105,7 @@ export default function AdminUsers() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F0EB] p-6 md:p-8" data-testid="admin-users-page">
+    <div className="min-h-screen bg-background p-6 md:p-8" data-testid="admin-users-page">
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <Link href="/admin">

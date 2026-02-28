@@ -173,7 +173,7 @@ export default function BookDetail() {
 
   if (bookLoading || bookFetching || !id) {
     return (
-      <div className="min-h-screen bg-[#F5F0EB] px-5 pt-6">
+      <div className="min-h-screen bg-background px-5 pt-6">
         <Skeleton className="h-8 w-32 mb-4" />
         <Skeleton className="h-64 w-full rounded-xl mb-4" />
         <Skeleton className="h-6 w-48 mb-2" />
@@ -184,7 +184,7 @@ export default function BookDetail() {
 
   if (!book) {
     return (
-      <div className="min-h-screen bg-[#F5F0EB] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <BookOpen className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
           <h2 className="text-xl font-bold mb-2">Book not found</h2>
@@ -218,7 +218,7 @@ export default function BookDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F0EB]">
+    <div className="min-h-screen bg-background">
       <SEOHead
         title={book?.title ? `${book.title} by ${book.author}` : "Book Detail"}
         description={book?.description || "Explore interactive psychology book breakdowns with principles, stories, exercises, and audio summaries."}
@@ -273,7 +273,7 @@ export default function BookDetail() {
           </div>
         </div>
 
-        <div className="pt-20 pb-6 flex flex-col items-center bg-[#F5F0EB]">
+        <div className="pt-20 pb-6 flex flex-col items-center bg-background">
           <div className="w-40 h-56 rounded-md overflow-hidden shadow-lg shadow-black/20 mb-6">
             {book.coverImage ? (
               <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
@@ -285,8 +285,8 @@ export default function BookDetail() {
           </div>
 
           <p className="text-[10px] uppercase tracking-[0.2em] text-primary font-semibold mb-1.5" data-testid="text-summary-label">Summary</p>
-          <h1 className="text-2xl font-bold font-serif text-[#111827] mb-1 text-center px-6 leading-tight" data-testid="text-book-title">{book.title}</h1>
-          <p className="text-sm text-[#6B7280] mb-4" data-testid="text-book-author">by {book.author}</p>
+          <h1 className="text-2xl font-bold font-serif text-foreground mb-1 text-center px-6 leading-tight" data-testid="text-book-title">{book.title}</h1>
+          <p className="text-sm text-muted-foreground mb-4" data-testid="text-book-author">by {book.author}</p>
 
           <div className="flex items-center gap-1.5 mb-6 flex-wrap justify-center">
             <span className="flex items-center gap-1 text-xs text-muted-foreground">

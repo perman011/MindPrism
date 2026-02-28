@@ -1,6 +1,6 @@
 import { SEOHead } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
-import { Check, Sparkles } from "lucide-react";
+import { Brain, Check, Clock, Columns, Crown, Flower2, Heart, HeartHandshake, Palette, Scale, Sparkles, Target, Users, Zap } from "lucide-react";
 import { useState } from "react";
 import mindprismLogo from "@assets/77531E8D-B1EB-4D23-A577-C8EC54A4B63C_1772158344341.png";
 import { useMutation } from "@tanstack/react-query";
@@ -8,18 +8,18 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 
 const interestTiles = [
-  { id: "anxiety", label: "Overcome Anxiety", emoji: "🧠", color: "from-purple-700/20 to-purple-800/10 border-purple-700/30" },
-  { id: "productivity", label: "Ultimate Productivity", emoji: "⏱️", color: "from-purple-700/20 to-purple-800/10 border-purple-700/30" },
-  { id: "body-language", label: "Read Body Language", emoji: "🤝", color: "from-rose-500/20 to-rose-600/10 border-rose-500/30" },
-  { id: "leadership", label: "Leadership", emoji: "💼", color: "from-indigo-500/20 to-indigo-600/10 border-indigo-500/30" },
-  { id: "mindfulness", label: "Mindfulness & Calm", emoji: "🧘", color: "from-teal-500/20 to-teal-600/10 border-teal-500/30" },
-  { id: "habits", label: "Build Better Habits", emoji: "🎯", color: "from-green-500/20 to-green-600/10 border-green-500/30" },
-  { id: "relationships", label: "Better Relationships", emoji: "💕", color: "from-pink-500/20 to-pink-600/10 border-pink-500/30" },
-  { id: "decision-making", label: "Smarter Decisions", emoji: "🎲", color: "from-purple-500/20 to-purple-600/10 border-purple-500/30" },
-  { id: "confidence", label: "Build Confidence", emoji: "💪", color: "from-orange-500/20 to-orange-600/10 border-orange-500/30" },
-  { id: "stoicism", label: "Stoic Philosophy", emoji: "🏛️", color: "from-slate-500/20 to-slate-600/10 border-slate-500/30" },
-  { id: "creativity", label: "Unlock Creativity", emoji: "🎨", color: "from-purple-700/20 to-purple-800/10 border-purple-700/30" },
-  { id: "emotional-iq", label: "Emotional Intelligence", emoji: "❤️", color: "from-red-500/20 to-red-600/10 border-red-500/30" },
+  { id: "anxiety", label: "Overcome Anxiety", icon: Brain, iconGradient: "from-purple-400 to-purple-600", color: "from-purple-700/20 to-purple-800/10 border-purple-700/30" },
+  { id: "productivity", label: "Ultimate Productivity", icon: Clock, iconGradient: "from-blue-400 to-teal-600", color: "from-purple-700/20 to-purple-800/10 border-purple-700/30" },
+  { id: "body-language", label: "Read Body Language", icon: Users, iconGradient: "from-rose-400 to-rose-600", color: "from-rose-500/20 to-rose-600/10 border-rose-500/30" },
+  { id: "leadership", label: "Leadership", icon: Crown, iconGradient: "from-indigo-400 to-indigo-600", color: "from-indigo-500/20 to-indigo-600/10 border-indigo-500/30" },
+  { id: "mindfulness", label: "Mindfulness & Calm", icon: Flower2, iconGradient: "from-teal-400 to-teal-600", color: "from-teal-500/20 to-teal-600/10 border-teal-500/30" },
+  { id: "habits", label: "Build Better Habits", icon: Target, iconGradient: "from-green-400 to-green-600", color: "from-green-500/20 to-green-600/10 border-green-500/30" },
+  { id: "relationships", label: "Better Relationships", icon: Heart, iconGradient: "from-pink-400 to-pink-600", color: "from-pink-500/20 to-pink-600/10 border-pink-500/30" },
+  { id: "decision-making", label: "Smarter Decisions", icon: Scale, iconGradient: "from-purple-400 to-purple-600", color: "from-purple-500/20 to-purple-600/10 border-purple-500/30" },
+  { id: "confidence", label: "Build Confidence", icon: Zap, iconGradient: "from-orange-400 to-orange-600", color: "from-orange-500/20 to-orange-600/10 border-orange-500/30" },
+  { id: "stoicism", label: "Stoic Philosophy", icon: Columns, iconGradient: "from-slate-400 to-slate-600", color: "from-slate-500/20 to-slate-600/10 border-slate-500/30" },
+  { id: "creativity", label: "Unlock Creativity", icon: Palette, iconGradient: "from-violet-400 to-violet-600", color: "from-purple-700/20 to-purple-800/10 border-purple-700/30" },
+  { id: "emotional-iq", label: "Emotional Intelligence", icon: HeartHandshake, iconGradient: "from-red-400 to-red-600", color: "from-red-500/20 to-red-600/10 border-red-500/30" },
 ];
 
 export default function Onboarding() {
@@ -86,7 +86,9 @@ export default function Onboarding() {
                     <Check className="w-3 h-3 text-primary-foreground" />
                   </div>
                 )}
-                <span className="text-2xl mb-2 block">{tile.emoji}</span>
+                <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${tile.iconGradient} flex items-center justify-center mb-2`}>
+                  <tile.icon className="w-5 h-5 text-white" />
+                </div>
                 <span className="font-medium text-sm">{tile.label}</span>
               </button>
             );

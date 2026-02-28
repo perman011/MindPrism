@@ -63,7 +63,7 @@ export function FlashcardPractice({ bookId, bookTitle, onClose }: FlashcardPract
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F5F0EB] p-5">
+      <div className="min-h-screen bg-background p-5">
         <Skeleton className="h-8 w-32 mb-4" />
         <Skeleton className="h-64 w-full rounded-xl" />
       </div>
@@ -72,7 +72,7 @@ export function FlashcardPractice({ bookId, bookTitle, onClose }: FlashcardPract
 
   if (!data || data.cards.length === 0) {
     return (
-      <div className="min-h-screen bg-[#F5F0EB] flex flex-col items-center justify-center p-6">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
         <Brain className="w-16 h-16 text-muted-foreground/20 mb-4" />
         <h2 className="text-xl font-bold mb-2">No Flashcards Available</h2>
         <p className="text-sm text-muted-foreground text-center mb-6">
@@ -91,7 +91,7 @@ export function FlashcardPractice({ bookId, bookTitle, onClose }: FlashcardPract
     const needsReview = sessionResults.filter(r => r.quality < 3).length;
 
     return (
-      <div className="min-h-screen bg-[#F5F0EB] flex flex-col items-center justify-center p-6">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -140,7 +140,7 @@ export function FlashcardPractice({ bookId, bookTitle, onClose }: FlashcardPract
   const progressPercent = Math.round(((currentIndex + 1) / data.cards.length) * 100);
 
   return (
-    <div className="min-h-screen bg-[#F5F0EB] flex flex-col" data-testid="flashcard-practice">
+    <div className="min-h-screen bg-background flex flex-col" data-testid="flashcard-practice">
       <div className="px-5 pt-4 pb-2 flex items-center justify-between">
         <button onClick={onClose} className="flex items-center gap-1.5 text-sm text-muted-foreground" data-testid="button-flashcard-back">
           <ArrowLeft className="w-4 h-4" /> Back

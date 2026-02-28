@@ -30,8 +30,8 @@ export default function AudioPage() {
         noIndex
       />
       <div className="px-5 pt-6 pb-3">
-        <h1 className="text-2xl font-bold text-[#111827] mb-1" data-testid="text-audio-title">Audio Summaries</h1>
-        <p className="text-sm text-[#6B7280] mb-6">Listen and learn on the go</p>
+        <h1 className="text-2xl font-bold text-foreground mb-1" data-testid="text-audio-title">Audio Summaries</h1>
+        <p className="text-sm text-muted-foreground mb-6">Listen and learn on the go</p>
       </div>
 
       <div className="px-5 pb-8">

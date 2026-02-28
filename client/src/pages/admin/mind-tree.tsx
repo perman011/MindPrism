@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Target, BookOpen, Brain, Lightbulb, AlertTriangle,
   BarChart3, Dumbbell, ListChecks, ChevronDown, ChevronRight,
+  Film,
 } from "lucide-react";
 
 interface ContentCounts {
@@ -13,6 +14,7 @@ interface ContentCounts {
   exercises: number;
   actionItems: number;
   infographics: number;
+  shorts?: number;
 }
 
 interface TreeItem {
@@ -51,6 +53,7 @@ export function MindTree({ counts, activeSection, onSectionClick, bookTitle }: M
     { id: "infographics", label: "Infographics", icon: BarChart3, section: "infographics" },
     { id: "exercises", label: "Exercises", icon: Dumbbell, section: "exercises" },
     { id: "action-items", label: "Action Items", icon: ListChecks, section: "action-items" },
+    { id: "shorts", label: "Story Shorts", icon: Film, section: "shorts" },
   ];
 
   const getCount = (sectionId: string): number => {
@@ -63,12 +66,13 @@ export function MindTree({ counts, activeSection, onSectionClick, bookTitle }: M
       infographics: counts.infographics,
       exercises: counts.exercises,
       "action-items": counts.actionItems,
+      "shorts": counts.shorts ?? 0,
     };
     return map[sectionId] ?? 0;
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#F5F0EB] border-r border-border" data-testid="mind-tree">
+    <div className="h-full flex flex-col bg-background border-r border-border" data-testid="mind-tree">
       <div className="p-4 border-b">
         <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Mind Tree</p>
         {bookTitle && (

@@ -4,7 +4,7 @@ import { Component, type ReactNode, type ErrorInfo } from "react";
 function FallbackUI() {
   return (
     <div
-      className="min-h-screen bg-[#F5F0EB] flex items-center justify-center p-6"
+      className="min-h-screen bg-background flex items-center justify-center p-6"
       data-testid="error-boundary-fallback"
     >
       <div className="text-center max-w-md">

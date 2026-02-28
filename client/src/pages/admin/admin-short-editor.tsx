@@ -116,7 +116,7 @@ export default function AdminShortEditor() {
   const needsThumbnail = mediaType === "audio" || mediaType === "video";
 
   return (
-    <div className="min-h-screen bg-[#F5F0EB] p-8" data-testid="admin-short-editor">
+    <div className="min-h-screen bg-background p-8" data-testid="admin-short-editor">
       <SEOHead title={isNew ? "Create Short" : "Edit Short"} noIndex />
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-8">

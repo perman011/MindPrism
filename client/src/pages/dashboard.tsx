@@ -73,9 +73,9 @@ function HorizontalScroll({ children, title, accentLabel, actionHref, actionLabe
       <div className="flex items-center justify-between gap-2 px-5 mb-4">
         <div>
           {accentLabel && (
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-[#341539] mb-1">{accentLabel}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-primary mb-1">{accentLabel}</p>
           )}
-          <h2 className="text-xl font-bold text-[#111827]">{title}</h2>
+          <h2 className="text-xl font-bold text-foreground">{title}</h2>
         </div>
         {actionHref && (
           <Link href={actionHref}>
@@ -128,7 +128,7 @@ function BookSlider({ books, title, testId }: { books: Book[]; title: string; te
   return (
     <section className="mb-10" data-testid={testId}>
       <div className="flex items-center justify-between gap-2 px-5 mb-4">
-        <h2 className="text-xl font-bold text-[#111827]">{title}</h2>
+        <h2 className="text-xl font-bold text-foreground">{title}</h2>
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
@@ -170,6 +170,7 @@ export default function Dashboard() {
   const { play } = useAudio();
   const [, navigate] = useLocation();
   const [activeChakra, setActiveChakra] = useState<ChakraType | null>(null);
+  const [dashboardMode, setDashboardMode] = useState<"chakra" | "reels">("chakra");
   const [celebrationMilestone, setCelebrationMilestone] = useState<typeof STREAK_MILESTONES[0] | null>(null);
   const [celebrationOpen, setCelebrationOpen] = useState(false);
   const [shownMilestones, setShownMilestones] = useState<Set<number>>(() => {
@@ -278,63 +279,145 @@ export default function Dashboard() {
         description="Your personalized psychology learning dashboard. Track your streaks, explore insights, and continue your growth journey."
         noIndex
       />
-      <div className="px-5 pt-8 pb-5 flex items-center justify-between gap-3">
-        <div className="flex-1">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{greeting()}</p>
-          <h1 className="text-2xl font-bold font-serif text-[#111827] tracking-tight" data-testid="text-welcome">
-            {user?.firstName ?? "Explorer"}
-          </h1>
+      <div className="relative bg-gradient-to-b from-[#341539] via-[#2A1130] to-background overflow-hidden">
+        <div className="absolute inset-0 opacity-15 pointer-events-none">
+          <div className="absolute top-6 left-8 w-1 h-1 rounded-full bg-purple-400 animate-pulse" />
+          <div className="absolute top-16 right-12 w-0.5 h-0.5 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "0.5s" }} />
+          <div className="absolute top-28 left-20 w-0.5 h-0.5 rounded-full bg-purple-400 animate-pulse" style={{ animationDelay: "1s" }} />
+          <div className="absolute bottom-20 right-8 w-1 h-1 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "1.5s" }} />
+          <div className="absolute bottom-32 left-16 w-0.5 h-0.5 rounded-full bg-purple-200 animate-pulse" style={{ animationDelay: "0.8s" }} />
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 bg-primary/10 px-4 py-2.5 rounded-full border border-primary/20" data-testid="badge-streak">
-            <motion.div
-              animate={(streak?.currentStreak ?? 0) > 0 ? {
-                scale: [1, 1.2, 1],
-                rotate: [0, -5, 5, 0],
-              } : {}}
-              transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
-            >
-              <Flame className="w-4 h-4 text-orange-500" />
-            </motion.div>
-            <span className="text-sm font-bold text-primary">{streak?.currentStreak ?? 0} day{(streak?.currentStreak ?? 0) !== 1 ? "s" : ""}</span>
+
+        <div className="relative z-10 px-5 pt-8 pb-5 flex items-center justify-between gap-3">
+          <div className="flex-1">
+            <p className="text-xs font-medium text-purple-200/70 uppercase tracking-wider mb-1">{greeting()}</p>
+            <h1 className="text-2xl font-bold font-serif text-white tracking-tight" data-testid="text-welcome">
+              {user?.firstName ?? "Explorer"}
+            </h1>
           </div>
-          <Link href="/vault">
-            <Avatar className="h-10 w-10 cursor-pointer">
-              <AvatarImage src={user?.profileImageUrl ?? undefined} />
-              <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">{initials}</AvatarFallback>
-            </Avatar>
-          </Link>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2.5 rounded-full border border-white/15" data-testid="badge-streak">
+              <motion.div
+                animate={(streak?.currentStreak ?? 0) > 0 ? {
+                  scale: [1, 1.2, 1],
+                  rotate: [0, -5, 5, 0],
+                } : {}}
+                transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
+              >
+                <Flame className="w-4 h-4 text-orange-400" />
+              </motion.div>
+              <span className="text-sm font-bold text-white">{streak?.currentStreak ?? 0} day{(streak?.currentStreak ?? 0) !== 1 ? "s" : ""}</span>
+            </div>
+            <Link href="/vault">
+              <Avatar className="h-10 w-10 cursor-pointer ring-2 ring-white/20">
+                <AvatarImage src={user?.profileImageUrl ?? undefined} />
+                <AvatarFallback className="text-xs bg-white/15 text-white font-semibold">{initials}</AvatarFallback>
+              </Avatar>
+            </Link>
+          </div>
         </div>
+
+        <div className="relative z-10 px-5 mb-4">
+          <div className="flex items-center justify-center">
+            <div className="inline-flex bg-white/10 backdrop-blur-sm rounded-full p-1 border border-white/10" data-testid="mode-toggle">
+              <button
+                onClick={() => setDashboardMode("chakra")}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-all duration-200 ${
+                  dashboardMode === "chakra"
+                    ? "bg-white text-[#341539] shadow-lg"
+                    : "text-white/70 hover:text-white"
+                }`}
+                data-testid="button-mode-chakra"
+                aria-label="Switch to Chakra view"
+                aria-pressed={dashboardMode === "chakra"}
+              >
+                <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
+                Chakra
+              </button>
+              <button
+                onClick={() => setDashboardMode("reels")}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-all duration-200 ${
+                  dashboardMode === "reels"
+                    ? "bg-white text-[#341539] shadow-lg"
+                    : "text-white/70 hover:text-white"
+                }`}
+                data-testid="button-mode-reels"
+                aria-label="Switch to Reels view"
+                aria-pressed={dashboardMode === "reels"}
+              >
+                <Film className="w-3.5 h-3.5" aria-hidden="true" />
+                Reels
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {dashboardMode === "chakra" ? (
+          <div className="relative z-10 px-5 pb-6" data-testid="section-energy-map">
+            <div className="flex justify-center">
+              <ChakraAvatar
+                activeChakra={activeChakra}
+                onChakraSelect={setActiveChakra}
+                progress={chakraProgressData ?? undefined}
+                size="md"
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="relative z-10 px-5 pb-6" data-testid="section-reels-feed">
+            {publishedShorts && publishedShorts.length > 0 ? (
+              <div className="grid grid-cols-3 gap-2">
+                {publishedShorts.slice(0, 6).map((short, i) => (
+                  <button
+                    key={short.id}
+                    onClick={() => {
+                      setShortsPlayerIndex(i);
+                      setShortsPlayerOpen(true);
+                    }}
+                    className="relative aspect-[9/16] rounded-xl overflow-hidden group"
+                    data-testid={`reel-${short.id}`}
+                    aria-label={`Watch: ${short.title}`}
+                  >
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        background: short.backgroundGradient || "linear-gradient(135deg, #341539 0%, #6B3A6E 100%)"
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
+                    <div className="absolute bottom-0 left-0 right-0 p-2">
+                      <p className="text-[10px] text-white font-semibold line-clamp-2 leading-tight">{short.title}</p>
+                    </div>
+                    <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                      <Play className="w-3 h-3 text-white ml-0.5" />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="py-8 text-center">
+                <Film className="w-8 h-8 text-white/30 mx-auto mb-2" />
+                <p className="text-sm text-white/50">No reels yet — check back soon</p>
+              </div>
+            )}
+            {publishedShorts && publishedShorts.length > 6 && (
+              <button
+                onClick={() => navigate("/shorts")}
+                className="mt-3 w-full py-2.5 rounded-full bg-white/10 text-white text-xs font-semibold hover:bg-white/15 transition-colors"
+                data-testid="button-see-all-reels"
+              >
+                See All Reels
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {shareTrigger && (
-        <div className="px-5 mb-4">
+        <div className="px-5 mb-4 mt-4">
           <ShareMilestonePrompt trigger={shareTrigger} onDismiss={dismissShareTrigger} />
         </div>
       )}
-
-      <section className="mb-8 px-5" data-testid="section-energy-map">
-        <p className="text-[11px] font-semibold text-[#111827] uppercase tracking-widest mb-2 px-1">My Energy Map</p>
-        <p className="text-sm text-[#6B7280] mb-3 px-1">Tap a chakra to see your progress</p>
-        <div className="relative rounded-2xl bg-[#341539] p-5 pb-3 overflow-hidden">
-          <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden rounded-2xl">
-            <div className="absolute top-4 left-8 w-1 h-1 rounded-full bg-purple-400 animate-pulse" />
-            <div className="absolute top-12 right-12 w-0.5 h-0.5 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "0.5s" }} />
-            <div className="absolute top-20 left-20 w-0.5 h-0.5 rounded-full bg-purple-400 animate-pulse" style={{ animationDelay: "1s" }} />
-            <div className="absolute bottom-16 right-8 w-1 h-1 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "1.5s" }} />
-            <div className="absolute bottom-24 left-16 w-0.5 h-0.5 rounded-full bg-purple-200 animate-pulse" style={{ animationDelay: "0.8s" }} />
-          </div>
-
-          <div className="flex justify-center relative" style={{ zIndex: 10 }}>
-            <ChakraAvatar
-              activeChakra={activeChakra}
-              onChakraSelect={setActiveChakra}
-              progress={chakraProgressData ?? undefined}
-              size="md"
-            />
-          </div>
-        </div>
-      </section>
 
       <AnimatePresence mode="wait">
         {activeChakra && (
@@ -475,8 +558,8 @@ export default function Dashboard() {
         <section className="mb-10" data-testid="section-continue-listening">
           <div className="flex items-center justify-between gap-2 px-5 mb-4">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-[#341539] mb-1">Continue listening</p>
-              <h2 className="text-xl font-bold text-[#111827]">Pick Up Where You Left Off</h2>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-primary mb-1">Continue listening</p>
+              <h2 className="text-xl font-bold text-foreground">Pick Up Where You Left Off</h2>
             </div>
             <Link href="/audio">
               <button className="text-xs text-primary font-medium flex items-center gap-0.5" data-testid="link-continue-listening-action">
@@ -626,8 +709,8 @@ export default function Dashboard() {
 
       {categories && categories.length > 0 && (
         <section className="mb-10 px-5" data-testid="section-categories">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-[#341539] mb-1">Explore topics</p>
-          <h2 className="text-xl font-bold text-[#111827] mb-4">Browse by Topic</h2>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-primary mb-1">Explore topics</p>
+          <h2 className="text-xl font-bold text-foreground mb-4">Browse by Topic</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {categories.map((cat) => (
               <Link key={cat.id} href={`/discover?category=${cat.slug}`}>

@@ -30,12 +30,12 @@ export function BottomNav() {
               role="tab"
               aria-selected={active}
               className={`flex flex-col items-center justify-center gap-1 flex-1 py-2 min-h-[2.75rem] rounded-md transition-all duration-150 active:scale-95 ${
-                active ? "text-[#341539] dark:text-primary" : "text-[#9CA3AF] dark:text-muted-foreground"
+                active ? "text-primary" : "text-muted-foreground"
               }`}
               data-testid={item.testId}
             >
               <item.icon className={`w-[22px] h-[22px] transition-all ${active ? "stroke-[2.5]" : "stroke-[1.75]"}`} aria-hidden="true" />
-              <span className={`text-[11px] leading-tight transition-all ${active ? "font-bold text-[#341539]" : "font-medium"}`}>{item.label}</span>
+              <span className={`text-[11px] leading-tight transition-all ${active ? "font-bold text-primary" : "font-medium"}`}>{item.label}</span>
             </button>
           );
         })}

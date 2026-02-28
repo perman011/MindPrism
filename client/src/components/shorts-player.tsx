@@ -183,7 +183,7 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
 
   if (allShorts.length === 0) {
     return (
-      <div className="fixed inset-0 z-[60] bg-[#F5F0EB] flex items-center justify-center" data-testid="shorts-player-empty">
+      <div className="fixed inset-0 z-[60] bg-background flex items-center justify-center" data-testid="shorts-player-empty">
         <p className="text-white/60 text-sm">No shorts available</p>
         <button
           onClick={onClose}
@@ -204,7 +204,7 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
   };
 
   return (
-    <div className="fixed inset-0 z-[60] bg-[#F5F0EB]" data-testid="shorts-player">
+    <div className="fixed inset-0 z-[60] bg-background" data-testid="shorts-player">
       <div className="absolute top-0 left-0 right-0 z-20 flex gap-1 px-3 pt-3" data-testid="shorts-progress-bar">
         {allShorts.map((_, i) => (
           <div key={i} className="flex-1 h-[3px] rounded-full overflow-hidden bg-white/20">

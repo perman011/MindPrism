@@ -79,7 +79,7 @@ export default function AdminShorts() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F5F0EB] p-8">
+      <div className="min-h-screen bg-background p-8">
         <div className="max-w-6xl mx-auto">
           <Skeleton className="h-10 w-64 mb-8" />
           <div className="space-y-4">
@@ -93,7 +93,7 @@ export default function AdminShorts() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F0EB] p-8" data-testid="admin-shorts-page">
+    <div className="min-h-screen bg-background p-8" data-testid="admin-shorts-page">
       <SEOHead title="Admin - Story Shorts" noIndex />
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
