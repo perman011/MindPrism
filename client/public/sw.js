@@ -115,9 +115,9 @@ function offlineFallback() {
     .logo img { width: 56px; height: 56px; object-fit: contain; }
     h1 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
     p { font-size: 0.875rem; color: rgba(17,24,39,0.6); line-height: 1.5; margin-bottom: 1.5rem; }
-    .gold { color: #3B82F6; }
-    .btn { display: inline-block; padding: 0.75rem 2rem; background: #3B82F6; color: #fff; font-weight: 600; border: none; border-radius: 9999px; font-size: 0.875rem; cursor: pointer; text-decoration: none; }
-    .btn:hover { background: #2563EB; }
+    .gold { color: #341539; }
+    .btn { display: inline-block; padding: 0.75rem 2rem; background: #341539; color: #fff; font-weight: 600; border: none; border-radius: 9999px; font-size: 0.875rem; cursor: pointer; text-decoration: none; }
+    .btn:hover { background: #2A0F2E; }
   </style>
 </head>
 <body>

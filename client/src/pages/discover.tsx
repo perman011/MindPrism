@@ -139,7 +139,7 @@ export default function Discover() {
           <button
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
               activeTab === "books"
-                ? "bg-[#3B82F6] text-white shadow-sm"
+                ? "bg-[#341539] text-white shadow-sm"
                 : "text-[#6B7280] hover:text-[#374151]"
             }`}
             onClick={() => { setActiveTab("books"); setSearchQuery(""); }}
@@ -151,7 +151,7 @@ export default function Discover() {
           <button
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
               activeTab === "shorts"
-                ? "bg-[#3B82F6] text-white shadow-sm"
+                ? "bg-[#341539] text-white shadow-sm"
                 : "text-[#6B7280] hover:text-[#374151]"
             }`}
             onClick={() => { setActiveTab("shorts"); setSearchQuery(""); }}
@@ -177,7 +177,7 @@ export default function Discover() {
               <button
                 className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all ${
                   activeCategory === null
-                    ? "bg-[#3B82F6] text-white shadow-sm"
+                    ? "bg-[#341539] text-white shadow-sm"
                     : "bg-white text-[#374151] border border-[#E5E7EB]"
                 }`}
                 onClick={() => setActiveCategory(null)}
@@ -190,7 +190,7 @@ export default function Discover() {
                   key={cat.id}
                   className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-2 transition-all ${
                     activeCategory === cat.slug
-                      ? "bg-[#3B82F6] text-white shadow-sm"
+                      ? "bg-[#341539] text-white shadow-sm"
                       : "bg-white text-[#374151] border border-[#E5E7EB]"
                   }`}
                   onClick={() => setActiveCategory(activeCategory === cat.slug ? null : cat.slug)}

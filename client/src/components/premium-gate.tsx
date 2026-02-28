@@ -42,7 +42,7 @@ export function PremiumGate({ children, isPremium }: PremiumGateProps) {
       <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/60 backdrop-blur-[2px] rounded-xl">
         <div className="flex flex-col items-center gap-3 p-6 text-center">
           <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-50 flex items-center justify-center">
-            <Lock className="w-6 h-6 text-blue-600 dark:text-blue-500" />
+            <Lock className="w-6 h-6 text-purple-800 dark:text-purple-700" />
           </div>
           <h3 className="text-lg font-bold">Premium Content</h3>
           <p className="text-sm text-muted-foreground max-w-[240px]">
@@ -51,7 +51,7 @@ export function PremiumGate({ children, isPremium }: PremiumGateProps) {
           <Button
             onClick={handleUpgrade}
             disabled={loading}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white gap-2"
+            className="bg-gradient-to-r from-purple-700 to-purple-800 hover:from-purple-800 hover:to-purple-700 text-white gap-2"
             data-testid="button-upgrade-premium"
           >
             <Lock className="w-4 h-4" />

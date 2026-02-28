@@ -71,7 +71,7 @@ export function ActionItemEditor({ bookId, actionItems }: ActionItemEditorProps)
 
       <div className="space-y-4">
         {actionItems.map((item) => (
-          <Card key={item.id} className={`p-3 border-l-4 ${item.type === "immediate" ? "border-l-violet-400" : "border-l-blue-400"}`} data-testid={`action-item-block-${item.id}`}>
+          <Card key={item.id} className={`p-3 border-l-4 ${item.type === "immediate" ? "border-l-violet-400" : "border-l-purple-600"}`} data-testid={`action-item-block-${item.id}`}>
             <div className="flex items-center gap-3">
               <GripVertical className="w-4 h-4 text-muted-foreground cursor-grab flex-shrink-0" />
               <Input
@@ -84,9 +84,9 @@ export function ActionItemEditor({ bookId, actionItems }: ActionItemEditorProps)
               <div className="flex items-center gap-2 flex-shrink-0">
                 <div className="flex items-center gap-1.5">
                   {item.type === "immediate" ? (
-                    <Zap className="w-3.5 h-3.5 text-blue-500" />
+                    <Zap className="w-3.5 h-3.5 text-purple-700" />
                   ) : (
-                    <Calendar className="w-3.5 h-3.5 text-blue-500" />
+                    <Calendar className="w-3.5 h-3.5 text-purple-700" />
                   )}
                   <Badge variant="outline" className="text-[9px]">
                     {item.type === "immediate" ? "Do Today" : "Long-Term"}
@@ -110,8 +110,8 @@ export function ActionItemEditor({ bookId, actionItems }: ActionItemEditorProps)
 
       {actionItems.length > 0 && (
         <div className="mt-4 flex items-center gap-4 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-blue-500" /> {immediateItems.length} immediate</span>
-          <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-blue-500" /> {longTermItems.length} long-term</span>
+          <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-purple-700" /> {immediateItems.length} immediate</span>
+          <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-purple-700" /> {longTermItems.length} long-term</span>
         </div>
       )}
     </section>

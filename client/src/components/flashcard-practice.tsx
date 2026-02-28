@@ -108,8 +108,8 @@ export function FlashcardPractice({ bookId, bookTitle, onClose }: FlashcardPract
               <p className="text-2xl font-bold text-emerald-400">{mastered}</p>
               <p className="text-[10px] text-muted-foreground">Mastered</p>
             </Card>
-            <Card className="p-3 text-center bg-blue-500/10 border-blue-500/20">
-              <p className="text-2xl font-bold text-blue-500">{learning}</p>
+            <Card className="p-3 text-center bg-purple-700/10 border-purple-700/20">
+              <p className="text-2xl font-bold text-purple-700">{learning}</p>
               <p className="text-[10px] text-muted-foreground">Learning</p>
             </Card>
             <Card className="p-3 text-center bg-rose-500/10 border-rose-500/20">
@@ -191,7 +191,7 @@ export function FlashcardPractice({ bookId, bookTitle, onClose }: FlashcardPract
                   variant="outline"
                   className={`absolute top-3 left-3 text-[9px] ${
                     card.progress.status === "mastered" ? "border-emerald-500/30 text-emerald-400"
-                    : card.progress.status === "learning" ? "border-blue-500/30 text-blue-500"
+                    : card.progress.status === "learning" ? "border-purple-700/30 text-purple-700"
                     : "border-rose-500/30 text-rose-400"
                   }`}
                 >
@@ -258,7 +258,7 @@ export function FlashcardPractice({ bookId, bookTitle, onClose }: FlashcardPract
               </Button>
               <Button
                 variant="outline"
-                className="border-blue-500/30 text-blue-500 hover:bg-blue-500/10"
+                className="border-purple-700/30 text-purple-700 hover:bg-purple-700/10"
                 onClick={() => handleRate(3)}
                 disabled={reviewMutation.isPending}
                 data-testid="button-rate-good"

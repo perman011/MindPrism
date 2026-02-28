@@ -46,8 +46,8 @@ export default function Vault() {
 
   const stats = [
     { icon: Flame, label: "Day Streak", value: streak?.currentStreak ?? 0, color: "text-primary", bgColor: "bg-primary/10", barColor: "bg-primary" },
-    { icon: Headphones, label: "Mins Listened", value: streak?.totalMinutesListened ?? 0, color: "text-blue-500", bgColor: "bg-blue-400/10", barColor: "bg-blue-400" },
-    { icon: PenLine, label: "Exercises Done", value: streak?.totalExercisesCompleted ?? 0, color: "text-blue-500", bgColor: "bg-blue-500/10", barColor: "bg-blue-500" },
+    { icon: Headphones, label: "Mins Listened", value: streak?.totalMinutesListened ?? 0, color: "text-purple-700", bgColor: "bg-purple-600/10", barColor: "bg-purple-600" },
+    { icon: PenLine, label: "Exercises Done", value: streak?.totalExercisesCompleted ?? 0, color: "text-purple-700", bgColor: "bg-purple-700/10", barColor: "bg-purple-700" },
   ];
 
   const tabs = [

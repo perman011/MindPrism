@@ -33,7 +33,7 @@ function HorizontalScroll({ children, title, accentLabel, actionHref, actionLabe
       <div className="flex items-center justify-between gap-2 px-5 mb-4">
         <div>
           {accentLabel && (
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-[#3B82F6] mb-1">{accentLabel}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-[#341539] mb-1">{accentLabel}</p>
           )}
           <h2 className="text-xl font-bold text-[#111827]">{title}</h2>
         </div>
@@ -338,13 +338,13 @@ export default function Dashboard() {
       {dailyInsight && (
         <div className="px-5 mb-8">
           <Link href={`/book/${dailyInsight.bookId}`}>
-            <Card className="p-5 bg-gradient-to-br from-blue-500/8 via-transparent to-primary/5 border-violet-500/15 cursor-pointer" data-testid="card-daily-insight">
+            <Card className="p-5 bg-gradient-to-br from-purple-700/8 via-transparent to-primary/5 border-violet-500/15 cursor-pointer" data-testid="card-daily-insight">
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-md bg-blue-500/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Lightbulb className="w-5 h-5 text-blue-500" />
+                <div className="w-10 h-10 rounded-md bg-purple-700/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Lightbulb className="w-5 h-5 text-purple-700" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-[10px] font-semibold text-blue-500 uppercase tracking-widest mb-1.5">Daily Insight</p>
+                  <p className="text-[10px] font-semibold text-purple-700 uppercase tracking-widest mb-1.5">Daily Insight</p>
                   <p className="text-base font-bold mb-1.5" data-testid="text-insight-title">{dailyInsight.title}</p>
                   <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3" data-testid="text-insight-content">{dailyInsight.content}</p>
                   <p className="text-[10px] text-muted-foreground/60 mt-2">From: {dailyInsight.bookTitle}</p>
@@ -458,7 +458,7 @@ export default function Dashboard() {
 
       {categories && categories.length > 0 && (
         <section className="mb-10 px-5" data-testid="section-categories">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-[#3B82F6] mb-1">Explore topics</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-[#341539] mb-1">Explore topics</p>
           <h2 className="text-xl font-bold text-[#111827] mb-4">Browse by Topic</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {categories.map((cat) => (

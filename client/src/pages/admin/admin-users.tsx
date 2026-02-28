@@ -16,7 +16,7 @@ import { useState } from "react";
 const ROLE_BADGES: Record<string, { label: string; className: string }> = {
   super_admin: { label: "Super Admin", className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
   admin: { label: "Admin", className: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
-  editor: { label: "Editor", className: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
+  editor: { label: "Editor", className: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-purple-600" },
   writer: { label: "Writer", className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" },
   user: { label: "Customer", className: "bg-gray-800 text-gray-400" },
 };
@@ -202,7 +202,7 @@ export default function AdminUsers() {
                             {u.firstName || ""} {u.lastName || ""}
                           </p>
                           {u.isPremium && (
-                            <Badge className="bg-blue-50 text-blue-700 dark:bg-blue-50 dark:text-blue-500 text-[10px]">
+                            <Badge className="bg-blue-50 text-blue-700 dark:bg-blue-50 dark:text-purple-700 text-[10px]">
                               <Crown className="w-3 h-3 mr-0.5" />
                               Premium
                             </Badge>
@@ -274,7 +274,7 @@ export default function AdminUsers() {
                           {u.firstName || ""} {u.lastName || ""}
                         </p>
                         {u.isPremium && (
-                          <Badge className="bg-blue-50 text-blue-700 dark:bg-blue-50 dark:text-blue-500 text-[10px]">
+                          <Badge className="bg-blue-50 text-blue-700 dark:bg-blue-50 dark:text-purple-700 text-[10px]">
                             <Crown className="w-3 h-3 mr-0.5" />
                             Premium
                           </Badge>

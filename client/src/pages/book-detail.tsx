@@ -102,7 +102,7 @@ export default function BookDetail() {
   const [shortsPlayerIndex, setShortsPlayerIndex] = useState(0);
 
   const triggerCelebration = useCallback(() => {
-    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ["#3B82F6", "#60A5FA", "#2563EB", "#ffffff"] });
+    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ["#341539", "#60A5FA", "#2A0F2E", "#ffffff"] });
     setTimeout(() => confetti({ particleCount: 50, spread: 60, origin: { y: 0.5 } }), 200);
   }, []);
 

@@ -71,7 +71,7 @@ function AudioShort({ short, isActive }: { short: Short; isActive: boolean }) {
             className="w-[4px] rounded-full transition-all"
             style={{
               height: `${bar.height}px`,
-              backgroundColor: bar.isPlayed ? "#3B82F6" : "rgba(255,255,255,0.2)",
+              backgroundColor: bar.isPlayed ? "#341539" : "rgba(255,255,255,0.2)",
             }}
           />
         ))}
@@ -210,7 +210,7 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
               className="h-full rounded-full transition-all duration-300"
               style={{
                 width: i < currentIndex ? "100%" : i === currentIndex ? "100%" : "0%",
-                backgroundColor: "#3B82F6",
+                backgroundColor: "#341539",
               }}
             />
           </div>

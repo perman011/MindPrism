@@ -69,19 +69,19 @@ const slides = [
     title: "Skip the 500 pages.",
     highlight: "Master the principles.",
     description: "Every dense psychology book distilled into its most powerful ideas — visual, interactive, and unforgettable.",
-    gradient: "from-[#0F0F1A] via-blue-100 to-[#0F0F1A]",
+    gradient: "from-[#0F0F1A] via-purple-100 to-[#0F0F1A]",
   },
   {
     title: "Visuals, Exercises &",
     highlight: "Audio Summaries.",
     description: "For the busy mind. Learn through interactive cards, reflection exercises, and listen on the go.",
-    gradient: "from-[#0F0F1A] via-blue-50 to-[#0F0F1A]",
+    gradient: "from-[#0F0F1A] via-purple-50 to-[#0F0F1A]",
   },
   {
     title: "Track your growth.",
     highlight: "Build your mind.",
     description: "Personal journal, streak tracking, and a vault of saved insights. Your psychology toolkit, always with you.",
-    gradient: "from-[#0F0F1A] via-blue-100 to-[#0F0F1A]",
+    gradient: "from-[#0F0F1A] via-purple-100 to-[#0F0F1A]",
   },
 ];
 
@@ -167,7 +167,7 @@ export default function LandingPage() {
               >
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4">
                   {slide.title}{" "}
-                  <span className="bg-gradient-to-r from-blue-400 to-purple-300 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-purple-600 to-purple-300 bg-clip-text text-transparent">
                     {slide.highlight}
                   </span>
                 </h1>

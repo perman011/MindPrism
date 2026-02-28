@@ -48,7 +48,7 @@ function StatCard({ label, value, icon: Icon, color }: { label: string; value: s
   );
 }
 
-function TrendLineChart({ data, color = "hsl(217, 91%, 60%)", testId }: { data: { date: string; count: number }[]; color?: string; testId?: string }) {
+function TrendLineChart({ data, color = "hsl(292, 46%, 15%)", testId }: { data: { date: string; count: number }[]; color?: string; testId?: string }) {
   const formatted = data.slice(-30).map(d => ({
     ...d,
     label: d.date.slice(5),
@@ -108,10 +108,10 @@ export default function AnalyticsDashboard() {
         ) : overview ? (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <StatCard label="Total Users" value={overview.totalUsers} icon={Users} color="bg-blue-500/20 text-blue-400" />
+              <StatCard label="Total Users" value={overview.totalUsers} icon={Users} color="bg-purple-700/20 text-purple-600" />
               <StatCard label="Active (7d)" value={overview.activeUsers7d} icon={Activity} color="bg-green-500/20 text-green-400" />
-              <StatCard label="Total Books" value={overview.totalBooks} icon={BookOpen} color="bg-blue-500/20 text-purple-400" />
-              <StatCard label="Total Events" value={overview.totalEvents} icon={Eye} color="bg-blue-500/20 text-blue-500" />
+              <StatCard label="Total Books" value={overview.totalBooks} icon={BookOpen} color="bg-purple-700/20 text-purple-400" />
+              <StatCard label="Total Events" value={overview.totalEvents} icon={Eye} color="bg-purple-700/20 text-purple-700" />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -153,7 +153,7 @@ export default function AnalyticsDashboard() {
                       <XAxis type="number" tick={{ fill: "#71717a", fontSize: 11 }} axisLine={{ stroke: "#3f3f46" }} tickLine={false} allowDecimals={false} />
                       <YAxis type="category" dataKey="bookTitle" tick={{ fill: "#a1a1aa", fontSize: 11 }} axisLine={{ stroke: "#3f3f46" }} tickLine={false} width={120} />
                       <Tooltip contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, color: "#fff", fontSize: 12 }} />
-                      <Bar dataKey="count" fill="hsl(217, 91%, 60%)" radius={[0, 4, 4, 0]} />
+                      <Bar dataKey="count" fill="hsl(292, 46%, 15%)" radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

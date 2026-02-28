@@ -79,7 +79,7 @@ export function ChapterEditor({ bookId, chapters }: ChapterEditorProps) {
     <section id="section-chapters" data-testid="editor-chapters">
       <div className="flex items-center justify-between mb-4 border-b pb-2">
         <h2 className="text-lg font-bold flex items-center gap-2">
-          <BookOpen className="w-5 h-5 text-blue-500" />
+          <BookOpen className="w-5 h-5 text-purple-700" />
           Chapter Summaries
         </h2>
         <Button size="sm" onClick={() => createMutation.mutate()} disabled={createMutation.isPending} className="gap-1.5" data-testid="button-add-chapter">

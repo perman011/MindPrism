@@ -87,7 +87,7 @@ export function CommentThread({ bookId, blockType, blockId, onClose }: CommentTh
             className={`p-3 rounded-lg text-sm ${
               comment.resolved
                 ? "bg-muted/30 opacity-60"
-                : "bg-blue-50 dark:bg-blue-50 border border-blue-200 dark:border-blue-200"
+                : "bg-blue-50 dark:bg-blue-50 border border-purple-400 dark:border-purple-400"
             }`}
             data-testid={`comment-${comment.id}`}
           >

@@ -173,7 +173,7 @@ export default function AdminShorts() {
                       {short.thumbnailUrl ? (
                         <img src={short.thumbnailUrl} alt={short.title} className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center" style={{ background: short.backgroundGradient || "linear-gradient(135deg, #3B82F630, #3B82F610)" }}>
+                        <div className="w-full h-full flex items-center justify-center" style={{ background: short.backgroundGradient || "linear-gradient(135deg, #34153930, #34153910)" }}>
                           <MediaIcon className="w-6 h-6 text-muted-foreground/50" />
                         </div>
                       )}

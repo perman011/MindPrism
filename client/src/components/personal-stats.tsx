@@ -53,9 +53,9 @@ export function PersonalStats() {
   const statCards = [
     { icon: BookOpen, label: "Books Started", value: stats.booksStarted, color: "text-primary", bg: "bg-primary/10" },
     { icon: Trophy, label: "Books Completed", value: stats.booksCompleted, color: "text-emerald-400", bg: "bg-emerald-400/10" },
-    { icon: Brain, label: "Principles Mastered", value: stats.principlesMastered, color: "text-blue-500", bg: "bg-blue-400/10" },
-    { icon: Target, label: "Domains Explored", value: stats.categoriesExplored, color: "text-blue-400", bg: "bg-blue-400/10" },
-    { icon: Clock, label: "Minutes Invested", value: stats.totalTimeInvested, color: "text-blue-500", bg: "bg-blue-400/10" },
+    { icon: Brain, label: "Principles Mastered", value: stats.principlesMastered, color: "text-purple-700", bg: "bg-purple-600/10" },
+    { icon: Target, label: "Domains Explored", value: stats.categoriesExplored, color: "text-purple-600", bg: "bg-purple-600/10" },
+    { icon: Clock, label: "Minutes Invested", value: stats.totalTimeInvested, color: "text-purple-700", bg: "bg-purple-600/10" },
     { icon: TrendingUp, label: "Avg Min/Book", value: stats.avgTimePerBook, color: "text-rose-400", bg: "bg-rose-400/10" },
   ];
 
@@ -63,7 +63,7 @@ export function PersonalStats() {
     { icon: Flame, label: "Current Streak", value: `${stats.currentStreak} days`, color: "text-primary" },
     { icon: Trophy, label: "Longest Streak", value: `${stats.longestStreak} days`, color: "text-amber-400" },
     { icon: PenLine, label: "Journal Entries", value: stats.journalEntries, color: "text-emerald-400" },
-    { icon: BarChart3, label: "Exercises Done", value: stats.exercisesDone, color: "text-blue-500" },
+    { icon: BarChart3, label: "Exercises Done", value: stats.exercisesDone, color: "text-purple-700" },
   ];
 
   const maxActivity = Math.max(...stats.weeklyActivity.map(d => d.activities), 1);
@@ -114,7 +114,7 @@ export function PersonalStats() {
                   color: "#111827",
                   fontSize: "12px",
                 }}
-                labelStyle={{ color: "hsl(217 91% 60%)" }}
+                labelStyle={{ color: "hsl(292 46% 15%)" }}
                 cursor={false}
               />
               <Bar dataKey="activities" radius={[4, 4, 0, 0]} maxBarSize={32}>
@@ -122,7 +122,7 @@ export function PersonalStats() {
                   <Cell
                     key={index}
                     fill={entry.activities > 0
-                      ? `hsl(217 91% ${60 - (entry.activities / maxActivity) * 10}%)`
+                      ? `hsl(292 46% ${60 - (entry.activities / maxActivity) * 10}%)`
                       : "hsl(var(--muted) / 0.5)"
                     }
                   />

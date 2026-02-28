@@ -244,7 +244,7 @@ export default function AdminShortEditor() {
                   data-testid="input-thumbnail-url"
                 />
                 {needsThumbnail && (
-                  <p className="text-xs text-blue-500 mt-1">Required for audio/video shorts</p>
+                  <p className="text-xs text-purple-700 mt-1">Required for audio/video shorts</p>
                 )}
               </div>
 
@@ -254,7 +254,7 @@ export default function AdminShortEditor() {
                   id="backgroundGradient"
                   value={backgroundGradient}
                   onChange={(e) => setBackgroundGradient(e.target.value)}
-                  placeholder="linear-gradient(135deg, #3B82F630, #0F0F1A)"
+                  placeholder="linear-gradient(135deg, #34153930, #0F0F1A)"
                   data-testid="input-gradient"
                 />
               </div>

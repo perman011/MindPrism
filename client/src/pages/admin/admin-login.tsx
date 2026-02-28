@@ -11,7 +11,7 @@ export default function AdminLogin() {
       <SEOHead title="Admin Login" noIndex />
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-700/5 rounded-full blur-3xl" />
       </div>
 
       <div className="w-full max-w-md relative">
@@ -30,9 +30,9 @@ export default function AdminLogin() {
         <Card className="bg-card/80 border-border backdrop-blur-sm">
           <CardContent className="p-6 space-y-6">
             <div className="text-center space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20">
-                <Lock className="w-3.5 h-3.5 text-blue-500" />
-                <span className="text-xs font-medium text-blue-500">Authorized Personnel Only</span>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-700/10 border border-purple-700/20">
+                <Lock className="w-3.5 h-3.5 text-purple-700" />
+                <span className="text-xs font-medium text-purple-700">Authorized Personnel Only</span>
               </div>
               <p className="text-sm text-muted-foreground">
                 Sign in with your admin credentials to access the content management system.

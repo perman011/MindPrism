@@ -26,8 +26,8 @@ type CardItem = {
 };
 
 const SECTION_META: Record<SectionType, { label: string; icon: any; color: string }> = {
-  "chapter-summaries": { label: "Chapter Summaries", icon: BookOpen, color: "text-blue-500" },
-  "mental-models": { label: "Mental Models", icon: Brain, color: "text-blue-500" },
+  "chapter-summaries": { label: "Chapter Summaries", icon: BookOpen, color: "text-purple-700" },
+  "mental-models": { label: "Mental Models", icon: Brain, color: "text-purple-700" },
   "principles": { label: "Principles & Stories", icon: Lightbulb, color: "text-primary" },
   "common-mistakes": { label: "Common Mistakes", icon: AlertTriangle, color: "text-orange-500" },
   "infographics": { label: "Infographics", icon: BarChart3, color: "text-indigo-500" },
@@ -41,7 +41,7 @@ function ConfettiOverlay() {
     left: Math.random() * 100,
     delay: Math.random() * 0.5,
     duration: 1 + Math.random() * 1,
-    color: ["bg-primary", "bg-emerald-500", "bg-blue-500", "bg-blue-500", "bg-pink-500"][i % 5],
+    color: ["bg-primary", "bg-emerald-500", "bg-purple-700", "bg-purple-700", "bg-pink-500"][i % 5],
   }));
 
   return (
@@ -66,8 +66,8 @@ function ChapterSummaryCard({ card, onNext }: { card: CardItem; onNext: () => vo
   if (card.type === "chapter-transition") {
     return (
       <div className="text-center" data-testid={`card-chapter-transition-${d.nextChapterNumber}`}>
-        <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-6">
-          <ArrowRight className="w-8 h-8 text-blue-500" />
+        <div className="w-16 h-16 rounded-full bg-purple-700/10 flex items-center justify-center mx-auto mb-6">
+          <ArrowRight className="w-8 h-8 text-purple-700" />
         </div>
         <p className="text-sm text-muted-foreground mb-2">Up Next</p>
         <h2 className="text-2xl font-bold mb-2">Chapter {d.nextChapterNumber}</h2>
@@ -104,8 +104,8 @@ function MentalModelCard({ card }: { card: CardItem }) {
   if (card.type === "mental-model-intro") {
     return (
       <div className="text-center" data-testid={`card-mental-model-intro-${d.id}`}>
-        <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-6">
-          <Brain className="w-8 h-8 text-blue-500" />
+        <div className="w-16 h-16 rounded-full bg-purple-700/10 flex items-center justify-center mx-auto mb-6">
+          <Brain className="w-8 h-8 text-purple-700" />
         </div>
         <h2 className="text-2xl font-bold mb-4">{d.title}</h2>
         <p className="text-base text-muted-foreground leading-relaxed mb-6">{d.description}</p>
@@ -193,8 +193,8 @@ function PrincipleStoryCard({ card, cards, currentIndex, goTo }: { card: CardIte
         {flipped && hasLinkedStory && (
           <div className="transition-all duration-500 opacity-100 scale-100">
             <div className="text-center">
-              <div className="w-14 h-14 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-6">
-                <BookMarked className="w-7 h-7 text-blue-500" />
+              <div className="w-14 h-14 rounded-full bg-purple-700/10 flex items-center justify-center mx-auto mb-6">
+                <BookMarked className="w-7 h-7 text-purple-700" />
               </div>
               <Badge variant="secondary" className="text-[10px] gap-1 mb-4">
                 Story
@@ -234,8 +234,8 @@ function PrincipleStoryCard({ card, cards, currentIndex, goTo }: { card: CardIte
 
     return (
       <div data-testid={`card-story-${d.id}`}>
-        <div className="w-14 h-14 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-6">
-          <BookMarked className="w-7 h-7 text-blue-500" />
+        <div className="w-14 h-14 rounded-full bg-purple-700/10 flex items-center justify-center mx-auto mb-6">
+          <BookMarked className="w-7 h-7 text-purple-700" />
         </div>
         <h2 className="text-xl font-bold mb-4 text-center">{d.title}</h2>
         <p className="text-sm text-muted-foreground leading-relaxed mb-6">{d.content}</p>
@@ -259,8 +259,8 @@ function CommonMistakeCard({ card }: { card: CardItem }) {
 
   return (
     <div data-testid={`card-common-mistake-${d.id}`}>
-      <div className="w-14 h-14 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-6">
-        <AlertTriangle className="w-7 h-7 text-blue-500" />
+      <div className="w-14 h-14 rounded-full bg-purple-700/10 flex items-center justify-center mx-auto mb-6">
+        <AlertTriangle className="w-7 h-7 text-purple-700" />
       </div>
 
       <div className="space-y-4">
@@ -329,7 +329,7 @@ function ExerciseCard({ card, bookId }: { card: CardItem; bookId: string }) {
 
   const impactConfig: Record<string, { icon: any; label: string; className: string }> = {
     high: { icon: Zap, label: "High Impact", className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" },
-    medium: { icon: TrendingUp, label: "Medium Impact", className: "bg-blue-500/10 text-blue-600 dark:text-blue-500 border-blue-500/20" },
+    medium: { icon: TrendingUp, label: "Medium Impact", className: "bg-purple-700/10 text-purple-800 dark:text-purple-700 border-purple-700/20" },
     low: { icon: Clock, label: "Low Impact", className: "bg-muted text-muted-foreground" },
   };
 
@@ -555,7 +555,7 @@ function InfographicCard({ card, onNext }: { card: CardItem; onNext: () => void 
         onClick={() => !isRevealed && setRevealedSteps((prev) => [...prev, stepIndex])}
         data-testid={`infographic-step-reveal-${stepIndex}`}
       >
-        <h3 className="text-xl font-bold mb-3 text-indigo-600 dark:text-indigo-400">{d.label}</h3>
+        <h3 className="text-xl font-bold mb-3 text-purple-700 dark:text-purple-500">{d.label}</h3>
 
         {isRevealed ? (
           <p className="text-sm leading-relaxed animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -632,7 +632,7 @@ function ActionItemsCard({ card }: { card: CardItem }) {
               </div>
               <Badge variant="outline" className={`text-[9px] flex-shrink-0 ${
                 item.type === "immediate"
-                  ? "border-blue-500/30 text-blue-600 dark:text-blue-500"
+                  ? "border-purple-700/30 text-purple-800 dark:text-purple-700"
                   : "border-sky-500/30 text-sky-600 dark:text-sky-400"
               }`}>
                 {item.type === "immediate" ? "Now" : "Later"}
