@@ -102,7 +102,7 @@ export default function BookDetail() {
   const [shortsPlayerIndex, setShortsPlayerIndex] = useState(0);
 
   const triggerCelebration = useCallback(() => {
-    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ["#d4a017", "#fbbf24", "#f59e0b", "#ffffff"] });
+    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ["#A78BFA", "#C4B5FD", "#7C5CFC", "#ffffff"] });
     setTimeout(() => confetti({ particleCount: 50, spread: 60, origin: { y: 0.5 } }), 200);
   }, []);
 
@@ -173,7 +173,7 @@ export default function BookDetail() {
 
   if (bookLoading || bookFetching || !id) {
     return (
-      <div className="min-h-screen bg-black px-5 pt-6">
+      <div className="min-h-screen bg-[#0F0F1A] px-5 pt-6">
         <Skeleton className="h-8 w-32 mb-4" />
         <Skeleton className="h-64 w-full rounded-xl mb-4" />
         <Skeleton className="h-6 w-48 mb-2" />
@@ -184,7 +184,7 @@ export default function BookDetail() {
 
   if (!book) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-[#0F0F1A] flex items-center justify-center">
         <div className="text-center">
           <BookOpen className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
           <h2 className="font-serif text-xl font-bold mb-2">Book not found</h2>
@@ -218,7 +218,7 @@ export default function BookDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-[#0F0F1A]">
       <SEOHead
         title={book?.title ? `${book.title} by ${book.author}` : "Book Detail"}
         description={book?.description || "Explore interactive psychology book breakdowns with principles, stories, exercises, and audio summaries."}
@@ -241,13 +241,13 @@ export default function BookDetail() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => window.history.length > 1 ? window.history.back() : navigate("/")}
-              className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"
+              className="w-9 h-9 rounded-full bg-[#0F0F1A]/30 backdrop-blur-sm flex items-center justify-center"
               data-testid="button-back"
             >
               <ArrowLeft className="w-5 h-5 text-white" />
             </button>
             <Link href="/">
-              <button className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center" data-testid="button-home">
+              <button className="w-9 h-9 rounded-full bg-[#0F0F1A]/30 backdrop-blur-sm flex items-center justify-center" data-testid="button-home">
                 <Home className="w-4 h-4 text-white" />
               </button>
             </Link>
@@ -255,14 +255,14 @@ export default function BookDetail() {
           <div className="flex items-center gap-2">
             <button
               onClick={handleShare}
-              className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"
+              className="w-9 h-9 rounded-full bg-[#0F0F1A]/30 backdrop-blur-sm flex items-center justify-center"
               data-testid="button-share"
             >
               <Share2 className="w-4.5 h-4.5 text-white" />
             </button>
             <button
               onClick={() => bookmarkMutation.mutate()}
-              className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"
+              className="w-9 h-9 rounded-full bg-[#0F0F1A]/30 backdrop-blur-sm flex items-center justify-center"
               data-testid="button-bookmark"
             >
               {isBookmarked
@@ -273,7 +273,7 @@ export default function BookDetail() {
           </div>
         </div>
 
-        <div className="pt-20 pb-6 flex flex-col items-center bg-black">
+        <div className="pt-20 pb-6 flex flex-col items-center bg-[#0F0F1A]">
           <div className="w-40 h-56 rounded-md overflow-hidden shadow-lg shadow-black/20 mb-6">
             {book.coverImage ? (
               <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />

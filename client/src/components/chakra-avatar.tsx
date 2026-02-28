@@ -146,7 +146,7 @@ export function ChakraAvatar({ activeChakra, onChakraSelect, progress, size = "m
               if (!c) return null;
               const info = CHAKRA_MAP[c];
               return (
-                <div className="px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-sm border border-white/10">
+                <div className="px-3 py-1.5 rounded-full bg-[#0F0F1A]/70 backdrop-blur-sm border border-white/10">
                   <span className="text-xs font-medium" style={{ color: info.color }}>
                     {info.name} Chakra
                   </span>

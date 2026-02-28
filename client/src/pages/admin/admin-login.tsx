@@ -7,11 +7,11 @@ import mindprismLogo from "@assets/77531E8D-B1EB-4D23-A577-C8EC54A4B63C_17721583
 
 export default function AdminLogin() {
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[#0F0F1A] flex items-center justify-center p-6">
       <SEOHead title="Admin Login" noIndex />
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-violet-500/5 rounded-full blur-3xl" />
       </div>
 
       <div className="w-full max-w-md relative">
@@ -30,9 +30,9 @@ export default function AdminLogin() {
         <Card className="bg-card/80 border-border backdrop-blur-sm">
           <CardContent className="p-6 space-y-6">
             <div className="text-center space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20">
-                <Lock className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-xs font-medium text-amber-400">Authorized Personnel Only</span>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20">
+                <Lock className="w-3.5 h-3.5 text-violet-400" />
+                <span className="text-xs font-medium text-violet-400">Authorized Personnel Only</span>
               </div>
               <p className="text-sm text-muted-foreground">
                 Sign in with your admin credentials to access the content management system.

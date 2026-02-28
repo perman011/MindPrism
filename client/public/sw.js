@@ -109,15 +109,15 @@ function offlineFallback() {
   <title>MindPrism - Offline</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #000; color: #fff; font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    body { background: #0F0F1A; color: #fff; font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
     .container { text-align: center; padding: 2rem; max-width: 400px; }
-    .logo { width: 80px; height: 80px; margin: 0 auto 1.5rem; border-radius: 50%; background: rgba(212,160,23,0.1); display: flex; align-items: center; justify-content: center; }
+    .logo { width: 80px; height: 80px; margin: 0 auto 1.5rem; border-radius: 50%; background: rgba(167,139,250,0.1); display: flex; align-items: center; justify-content: center; }
     .logo img { width: 56px; height: 56px; object-fit: contain; mix-blend-mode: screen; }
     h1 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
     p { font-size: 0.875rem; color: rgba(255,255,255,0.6); line-height: 1.5; margin-bottom: 1.5rem; }
-    .gold { color: #d4a017; }
-    .btn { display: inline-block; padding: 0.75rem 2rem; background: #d4a017; color: #000; font-weight: 600; border: none; border-radius: 9999px; font-size: 0.875rem; cursor: pointer; text-decoration: none; }
-    .btn:hover { background: #b8860b; }
+    .gold { color: #A78BFA; }
+    .btn { display: inline-block; padding: 0.75rem 2rem; background: #A78BFA; color: #0F0F1A; font-weight: 600; border: none; border-radius: 9999px; font-size: 0.875rem; cursor: pointer; text-decoration: none; }
+    .btn:hover { background: #7C5CFC; }
   </style>
 </head>
 <body>

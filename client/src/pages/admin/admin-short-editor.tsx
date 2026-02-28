@@ -107,7 +107,7 @@ export default function AdminShortEditor() {
   const needsThumbnail = mediaType === "audio" || mediaType === "video";
 
   return (
-    <div className="min-h-screen bg-black p-8" data-testid="admin-short-editor">
+    <div className="min-h-screen bg-[#0F0F1A] p-8" data-testid="admin-short-editor">
       <SEOHead title={isNew ? "Create Short" : "Edit Short"} noIndex />
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-8">
@@ -244,7 +244,7 @@ export default function AdminShortEditor() {
                   data-testid="input-thumbnail-url"
                 />
                 {needsThumbnail && (
-                  <p className="text-xs text-amber-400 mt-1">Required for audio/video shorts</p>
+                  <p className="text-xs text-violet-400 mt-1">Required for audio/video shorts</p>
                 )}
               </div>
 
@@ -254,7 +254,7 @@ export default function AdminShortEditor() {
                   id="backgroundGradient"
                   value={backgroundGradient}
                   onChange={(e) => setBackgroundGradient(e.target.value)}
-                  placeholder="linear-gradient(135deg, #d4a01730, #000)"
+                  placeholder="linear-gradient(135deg, #A78BFA30, #0F0F1A)"
                   data-testid="input-gradient"
                 />
               </div>

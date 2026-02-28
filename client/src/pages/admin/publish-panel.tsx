@@ -163,7 +163,7 @@ export function PublishPanel({ book, contentCounts }: PublishPanelProps) {
       </div>
 
       {unresolvedCount > 0 && (
-        <div className="flex items-center gap-2 p-2 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-lg text-xs text-amber-700 dark:text-amber-400 mb-3">
+        <div className="flex items-center gap-2 p-2 bg-violet-50 dark:bg-violet-900/10 border border-violet-200 dark:border-violet-800 rounded-lg text-xs text-violet-700 dark:text-violet-400 mb-3">
           <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
           {unresolvedCount} unresolved comment{unresolvedCount > 1 ? "s" : ""}
         </div>

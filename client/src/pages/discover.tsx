@@ -135,7 +135,7 @@ export default function Discover() {
           )}
         </div>
 
-        <div className="flex rounded-xl bg-[#1a1a1a] p-1 mb-4" data-testid="discover-tabs">
+        <div className="flex rounded-xl bg-[#1A1A2E] p-1 mb-4" data-testid="discover-tabs">
           <button
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
               activeTab === "books"
@@ -161,7 +161,7 @@ export default function Discover() {
             Shorts
             {shortsCount > 0 && (
               <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                activeTab === "shorts" ? "bg-black/20 text-black" : "bg-primary/20 text-primary"
+                activeTab === "shorts" ? "bg-primary/20 text-primary-foreground" : "bg-primary/20 text-primary"
               }`}>
                 {shortsCount}
               </span>

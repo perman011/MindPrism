@@ -46,18 +46,18 @@ export function ProgressShareCard() {
     canvas.height = h;
 
     const grad = ctx.createLinearGradient(0, 0, w, h);
-    grad.addColorStop(0, "#1a1400");
-    grad.addColorStop(0.5, "#2a1f00");
-    grad.addColorStop(1, "#0a0a0a");
+    grad.addColorStop(0, "#0F0F1A");
+    grad.addColorStop(0.5, "#1A1A2E");
+    grad.addColorStop(1, "#0F0F1A");
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
 
-    ctx.strokeStyle = "rgba(212, 160, 23, 0.3)";
+    ctx.strokeStyle = "rgba(167, 139, 250, 0.3)";
     ctx.lineWidth = 2;
     ctx.strokeRect(16, 16, w - 32, h - 32);
 
     const cornerSize = 20;
-    ctx.strokeStyle = "rgba(212, 160, 23, 0.6)";
+    ctx.strokeStyle = "rgba(167, 139, 250, 0.6)";
     ctx.lineWidth = 2;
     [[16, 16, 1, 1], [w - 16, 16, -1, 1], [16, h - 16, 1, -1], [w - 16, h - 16, -1, -1]].forEach(([x, y, dx, dy]) => {
       ctx.beginPath();
@@ -80,7 +80,7 @@ export function ProgressShareCard() {
       ctx.globalCompositeOperation = "source-over";
     } catch {}
 
-    ctx.fillStyle = "#d4a017";
+    ctx.fillStyle = "#A78BFA";
     ctx.font = "bold 18px Inter, sans-serif";
     ctx.fillText("MindPrism", 84, 56);
 
@@ -91,7 +91,7 @@ export function ProgressShareCard() {
     ctx.font = "bold 28px 'Source Serif Pro', Georgia, serif";
     ctx.fillText(`${userName}'s Journey`, 40, 110);
 
-    ctx.fillStyle = "rgba(212, 160, 23, 0.4)";
+    ctx.fillStyle = "rgba(167, 139, 250, 0.4)";
     ctx.fillRect(40, 125, 100, 2);
 
     const statItems = [
@@ -106,13 +106,13 @@ export function ProgressShareCard() {
       const y = 160 + Math.floor(i / 2) * 90;
 
       const cardGrad = ctx.createLinearGradient(x, y, x + 240, y + 70);
-      cardGrad.addColorStop(0, "rgba(212, 160, 23, 0.08)");
-      cardGrad.addColorStop(1, "rgba(212, 160, 23, 0.02)");
+      cardGrad.addColorStop(0, "rgba(167, 139, 250, 0.08)");
+      cardGrad.addColorStop(1, "rgba(167, 139, 250, 0.02)");
       ctx.fillStyle = cardGrad;
       roundRect(ctx, x, y, 240, 70, 12);
       ctx.fill();
 
-      ctx.strokeStyle = "rgba(212, 160, 23, 0.15)";
+      ctx.strokeStyle = "rgba(167, 139, 250, 0.15)";
       ctx.lineWidth = 1;
       roundRect(ctx, x, y, 240, 70, 12);
       ctx.stroke();

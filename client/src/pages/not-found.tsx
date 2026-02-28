@@ -5,7 +5,7 @@ import { Home } from "lucide-react";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-black">
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#0F0F1A]">
       <SEOHead title="Page Not Found" noIndex />
       <div className="text-center px-6">
         <p className="text-7xl font-bold text-primary mb-4" data-testid="text-404">404</p>

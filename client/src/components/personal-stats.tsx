@@ -55,7 +55,7 @@ export function PersonalStats() {
     { icon: Trophy, label: "Books Completed", value: stats.booksCompleted, color: "text-emerald-400", bg: "bg-emerald-400/10" },
     { icon: Brain, label: "Principles Mastered", value: stats.principlesMastered, color: "text-violet-400", bg: "bg-violet-400/10" },
     { icon: Target, label: "Domains Explored", value: stats.categoriesExplored, color: "text-blue-400", bg: "bg-blue-400/10" },
-    { icon: Clock, label: "Minutes Invested", value: stats.totalTimeInvested, color: "text-amber-400", bg: "bg-amber-400/10" },
+    { icon: Clock, label: "Minutes Invested", value: stats.totalTimeInvested, color: "text-violet-400", bg: "bg-violet-400/10" },
     { icon: TrendingUp, label: "Avg Min/Book", value: stats.avgTimePerBook, color: "text-rose-400", bg: "bg-rose-400/10" },
   ];
 
@@ -94,7 +94,7 @@ export function PersonalStats() {
         ))}
       </div>
 
-      <Card className="p-4 mb-6 bg-black border-primary/10" data-testid="weekly-activity-chart">
+      <Card className="p-4 mb-6 bg-[#0F0F1A] border-primary/10" data-testid="weekly-activity-chart">
         <h3 className="text-[11px] font-semibold uppercase tracking-widest text-primary mb-4">Weekly Activity</h3>
         <div className="h-36">
           <ResponsiveContainer width="100%" height="100%">
@@ -108,13 +108,13 @@ export function PersonalStats() {
               <YAxis hide />
               <Tooltip
                 contentStyle={{
-                  background: "#1a1a1a",
-                  border: "1px solid hsl(43 75% 49% / 0.2)",
+                  background: "#1A1A2E",
+                  border: "1px solid hsl(263 70% 76% / 0.2)",
                   borderRadius: "8px",
                   color: "#fff",
                   fontSize: "12px",
                 }}
-                labelStyle={{ color: "hsl(43 75% 49%)" }}
+                labelStyle={{ color: "hsl(263 70% 76%)" }}
                 cursor={false}
               />
               <Bar dataKey="activities" radius={[4, 4, 0, 0]} maxBarSize={32}>
@@ -122,7 +122,7 @@ export function PersonalStats() {
                   <Cell
                     key={index}
                     fill={entry.activities > 0
-                      ? `hsl(43 75% ${49 - (entry.activities / maxActivity) * 10}%)`
+                      ? `hsl(263 70% ${76 - (entry.activities / maxActivity) * 10}%)`
                       : "hsl(var(--muted) / 0.5)"
                     }
                   />

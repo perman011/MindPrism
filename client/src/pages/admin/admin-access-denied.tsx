@@ -7,7 +7,7 @@ import mindprismLogo from "@assets/77531E8D-B1EB-4D23-A577-C8EC54A4B63C_17721583
 
 export default function AdminAccessDenied() {
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[#0F0F1A] flex items-center justify-center p-6">
       <SEOHead title="Access Denied" noIndex />
       <div className="w-full max-w-md">
         <div className="text-center mb-8">

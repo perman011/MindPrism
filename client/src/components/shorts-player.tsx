@@ -71,7 +71,7 @@ function AudioShort({ short, isActive }: { short: Short; isActive: boolean }) {
             className="w-[4px] rounded-full transition-all"
             style={{
               height: `${bar.height}px`,
-              backgroundColor: bar.isPlayed ? "#d4a017" : "rgba(255,255,255,0.2)",
+              backgroundColor: bar.isPlayed ? "#A78BFA" : "rgba(255,255,255,0.2)",
             }}
           />
         ))}
@@ -182,7 +182,7 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
 
   if (allShorts.length === 0) {
     return (
-      <div className="fixed inset-0 z-[60] bg-black flex items-center justify-center" data-testid="shorts-player-empty">
+      <div className="fixed inset-0 z-[60] bg-[#0F0F1A] flex items-center justify-center" data-testid="shorts-player-empty">
         <p className="text-white/60 text-sm">No shorts available</p>
         <button
           onClick={onClose}
@@ -202,7 +202,7 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
   };
 
   return (
-    <div className="fixed inset-0 z-[60] bg-black" data-testid="shorts-player">
+    <div className="fixed inset-0 z-[60] bg-[#0F0F1A]" data-testid="shorts-player">
       <div className="absolute top-0 left-0 right-0 z-20 flex gap-1 px-3 pt-3" data-testid="shorts-progress-bar">
         {allShorts.map((_, i) => (
           <div key={i} className="flex-1 h-[3px] rounded-full overflow-hidden bg-white/20">
@@ -210,7 +210,7 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
               className="h-full rounded-full transition-all duration-300"
               style={{
                 width: i < currentIndex ? "100%" : i === currentIndex ? "100%" : "0%",
-                backgroundColor: "#d4a017",
+                backgroundColor: "#A78BFA",
               }}
             />
           </div>
@@ -219,7 +219,7 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
 
       <button
         onClick={onClose}
-        className="absolute top-10 right-3 z-30 w-11 h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center"
+        className="absolute top-10 right-3 z-30 w-11 h-11 rounded-full bg-[#0F0F1A]/40 backdrop-blur-sm flex items-center justify-center"
         data-testid="button-close-shorts"
       >
         <X className="w-6 h-6 text-white" />
@@ -261,10 +261,10 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
           )}
 
           {!currentShort.mediaUrl && !currentShort.backgroundGradient && (
-            <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a1a] via-black to-[#0a0a0a]" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#1A1A2E] via-[#0F0F1A] to-[#0F0F1A]" />
           )}
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0F0F1A]/80 via-transparent to-[#0F0F1A]/30" />
 
           <div className="absolute bottom-0 left-0 right-0 p-6 pb-10 z-10">
             {currentShort.mediaType === "audio" ? (
@@ -308,14 +308,14 @@ export function ShortCard({ short, onClick, fluid }: { short: Short & { bookTitl
         ) : short.backgroundGradient ? (
           <div className="w-full h-full" style={{ background: short.backgroundGradient }} />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-primary/20 via-[#1a1a1a] to-black" />
+          <div className="w-full h-full bg-gradient-to-br from-primary/20 via-[#1A1A2E] to-[#0F0F1A]" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/40 flex items-center justify-center">
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0F0F1A]/80 via-transparent to-transparent" />
+        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#0F0F1A]/40 flex items-center justify-center">
           <MediaIcon className="w-3 h-3 text-white" />
         </div>
         {short.duration && (
-          <div className="absolute bottom-12 left-2 px-1.5 py-0.5 rounded bg-black/50 text-[10px] text-white/80">
+          <div className="absolute bottom-12 left-2 px-1.5 py-0.5 rounded bg-[#0F0F1A]/50 text-[10px] text-white/80">
             {short.duration}s
           </div>
         )}

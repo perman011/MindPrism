@@ -73,9 +73,9 @@ export function ShareModal({ open, onClose, bookTitle, bookAuthor, bookId }: Sha
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+          <div className="absolute inset-0 bg-[#0F0F1A]/60 backdrop-blur-sm" onClick={onClose} />
           <motion.div
-            className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-2xl bg-[#1a1a1a] border border-primary/20 overflow-hidden"
+            className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-2xl bg-[#1A1A2E] border border-primary/20 overflow-hidden"
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}

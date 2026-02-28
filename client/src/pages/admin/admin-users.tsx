@@ -92,7 +92,7 @@ export default function AdminUsers() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black p-8">
+      <div className="min-h-screen bg-[#0F0F1A] p-8">
         <SEOHead title="Admin - Users" noIndex />
         <div className="max-w-5xl mx-auto">
           <Skeleton className="h-10 w-64 mb-8" />
@@ -105,7 +105,7 @@ export default function AdminUsers() {
   }
 
   return (
-    <div className="min-h-screen bg-black p-6 md:p-8" data-testid="admin-users-page">
+    <div className="min-h-screen bg-[#0F0F1A] p-6 md:p-8" data-testid="admin-users-page">
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <Link href="/admin">
@@ -202,7 +202,7 @@ export default function AdminUsers() {
                             {u.firstName || ""} {u.lastName || ""}
                           </p>
                           {u.isPremium && (
-                            <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-[10px]">
+                            <Badge className="bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400 text-[10px]">
                               <Crown className="w-3 h-3 mr-0.5" />
                               Premium
                             </Badge>
@@ -274,7 +274,7 @@ export default function AdminUsers() {
                           {u.firstName || ""} {u.lastName || ""}
                         </p>
                         {u.isPremium && (
-                          <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-[10px]">
+                          <Badge className="bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400 text-[10px]">
                             <Crown className="w-3 h-3 mr-0.5" />
                             Premium
                           </Badge>

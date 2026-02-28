@@ -122,7 +122,7 @@ export function NotificationSettings() {
               <select
                 value={prefs?.reminderTime || "09:00"}
                 onChange={(e) => handleTimeChange(e.target.value)}
-                className="w-full bg-black border border-primary/20 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-primary/50"
+                className="w-full bg-[#0F0F1A] border border-primary/20 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-primary/50"
                 data-testid="select-reminder-time"
               >
                 {timeOptions.map((opt) => (

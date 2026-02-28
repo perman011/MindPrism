@@ -69,19 +69,19 @@ const slides = [
     title: "Skip the 500 pages.",
     highlight: "Master the principles.",
     description: "Every dense psychology book distilled into its most powerful ideas — visual, interactive, and unforgettable.",
-    gradient: "from-black via-yellow-950 to-black",
+    gradient: "from-[#0F0F1A] via-violet-950 to-[#0F0F1A]",
   },
   {
     title: "Visuals, Exercises &",
     highlight: "Audio Summaries.",
     description: "For the busy mind. Learn through interactive cards, reflection exercises, and listen on the go.",
-    gradient: "from-black via-amber-950 to-black",
+    gradient: "from-[#0F0F1A] via-purple-950 to-[#0F0F1A]",
   },
   {
     title: "Track your growth.",
     highlight: "Build your mind.",
     description: "Personal journal, streak tracking, and a vault of saved insights. Your psychology toolkit, always with you.",
-    gradient: "from-black via-yellow-900 to-black",
+    gradient: "from-[#0F0F1A] via-violet-900 to-[#0F0F1A]",
   },
 ];
 
@@ -111,14 +111,14 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-[#0F0F1A] text-white flex flex-col relative overflow-hidden">
       <SEOHead
         title="Welcome"
         description="Transform dense psychology books into bite-sized principles, interactive exercises, stories, and audio summaries. Start your personal growth journey today."
       />
       <div className="absolute inset-0 z-0">
         <img src={heroBg} alt="" className="w-full h-full object-cover opacity-10" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/80 to-black" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0F0F1A]/50 via-[#0F0F1A]/80 to-[#0F0F1A]" />
       </div>
 
       <FeatherRain />
@@ -167,7 +167,7 @@ export default function LandingPage() {
               >
                 <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4">
                   {slide.title}{" "}
-                  <span className="bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-violet-400 to-purple-300 bg-clip-text text-transparent">
                     {slide.highlight}
                   </span>
                 </h1>

@@ -66,7 +66,7 @@ export function InstallPrompt() {
       className={`fixed inset-0 z-[100] flex items-end justify-center p-4 pb-20 transition-opacity duration-300 ${animating ? "opacity-100" : "opacity-0"}`}
       data-testid="install-prompt-overlay"
     >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleDismiss} />
+      <div className="absolute inset-0 bg-[#0F0F1A]/60 backdrop-blur-sm" onClick={handleDismiss} />
       <div
         className={`relative w-full max-w-sm bg-[#111] border border-primary/20 rounded-2xl p-5 transition-all duration-300 ${animating ? "translate-y-0 scale-100" : "translate-y-8 scale-95"}`}
         data-testid="install-prompt-modal"
@@ -80,7 +80,7 @@ export function InstallPrompt() {
         </button>
 
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-12 h-12 rounded-xl bg-black border border-primary/20 flex items-center justify-center overflow-hidden flex-shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-[#0F0F1A] border border-primary/20 flex items-center justify-center overflow-hidden flex-shrink-0">
             <div className="mix-blend-screen">
               <img src={logoImage} alt="MindPrism" className="w-9 h-9 object-contain" />
             </div>

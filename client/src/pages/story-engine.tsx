@@ -29,7 +29,7 @@ const SECTION_META: Record<SectionType, { label: string; icon: any; color: strin
   "chapter-summaries": { label: "Chapter Summaries", icon: BookOpen, color: "text-blue-500" },
   "mental-models": { label: "Mental Models", icon: Brain, color: "text-purple-500" },
   "principles": { label: "Principles & Stories", icon: Lightbulb, color: "text-primary" },
-  "common-mistakes": { label: "Common Mistakes", icon: AlertTriangle, color: "text-amber-500" },
+  "common-mistakes": { label: "Common Mistakes", icon: AlertTriangle, color: "text-orange-500" },
   "infographics": { label: "Infographics", icon: BarChart3, color: "text-indigo-500" },
   "exercises": { label: "Exercises", icon: Dumbbell, color: "text-emerald-500" },
   "action-items": { label: "Action Items", icon: ListChecks, color: "text-sky-500" },
@@ -41,7 +41,7 @@ function ConfettiOverlay() {
     left: Math.random() * 100,
     delay: Math.random() * 0.5,
     duration: 1 + Math.random() * 1,
-    color: ["bg-primary", "bg-emerald-500", "bg-amber-500", "bg-blue-500", "bg-pink-500"][i % 5],
+    color: ["bg-primary", "bg-emerald-500", "bg-violet-500", "bg-blue-500", "bg-pink-500"][i % 5],
   }));
 
   return (
@@ -193,8 +193,8 @@ function PrincipleStoryCard({ card, cards, currentIndex, goTo }: { card: CardIte
         {flipped && hasLinkedStory && (
           <div className="transition-all duration-500 opacity-100 scale-100">
             <div className="text-center">
-              <div className="w-14 h-14 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-6">
-                <BookMarked className="w-7 h-7 text-amber-500" />
+              <div className="w-14 h-14 rounded-full bg-violet-500/10 flex items-center justify-center mx-auto mb-6">
+                <BookMarked className="w-7 h-7 text-violet-500" />
               </div>
               <Badge variant="secondary" className="text-[10px] gap-1 mb-4">
                 Story
@@ -234,8 +234,8 @@ function PrincipleStoryCard({ card, cards, currentIndex, goTo }: { card: CardIte
 
     return (
       <div data-testid={`card-story-${d.id}`}>
-        <div className="w-14 h-14 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-6">
-          <BookMarked className="w-7 h-7 text-amber-500" />
+        <div className="w-14 h-14 rounded-full bg-violet-500/10 flex items-center justify-center mx-auto mb-6">
+          <BookMarked className="w-7 h-7 text-violet-500" />
         </div>
         <h2 className="font-serif text-xl font-bold mb-4 text-center">{d.title}</h2>
         <p className="text-sm text-muted-foreground leading-relaxed mb-6">{d.content}</p>
@@ -259,8 +259,8 @@ function CommonMistakeCard({ card }: { card: CardItem }) {
 
   return (
     <div data-testid={`card-common-mistake-${d.id}`}>
-      <div className="w-14 h-14 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-6">
-        <AlertTriangle className="w-7 h-7 text-amber-500" />
+      <div className="w-14 h-14 rounded-full bg-violet-500/10 flex items-center justify-center mx-auto mb-6">
+        <AlertTriangle className="w-7 h-7 text-violet-500" />
       </div>
 
       <div className="space-y-4">
@@ -329,7 +329,7 @@ function ExerciseCard({ card, bookId }: { card: CardItem; bookId: string }) {
 
   const impactConfig: Record<string, { icon: any; label: string; className: string }> = {
     high: { icon: Zap, label: "High Impact", className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" },
-    medium: { icon: TrendingUp, label: "Medium Impact", className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20" },
+    medium: { icon: TrendingUp, label: "Medium Impact", className: "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20" },
     low: { icon: Clock, label: "Low Impact", className: "bg-muted text-muted-foreground" },
   };
 
@@ -632,7 +632,7 @@ function ActionItemsCard({ card }: { card: CardItem }) {
               </div>
               <Badge variant="outline" className={`text-[9px] flex-shrink-0 ${
                 item.type === "immediate"
-                  ? "border-amber-500/30 text-amber-600 dark:text-amber-400"
+                  ? "border-violet-500/30 text-violet-600 dark:text-violet-400"
                   : "border-sky-500/30 text-sky-600 dark:text-sky-400"
               }`}>
                 {item.type === "immediate" ? "Now" : "Later"}

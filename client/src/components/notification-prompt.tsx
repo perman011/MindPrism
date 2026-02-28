@@ -61,7 +61,7 @@ export function NotificationPrompt() {
       className={`fixed inset-0 z-[100] flex items-center justify-center p-4 transition-opacity duration-300 ${animating ? "opacity-100" : "opacity-0"}`}
       data-testid="notification-prompt-overlay"
     >
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={handleDismiss} />
+      <div className="absolute inset-0 bg-[#0F0F1A]/80 backdrop-blur-sm" onClick={handleDismiss} />
       <div
         className={`relative w-full max-w-sm bg-[#111] border border-primary/20 rounded-2xl p-6 text-center transition-all duration-300 ${animating ? "scale-100 translate-y-0" : "scale-95 translate-y-4"}`}
         data-testid="notification-prompt-modal"
@@ -74,7 +74,7 @@ export function NotificationPrompt() {
           <X className="w-4 h-4 text-muted-foreground" />
         </button>
 
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-black flex items-center justify-center overflow-hidden">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#0F0F1A] flex items-center justify-center overflow-hidden">
           <div className="mix-blend-screen">
             <img src={logoImage} alt="MindPrism" className="w-12 h-12 object-contain" />
           </div>
