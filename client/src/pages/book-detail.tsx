@@ -334,26 +334,6 @@ export default function BookDetail() {
               </a>
             </div>
           )}
-          <div className="flex gap-3 w-full px-6 mt-3">
-            <Button
-              variant="outline"
-              className="flex-1 gap-2 border-violet-500/30 text-violet-400"
-              onClick={() => setShowFlashcards(true)}
-              data-testid="button-practice"
-            >
-              <GraduationCap className="w-4 h-4" />
-              Practice
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-1 gap-2 border-emerald-500/30 text-emerald-400"
-              onClick={() => setShowQuiz(true)}
-              data-testid="button-quiz"
-            >
-              <HelpCircle className="w-4 h-4" />
-              Quiz
-            </Button>
-          </div>
         </div>
       </div>
 
