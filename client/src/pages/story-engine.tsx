@@ -760,9 +760,16 @@ export default function StoryEngine() {
   if (totalCards === 0) {
     return (
       <div className="fixed inset-0 z-[200] bg-background flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-muted-foreground mb-4">No content available for this section yet.</p>
-          <Button onClick={() => setLocation(`/book/${id}`)} data-testid="button-go-back-empty">Go Back</Button>
+        <div className="text-center px-6">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+            <BookOpen className="w-8 h-8 text-primary" />
+          </div>
+          <h2 className="font-serif text-xl font-bold text-foreground mb-2">Content Coming Soon</h2>
+          <p className="text-muted-foreground mb-6">Explore other sections of this book below</p>
+          <Button onClick={() => setLocation(`/book/${id}`)} className="gap-2" data-testid="button-go-back-empty">
+            <ChevronLeft className="w-4 h-4" />
+            Back to Book
+          </Button>
         </div>
       </div>
     );
