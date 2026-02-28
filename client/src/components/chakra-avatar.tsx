@@ -50,13 +50,15 @@ export function ChakraAvatar({ activeChakra, onChakraSelect, progress, size = "m
         style={{
           opacity: activeChakra ? 0.85 : 1,
           transition: "opacity 0.5s ease",
+          isolation: "isolate",
         }}
       >
         <img
           src={chakraFigureImg}
           alt="Meditating figure with chakra points"
-          className="w-full h-full object-contain select-none pointer-events-none mix-blend-screen"
+          className="w-full h-full object-contain select-none pointer-events-none"
           draggable={false}
+          style={{ mixBlendMode: "screen" }}
         />
 
         {chakraOrder.map((chakra) => {

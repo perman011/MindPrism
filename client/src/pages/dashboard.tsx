@@ -279,7 +279,7 @@ export default function Dashboard() {
         description="Your personalized psychology learning dashboard. Track your streaks, explore insights, and continue your growth journey."
         noIndex
       />
-      <div className="relative bg-gradient-to-b from-[#341539] via-[#2A1130] to-background overflow-hidden">
+      <div className="relative bg-gradient-to-b from-[#341539] via-[#2A1130] via-85% to-background overflow-hidden">
         <div className="absolute inset-0 opacity-15 pointer-events-none">
           <div className="absolute top-6 left-8 w-1 h-1 rounded-full bg-purple-400 animate-pulse" />
           <div className="absolute top-16 right-12 w-0.5 h-0.5 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "0.5s" }} />
