@@ -135,7 +135,7 @@ export default function Discover() {
           )}
         </div>
 
-        <div className="flex rounded-xl bg-[#1A1A2E] p-1 mb-4" data-testid="discover-tabs">
+        <div className="flex rounded-xl bg-[#FFFFFF] p-1 mb-4" data-testid="discover-tabs">
           <button
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
               activeTab === "books"

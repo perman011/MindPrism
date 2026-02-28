@@ -26,6 +26,8 @@ declare module "http" {
   }
 }
 
+app.set("trust proxy", 1);
+
 applySecurityMiddleware(app);
 
 app.use("/api/login", authLimiter);

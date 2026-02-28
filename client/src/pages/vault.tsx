@@ -46,8 +46,8 @@ export default function Vault() {
 
   const stats = [
     { icon: Flame, label: "Day Streak", value: streak?.currentStreak ?? 0, color: "text-primary", bgColor: "bg-primary/10", barColor: "bg-primary" },
-    { icon: Headphones, label: "Mins Listened", value: streak?.totalMinutesListened ?? 0, color: "text-violet-400", bgColor: "bg-violet-400/10", barColor: "bg-violet-400" },
-    { icon: PenLine, label: "Exercises Done", value: streak?.totalExercisesCompleted ?? 0, color: "text-purple-500", bgColor: "bg-purple-500/10", barColor: "bg-purple-500" },
+    { icon: Headphones, label: "Mins Listened", value: streak?.totalMinutesListened ?? 0, color: "text-blue-500", bgColor: "bg-blue-400/10", barColor: "bg-blue-400" },
+    { icon: PenLine, label: "Exercises Done", value: streak?.totalExercisesCompleted ?? 0, color: "text-blue-500", bgColor: "bg-blue-500/10", barColor: "bg-blue-500" },
   ];
 
   const tabs = [
@@ -103,7 +103,7 @@ export default function Vault() {
           })}
         </div>
 
-        <Card className="p-5 mb-8 bg-[#0F0F1A] border-primary/10">
+        <Card className="p-5 mb-8 bg-[#F5F0EB] border-primary/10">
           <h3 className="text-[11px] font-semibold uppercase tracking-widest text-primary mb-4 text-center">My Personal Aura</h3>
           <div className="flex justify-center mb-3">
             <ChakraAvatar

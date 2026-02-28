@@ -7,14 +7,14 @@ import mindprismLogo from "@assets/77531E8D-B1EB-4D23-A577-C8EC54A4B63C_17721583
 
 export default function AdminAccessDenied() {
   return (
-    <div className="min-h-screen bg-[#0F0F1A] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[#F5F0EB] flex items-center justify-center p-6">
       <SEOHead title="Access Denied" noIndex />
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-4 mix-blend-screen">
             <img src={mindprismLogo} alt="MindPrism" className="h-32 object-contain opacity-60" style={{ aspectRatio: '1.618' }} />
           </div>
-          <h1 className="font-serif text-2xl font-bold text-white mb-1" data-testid="text-access-denied">
+          <h1 className="font-serif text-2xl font-bold text-foreground mb-1" data-testid="text-access-denied">
             Access Denied
           </h1>
           <p className="text-sm text-muted-foreground">

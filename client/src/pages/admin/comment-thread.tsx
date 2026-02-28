@@ -62,7 +62,7 @@ export function CommentThread({ bookId, blockType, blockId, onClose }: CommentTh
   });
 
   return (
-    <div className="fixed right-0 top-0 h-full w-80 bg-[#0F0F1A] shadow-2xl border-l border-border z-50 flex flex-col" data-testid="comment-thread">
+    <div className="fixed right-0 top-0 h-full w-80 bg-[#F5F0EB] shadow-2xl border-l border-border z-50 flex flex-col" data-testid="comment-thread">
       <div className="p-4 border-b flex items-center justify-between">
         <div className="flex items-center gap-2">
           <MessageSquare className="w-4 h-4 text-primary" />
@@ -87,7 +87,7 @@ export function CommentThread({ bookId, blockType, blockId, onClose }: CommentTh
             className={`p-3 rounded-lg text-sm ${
               comment.resolved
                 ? "bg-muted/30 opacity-60"
-                : "bg-violet-50 dark:bg-violet-900/10 border border-violet-200 dark:border-violet-800"
+                : "bg-blue-50 dark:bg-blue-50 border border-blue-200 dark:border-blue-200"
             }`}
             data-testid={`comment-${comment.id}`}
           >

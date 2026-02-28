@@ -69,19 +69,19 @@ const slides = [
     title: "Skip the 500 pages.",
     highlight: "Master the principles.",
     description: "Every dense psychology book distilled into its most powerful ideas — visual, interactive, and unforgettable.",
-    gradient: "from-[#0F0F1A] via-violet-950 to-[#0F0F1A]",
+    gradient: "from-[#0F0F1A] via-blue-100 to-[#0F0F1A]",
   },
   {
     title: "Visuals, Exercises &",
     highlight: "Audio Summaries.",
     description: "For the busy mind. Learn through interactive cards, reflection exercises, and listen on the go.",
-    gradient: "from-[#0F0F1A] via-purple-950 to-[#0F0F1A]",
+    gradient: "from-[#0F0F1A] via-blue-50 to-[#0F0F1A]",
   },
   {
     title: "Track your growth.",
     highlight: "Build your mind.",
     description: "Personal journal, streak tracking, and a vault of saved insights. Your psychology toolkit, always with you.",
-    gradient: "from-[#0F0F1A] via-violet-900 to-[#0F0F1A]",
+    gradient: "from-[#0F0F1A] via-blue-100 to-[#0F0F1A]",
   },
 ];
 
@@ -111,21 +111,21 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F0F1A] text-white flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-[#F5F0EB] text-foreground flex flex-col relative overflow-hidden">
       <SEOHead
         title="Welcome"
         description="Transform dense psychology books into bite-sized principles, interactive exercises, stories, and audio summaries. Start your personal growth journey today."
       />
       <div className="absolute inset-0 z-0">
-        <img src={heroBg} alt="" className="w-full h-full object-cover opacity-10" />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0F0F1A]/50 via-[#0F0F1A]/80 to-[#0F0F1A]" />
+        <img src={heroBg} alt="" className="w-full h-full object-cover opacity-5" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#F5F0EB]/50 via-[#F5F0EB]/80 to-[#F5F0EB]" />
       </div>
 
       <FeatherRain />
 
       <nav className="relative z-10 px-6 py-5 flex items-center justify-between">
         <motion.div
-          className="flex items-center mix-blend-screen"
+          className="flex items-center"
           data-testid="text-logo"
           initial={{ y: -80, opacity: 0, rotate: -8 }}
           animate={{ y: 0, opacity: 1, rotate: 0 }}
@@ -142,7 +142,7 @@ export default function LandingPage() {
         <Button
           variant="ghost"
           size="sm"
-          className="text-white/70 hover:text-white hover:bg-white/10"
+          className="text-foreground/70 hover:text-foreground hover:bg-foreground/5"
           onClick={() => { window.location.href = "/api/login"; }}
           data-testid="button-login"
         >
@@ -167,11 +167,11 @@ export default function LandingPage() {
               >
                 <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4">
                   {slide.title}{" "}
-                  <span className="bg-gradient-to-r from-violet-400 to-purple-300 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-blue-400 to-purple-300 bg-clip-text text-transparent">
                     {slide.highlight}
                   </span>
                 </h1>
-                <p className="text-lg text-white/60 max-w-lg leading-relaxed">
+                <p className="text-lg text-muted-foreground max-w-lg leading-relaxed">
                   {slide.description}
                 </p>
               </div>

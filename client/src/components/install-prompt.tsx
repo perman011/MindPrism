@@ -66,27 +66,25 @@ export function InstallPrompt() {
       className={`fixed inset-0 z-[100] flex items-end justify-center p-4 pb-20 transition-opacity duration-300 ${animating ? "opacity-100" : "opacity-0"}`}
       data-testid="install-prompt-overlay"
     >
-      <div className="absolute inset-0 bg-[#0F0F1A]/60 backdrop-blur-sm" onClick={handleDismiss} />
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={handleDismiss} />
       <div
-        className={`relative w-full max-w-sm bg-[#111] border border-primary/20 rounded-2xl p-5 transition-all duration-300 ${animating ? "translate-y-0 scale-100" : "translate-y-8 scale-95"}`}
+        className={`relative w-full max-w-sm bg-white border border-border rounded-2xl p-5 shadow-lg transition-all duration-300 ${animating ? "translate-y-0 scale-100" : "translate-y-8 scale-95"}`}
         data-testid="install-prompt-modal"
       >
         <button
           onClick={handleDismiss}
-          className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+          className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
           data-testid="button-dismiss-install"
         >
           <X className="w-4 h-4 text-muted-foreground" />
         </button>
 
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-12 h-12 rounded-xl bg-[#0F0F1A] border border-primary/20 flex items-center justify-center overflow-hidden flex-shrink-0">
-            <div className="mix-blend-screen">
-              <img src={logoImage} alt="MindPrism" className="w-9 h-9 object-contain" />
-            </div>
+          <div className="w-12 h-12 rounded-xl bg-blue-50 border border-primary/20 flex items-center justify-center overflow-hidden flex-shrink-0">
+            <img src={logoImage} alt="MindPrism" className="w-9 h-9 object-contain" />
           </div>
           <div>
-            <h3 className="font-semibold text-sm text-white">Install MindPrism</h3>
+            <h3 className="font-semibold text-sm text-foreground">Install MindPrism</h3>
             <p className="text-[11px] text-muted-foreground">For a better experience</p>
           </div>
         </div>

@@ -75,7 +75,7 @@ export function MentalModelEditor({ bookId, models }: MentalModelEditorProps) {
     <section id="section-mental-models" data-testid="editor-mental-models">
       <div className="flex items-center justify-between mb-4 border-b pb-2">
         <h2 className="text-lg font-bold flex items-center gap-2">
-          <Brain className="w-5 h-5 text-purple-500" />
+          <Brain className="w-5 h-5 text-blue-500" />
           Mental Models
         </h2>
         <Button size="sm" onClick={() => createMutation.mutate()} disabled={createMutation.isPending} className="gap-1.5" data-testid="button-add-model">
@@ -116,7 +116,7 @@ export function MentalModelEditor({ bookId, models }: MentalModelEditorProps) {
               <div className="ml-7 space-y-2">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tap-to-Reveal Steps</p>
                 {steps.map((step: any, i: number) => (
-                  <div key={i} className="flex items-start gap-2 bg-purple-500/5 rounded-lg p-3">
+                  <div key={i} className="flex items-start gap-2 bg-blue-500/5 rounded-lg p-3">
                     <Badge variant="outline" className="text-[9px] mt-0.5 flex-shrink-0">{i + 1}</Badge>
                     <div className="flex-1 space-y-1">
                       <Input

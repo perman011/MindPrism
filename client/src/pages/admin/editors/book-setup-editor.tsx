@@ -224,7 +224,7 @@ export function BookSetupEditor({
             data-testid="input-core-thesis"
           />
           <span className={`absolute bottom-2 right-3 text-[10px] font-mono ${
-            thesisLength >= thesisMax ? "text-destructive font-bold" : thesisLength > 160 ? "text-violet-500" : "text-muted-foreground"
+            thesisLength >= thesisMax ? "text-destructive font-bold" : thesisLength > 160 ? "text-blue-500" : "text-muted-foreground"
           }`}>
             {thesisLength}/{thesisMax}
           </span>

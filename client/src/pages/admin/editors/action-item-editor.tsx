@@ -84,7 +84,7 @@ export function ActionItemEditor({ bookId, actionItems }: ActionItemEditorProps)
               <div className="flex items-center gap-2 flex-shrink-0">
                 <div className="flex items-center gap-1.5">
                   {item.type === "immediate" ? (
-                    <Zap className="w-3.5 h-3.5 text-violet-500" />
+                    <Zap className="w-3.5 h-3.5 text-blue-500" />
                   ) : (
                     <Calendar className="w-3.5 h-3.5 text-blue-500" />
                   )}
@@ -110,7 +110,7 @@ export function ActionItemEditor({ bookId, actionItems }: ActionItemEditorProps)
 
       {actionItems.length > 0 && (
         <div className="mt-4 flex items-center gap-4 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-violet-500" /> {immediateItems.length} immediate</span>
+          <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-blue-500" /> {immediateItems.length} immediate</span>
           <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-blue-500" /> {longTermItems.length} long-term</span>
         </div>
       )}

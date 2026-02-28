@@ -58,7 +58,7 @@ export default function AudioPage() {
                       <span className="font-serif text-lg font-bold text-primary/30">{book.title[0]}</span>
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-[#0F0F1A]/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                  <div className="absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
                     <Play className="w-5 h-5 text-white" />
                   </div>
                 </div>

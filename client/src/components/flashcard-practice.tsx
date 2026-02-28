@@ -63,7 +63,7 @@ export function FlashcardPractice({ bookId, bookTitle, onClose }: FlashcardPract
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0F0F1A] p-5">
+      <div className="min-h-screen bg-[#F5F0EB] p-5">
         <Skeleton className="h-8 w-32 mb-4" />
         <Skeleton className="h-64 w-full rounded-xl" />
       </div>
@@ -72,7 +72,7 @@ export function FlashcardPractice({ bookId, bookTitle, onClose }: FlashcardPract
 
   if (!data || data.cards.length === 0) {
     return (
-      <div className="min-h-screen bg-[#0F0F1A] flex flex-col items-center justify-center p-6">
+      <div className="min-h-screen bg-[#F5F0EB] flex flex-col items-center justify-center p-6">
         <Brain className="w-16 h-16 text-muted-foreground/20 mb-4" />
         <h2 className="font-serif text-xl font-bold mb-2">No Flashcards Available</h2>
         <p className="text-sm text-muted-foreground text-center mb-6">
@@ -91,7 +91,7 @@ export function FlashcardPractice({ bookId, bookTitle, onClose }: FlashcardPract
     const needsReview = sessionResults.filter(r => r.quality < 3).length;
 
     return (
-      <div className="min-h-screen bg-[#0F0F1A] flex flex-col items-center justify-center p-6">
+      <div className="min-h-screen bg-[#F5F0EB] flex flex-col items-center justify-center p-6">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -108,8 +108,8 @@ export function FlashcardPractice({ bookId, bookTitle, onClose }: FlashcardPract
               <p className="text-2xl font-bold text-emerald-400">{mastered}</p>
               <p className="text-[10px] text-muted-foreground">Mastered</p>
             </Card>
-            <Card className="p-3 text-center bg-violet-500/10 border-violet-500/20">
-              <p className="text-2xl font-bold text-violet-400">{learning}</p>
+            <Card className="p-3 text-center bg-blue-500/10 border-blue-500/20">
+              <p className="text-2xl font-bold text-blue-500">{learning}</p>
               <p className="text-[10px] text-muted-foreground">Learning</p>
             </Card>
             <Card className="p-3 text-center bg-rose-500/10 border-rose-500/20">
@@ -140,7 +140,7 @@ export function FlashcardPractice({ bookId, bookTitle, onClose }: FlashcardPract
   const progressPercent = Math.round(((currentIndex + 1) / data.cards.length) * 100);
 
   return (
-    <div className="min-h-screen bg-[#0F0F1A] flex flex-col" data-testid="flashcard-practice">
+    <div className="min-h-screen bg-[#F5F0EB] flex flex-col" data-testid="flashcard-practice">
       <div className="px-5 pt-4 pb-2 flex items-center justify-between">
         <button onClick={onClose} className="flex items-center gap-1.5 text-sm text-muted-foreground" data-testid="button-flashcard-back">
           <ArrowLeft className="w-4 h-4" /> Back
@@ -191,7 +191,7 @@ export function FlashcardPractice({ bookId, bookTitle, onClose }: FlashcardPract
                   variant="outline"
                   className={`absolute top-3 left-3 text-[9px] ${
                     card.progress.status === "mastered" ? "border-emerald-500/30 text-emerald-400"
-                    : card.progress.status === "learning" ? "border-violet-500/30 text-violet-400"
+                    : card.progress.status === "learning" ? "border-blue-500/30 text-blue-500"
                     : "border-rose-500/30 text-rose-400"
                   }`}
                 >
@@ -258,7 +258,7 @@ export function FlashcardPractice({ bookId, bookTitle, onClose }: FlashcardPract
               </Button>
               <Button
                 variant="outline"
-                className="border-violet-500/30 text-violet-400 hover:bg-violet-500/10"
+                className="border-blue-500/30 text-blue-500 hover:bg-blue-500/10"
                 onClick={() => handleRate(3)}
                 disabled={reviewMutation.isPending}
                 data-testid="button-rate-good"

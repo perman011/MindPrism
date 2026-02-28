@@ -46,18 +46,18 @@ export function ProgressShareCard() {
     canvas.height = h;
 
     const grad = ctx.createLinearGradient(0, 0, w, h);
-    grad.addColorStop(0, "#0F0F1A");
-    grad.addColorStop(0.5, "#1A1A2E");
-    grad.addColorStop(1, "#0F0F1A");
+    grad.addColorStop(0, "#F5F0EB");
+    grad.addColorStop(0.5, "#FFFFFF");
+    grad.addColorStop(1, "#F5F0EB");
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
 
-    ctx.strokeStyle = "rgba(167, 139, 250, 0.3)";
+    ctx.strokeStyle = "rgba(59, 130, 246, 0.3)";
     ctx.lineWidth = 2;
     ctx.strokeRect(16, 16, w - 32, h - 32);
 
     const cornerSize = 20;
-    ctx.strokeStyle = "rgba(167, 139, 250, 0.6)";
+    ctx.strokeStyle = "rgba(59, 130, 246, 0.6)";
     ctx.lineWidth = 2;
     [[16, 16, 1, 1], [w - 16, 16, -1, 1], [16, h - 16, 1, -1], [w - 16, h - 16, -1, -1]].forEach(([x, y, dx, dy]) => {
       ctx.beginPath();
@@ -80,18 +80,18 @@ export function ProgressShareCard() {
       ctx.globalCompositeOperation = "source-over";
     } catch {}
 
-    ctx.fillStyle = "#A78BFA";
+    ctx.fillStyle = "#3B82F6";
     ctx.font = "bold 18px Inter, sans-serif";
     ctx.fillText("MindPrism", 84, 56);
 
     const userName = user?.firstName
       ? `${user.firstName}${user.lastName ? ` ${user.lastName}` : ""}`
       : "Explorer";
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = "#111827";
     ctx.font = "bold 28px 'Source Serif Pro', Georgia, serif";
     ctx.fillText(`${userName}'s Journey`, 40, 110);
 
-    ctx.fillStyle = "rgba(167, 139, 250, 0.4)";
+    ctx.fillStyle = "rgba(59, 130, 246, 0.4)";
     ctx.fillRect(40, 125, 100, 2);
 
     const statItems = [
@@ -106,13 +106,13 @@ export function ProgressShareCard() {
       const y = 160 + Math.floor(i / 2) * 90;
 
       const cardGrad = ctx.createLinearGradient(x, y, x + 240, y + 70);
-      cardGrad.addColorStop(0, "rgba(167, 139, 250, 0.08)");
-      cardGrad.addColorStop(1, "rgba(167, 139, 250, 0.02)");
+      cardGrad.addColorStop(0, "rgba(59, 130, 246, 0.08)");
+      cardGrad.addColorStop(1, "rgba(59, 130, 246, 0.02)");
       ctx.fillStyle = cardGrad;
       roundRect(ctx, x, y, 240, 70, 12);
       ctx.fill();
 
-      ctx.strokeStyle = "rgba(167, 139, 250, 0.15)";
+      ctx.strokeStyle = "rgba(59, 130, 246, 0.15)";
       ctx.lineWidth = 1;
       roundRect(ctx, x, y, 240, 70, 12);
       ctx.stroke();
@@ -120,16 +120,16 @@ export function ProgressShareCard() {
       ctx.font = "24px sans-serif";
       ctx.fillText(stat.icon, x + 16, y + 38);
 
-      ctx.fillStyle = "#ffffff";
+      ctx.fillStyle = "#111827";
       ctx.font = "bold 22px Inter, sans-serif";
       ctx.fillText(stat.value, x + 52, y + 34);
 
-      ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+      ctx.fillStyle = "rgba(17, 24, 39, 0.5)";
       ctx.font = "12px Inter, sans-serif";
       ctx.fillText(stat.label, x + 52, y + 54);
     });
 
-    ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+    ctx.fillStyle = "rgba(17, 24, 39, 0.3)";
     ctx.font = "11px Inter, sans-serif";
     ctx.fillText("mindprism.io", w - 110, h - 30);
 

@@ -61,26 +61,24 @@ export function NotificationPrompt() {
       className={`fixed inset-0 z-[100] flex items-center justify-center p-4 transition-opacity duration-300 ${animating ? "opacity-100" : "opacity-0"}`}
       data-testid="notification-prompt-overlay"
     >
-      <div className="absolute inset-0 bg-[#0F0F1A]/80 backdrop-blur-sm" onClick={handleDismiss} />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={handleDismiss} />
       <div
-        className={`relative w-full max-w-sm bg-[#111] border border-primary/20 rounded-2xl p-6 text-center transition-all duration-300 ${animating ? "scale-100 translate-y-0" : "scale-95 translate-y-4"}`}
+        className={`relative w-full max-w-sm bg-white border border-border rounded-2xl p-6 text-center shadow-lg transition-all duration-300 ${animating ? "scale-100 translate-y-0" : "scale-95 translate-y-4"}`}
         data-testid="notification-prompt-modal"
       >
         <button
           onClick={handleDismiss}
-          className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+          className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
           data-testid="button-dismiss-notification-prompt"
         >
           <X className="w-4 h-4 text-muted-foreground" />
         </button>
 
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#0F0F1A] flex items-center justify-center overflow-hidden">
-          <div className="mix-blend-screen">
-            <img src={logoImage} alt="MindPrism" className="w-12 h-12 object-contain" />
-          </div>
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-50 flex items-center justify-center overflow-hidden">
+          <img src={logoImage} alt="MindPrism" className="w-12 h-12 object-contain" />
         </div>
 
-        <h3 className="font-serif text-lg font-bold text-white mb-2">Stay in the Flow</h3>
+        <h3 className="font-serif text-lg font-bold text-foreground mb-2">Stay in the Flow</h3>
         <p className="text-sm text-muted-foreground mb-5">
           Get daily wisdom, streak reminders, and new book alerts
         </p>

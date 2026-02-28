@@ -40,7 +40,7 @@ function StatCard({ label, value, icon: Icon, color }: { label: string; value: s
           <Icon className="w-5 h-5" />
         </div>
         <div>
-          <p className="text-2xl font-bold text-white">{value}</p>
+          <p className="text-2xl font-bold text-foreground">{value}</p>
           <p className="text-xs text-zinc-400">{label}</p>
         </div>
       </div>
@@ -48,7 +48,7 @@ function StatCard({ label, value, icon: Icon, color }: { label: string; value: s
   );
 }
 
-function TrendLineChart({ data, color = "hsl(263, 70%, 76%)", testId }: { data: { date: string; count: number }[]; color?: string; testId?: string }) {
+function TrendLineChart({ data, color = "hsl(217, 91%, 60%)", testId }: { data: { date: string; count: number }[]; color?: string; testId?: string }) {
   const formatted = data.slice(-30).map(d => ({
     ...d,
     label: d.date.slice(5),
@@ -83,10 +83,10 @@ export default function AnalyticsDashboard() {
   });
 
   return (
-    <div className="min-h-screen bg-[#0F0F1A]">
+    <div className="min-h-screen bg-[#F5F0EB]">
       <SEOHead title="Analytics | Admin" noIndex />
 
-      <div className="border-b border-zinc-800 bg-[#0F0F1A]/50 backdrop-blur-sm sticky top-0 z-10">
+      <div className="border-b border-zinc-800 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
           <Link href="/admin">
             <button className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center hover:bg-zinc-700 transition-colors" data-testid="button-back-admin">
@@ -94,7 +94,7 @@ export default function AnalyticsDashboard() {
             </button>
           </Link>
           <BarChart3 className="w-5 h-5 text-primary" />
-          <h1 className="text-lg font-semibold text-white">Analytics Dashboard</h1>
+          <h1 className="text-lg font-semibold text-foreground">Analytics Dashboard</h1>
         </div>
       </div>
 
@@ -110,8 +110,8 @@ export default function AnalyticsDashboard() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <StatCard label="Total Users" value={overview.totalUsers} icon={Users} color="bg-blue-500/20 text-blue-400" />
               <StatCard label="Active (7d)" value={overview.activeUsers7d} icon={Activity} color="bg-green-500/20 text-green-400" />
-              <StatCard label="Total Books" value={overview.totalBooks} icon={BookOpen} color="bg-purple-500/20 text-purple-400" />
-              <StatCard label="Total Events" value={overview.totalEvents} icon={Eye} color="bg-violet-500/20 text-violet-400" />
+              <StatCard label="Total Books" value={overview.totalBooks} icon={BookOpen} color="bg-blue-500/20 text-purple-400" />
+              <StatCard label="Total Events" value={overview.totalEvents} icon={Eye} color="bg-blue-500/20 text-blue-500" />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -153,7 +153,7 @@ export default function AnalyticsDashboard() {
                       <XAxis type="number" tick={{ fill: "#71717a", fontSize: 11 }} axisLine={{ stroke: "#3f3f46" }} tickLine={false} allowDecimals={false} />
                       <YAxis type="category" dataKey="bookTitle" tick={{ fill: "#a1a1aa", fontSize: 11 }} axisLine={{ stroke: "#3f3f46" }} tickLine={false} width={120} />
                       <Tooltip contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, color: "#fff", fontSize: 12 }} />
-                      <Bar dataKey="count" fill="hsl(263, 70%, 76%)" radius={[0, 4, 4, 0]} />
+                      <Bar dataKey="count" fill="hsl(217, 91%, 60%)" radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

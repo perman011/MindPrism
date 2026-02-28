@@ -19,7 +19,7 @@ export function OfflineBanner() {
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 z-[90] flex items-center justify-center gap-2 py-2 px-4 bg-[#0F0F1A]/95 border-b border-primary/20"
+      className="fixed top-0 left-0 right-0 z-[90] flex items-center justify-center gap-2 py-2 px-4 bg-white/95 border-b border-primary/20"
       data-testid="offline-banner"
     >
       <WifiOff className="w-3.5 h-3.5 text-primary" />

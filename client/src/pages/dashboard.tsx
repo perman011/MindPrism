@@ -226,16 +226,16 @@ export default function Dashboard() {
       </div>
 
       <section className="mb-8 px-5" data-testid="section-energy-map">
-        <div className="relative rounded-2xl bg-[#0F0F1A] p-5 pb-3">
+        <div className="relative rounded-2xl bg-[#F5F0EB] p-5 pb-3">
           <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden rounded-2xl">
-            <div className="absolute top-4 left-8 w-1 h-1 rounded-full bg-violet-300 animate-pulse" />
-            <div className="absolute top-12 right-12 w-0.5 h-0.5 rounded-full bg-violet-400 animate-pulse" style={{ animationDelay: "0.5s" }} />
-            <div className="absolute top-20 left-20 w-0.5 h-0.5 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "1s" }} />
-            <div className="absolute bottom-16 right-8 w-1 h-1 rounded-full bg-violet-400 animate-pulse" style={{ animationDelay: "1.5s" }} />
-            <div className="absolute bottom-24 left-16 w-0.5 h-0.5 rounded-full bg-purple-200 animate-pulse" style={{ animationDelay: "0.8s" }} />
+            <div className="absolute top-4 left-8 w-1 h-1 rounded-full bg-blue-300 animate-pulse" />
+            <div className="absolute top-12 right-12 w-0.5 h-0.5 rounded-full bg-blue-400 animate-pulse" style={{ animationDelay: "0.5s" }} />
+            <div className="absolute top-20 left-20 w-0.5 h-0.5 rounded-full bg-blue-300 animate-pulse" style={{ animationDelay: "1s" }} />
+            <div className="absolute bottom-16 right-8 w-1 h-1 rounded-full bg-blue-400 animate-pulse" style={{ animationDelay: "1.5s" }} />
+            <div className="absolute bottom-24 left-16 w-0.5 h-0.5 rounded-full bg-blue-200 animate-pulse" style={{ animationDelay: "0.8s" }} />
           </div>
 
-          <p className="text-center text-xs font-medium text-violet-300/80 uppercase tracking-widest mb-2">
+          <p className="text-center text-xs font-medium text-blue-400/80 uppercase tracking-widest mb-2">
             My Energy Map
           </p>
           <h3 className="text-center font-serif text-sm text-white/70 mb-3">
@@ -343,13 +343,13 @@ export default function Dashboard() {
       {dailyInsight && (
         <div className="px-5 mb-8">
           <Link href={`/book/${dailyInsight.bookId}`}>
-            <Card className="p-5 bg-gradient-to-br from-violet-500/8 via-transparent to-primary/5 border-violet-500/15 cursor-pointer" data-testid="card-daily-insight">
+            <Card className="p-5 bg-gradient-to-br from-blue-500/8 via-transparent to-primary/5 border-violet-500/15 cursor-pointer" data-testid="card-daily-insight">
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-md bg-violet-500/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Lightbulb className="w-5 h-5 text-violet-400" />
+                <div className="w-10 h-10 rounded-md bg-blue-500/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Lightbulb className="w-5 h-5 text-blue-500" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-[10px] font-semibold text-violet-400 uppercase tracking-widest mb-1.5">Daily Insight</p>
+                  <p className="text-[10px] font-semibold text-blue-500 uppercase tracking-widest mb-1.5">Daily Insight</p>
                   <p className="font-serif text-base font-bold mb-1.5" data-testid="text-insight-title">{dailyInsight.title}</p>
                   <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3" data-testid="text-insight-content">{dailyInsight.content}</p>
                   <p className="text-[10px] text-muted-foreground/60 mt-2">From: {dailyInsight.bookTitle}</p>
@@ -405,7 +405,7 @@ export default function Dashboard() {
                         <span className="font-serif text-xl font-bold text-primary/30">{book.title[0]}</span>
                       </div>
                     )}
-                    <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-[#0F0F1A]/20">
+                    <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gray-200/40">
                       <div
                         className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-500"
                         style={{ width: `${pct}%` }}

@@ -9,7 +9,7 @@ import { useLocation } from "wouter";
 
 const interestTiles = [
   { id: "anxiety", label: "Overcome Anxiety", emoji: "🧠", color: "from-blue-500/20 to-blue-600/10 border-blue-500/30" },
-  { id: "productivity", label: "Ultimate Productivity", emoji: "⏱️", color: "from-violet-500/20 to-violet-600/10 border-violet-500/30" },
+  { id: "productivity", label: "Ultimate Productivity", emoji: "⏱️", color: "from-blue-500/20 to-blue-600/10 border-blue-500/30" },
   { id: "body-language", label: "Read Body Language", emoji: "🤝", color: "from-rose-500/20 to-rose-600/10 border-rose-500/30" },
   { id: "leadership", label: "Leadership", emoji: "💼", color: "from-indigo-500/20 to-indigo-600/10 border-indigo-500/30" },
   { id: "mindfulness", label: "Mindfulness & Calm", emoji: "🧘", color: "from-teal-500/20 to-teal-600/10 border-teal-500/30" },
@@ -18,7 +18,7 @@ const interestTiles = [
   { id: "decision-making", label: "Smarter Decisions", emoji: "🎲", color: "from-purple-500/20 to-purple-600/10 border-purple-500/30" },
   { id: "confidence", label: "Build Confidence", emoji: "💪", color: "from-orange-500/20 to-orange-600/10 border-orange-500/30" },
   { id: "stoicism", label: "Stoic Philosophy", emoji: "🏛️", color: "from-slate-500/20 to-slate-600/10 border-slate-500/30" },
-  { id: "creativity", label: "Unlock Creativity", emoji: "🎨", color: "from-violet-500/20 to-violet-600/10 border-violet-500/30" },
+  { id: "creativity", label: "Unlock Creativity", emoji: "🎨", color: "from-blue-500/20 to-blue-600/10 border-blue-500/30" },
   { id: "emotional-iq", label: "Emotional Intelligence", emoji: "❤️", color: "from-red-500/20 to-red-600/10 border-red-500/30" },
 ];
 

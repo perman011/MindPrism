@@ -5,8 +5,8 @@
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "theme_color": "#A78BFA",
-  "background_color": "#0F0F1A",
+  "theme_color": "#F5F0EB",
+  "background_color": "#F5F0EB",
   "categories": ["education", "books", "lifestyle"],
   "icons": [
     {

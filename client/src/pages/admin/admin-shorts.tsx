@@ -79,7 +79,7 @@ export default function AdminShorts() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0F0F1A] p-8">
+      <div className="min-h-screen bg-[#F5F0EB] p-8">
         <div className="max-w-6xl mx-auto">
           <Skeleton className="h-10 w-64 mb-8" />
           <div className="space-y-4">
@@ -93,7 +93,7 @@ export default function AdminShorts() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0F0F1A] p-8" data-testid="admin-shorts-page">
+    <div className="min-h-screen bg-[#F5F0EB] p-8" data-testid="admin-shorts-page">
       <SEOHead title="Admin - Story Shorts" noIndex />
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
@@ -173,7 +173,7 @@ export default function AdminShorts() {
                       {short.thumbnailUrl ? (
                         <img src={short.thumbnailUrl} alt={short.title} className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center" style={{ background: short.backgroundGradient || "linear-gradient(135deg, #A78BFA30, #A78BFA10)" }}>
+                        <div className="w-full h-full flex items-center justify-center" style={{ background: short.backgroundGradient || "linear-gradient(135deg, #3B82F630, #3B82F610)" }}>
                           <MediaIcon className="w-6 h-6 text-muted-foreground/50" />
                         </div>
                       )}
