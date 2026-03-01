@@ -1,14 +1,225 @@
-import { useState } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { ChapterSummary } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, GripVertical, BookOpen } from "lucide-react";
+import { Plus, Trash2, GripVertical, BookOpen, Clock, Music, Play, Pause, Bold, Italic, Heading2, Heading3, List, ListOrdered, Quote, Minus, Highlighter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { FileUpload } from "@/components/admin/FileUpload";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Highlight from "@tiptap/extension-highlight";
+import Placeholder from "@tiptap/extension-placeholder";
+
+function calculateReadTime(html: string): number {
+  if (!html) return 0;
+  const text = html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  const words = text.split(" ").filter(Boolean).length;
+  return Math.max(1, Math.ceil(words / 200));
+}
+
+function extractCardsFromHtml(html: string): { text: string }[] {
+  if (!html) return [];
+  const text = html.replace(/<[^>]*>/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+  const paragraphs = text.split("\n\n").map(p => p.trim()).filter(p => p.length > 10);
+  if (paragraphs.length === 0) return [{ text: text.substring(0, 200) || "..." }];
+  return paragraphs.map(p => ({ text: p.substring(0, 300) }));
+}
+
+interface TipTapEditorProps {
+  content: string;
+  onUpdate: (html: string) => void;
+  chapterId: string;
+}
+
+function TipTapEditor({ content, onUpdate, chapterId }: TipTapEditorProps) {
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const isLocalUpdate = useRef(false);
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: { levels: [2, 3] },
+      }),
+      Highlight.configure({ multicolor: false }),
+      Placeholder.configure({
+        placeholder: "Start writing your chapter summary here...\n\nUse the toolbar to format text. Highlight key insights with the marker tool — they'll appear as styled cards in the reader.",
+      }),
+    ],
+    content: content || "",
+    onUpdate: ({ editor }) => {
+      isLocalUpdate.current = true;
+      const html = editor.getHTML();
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        onUpdate(html);
+        isLocalUpdate.current = false;
+      }, 800);
+    },
+    editorProps: {
+      attributes: {
+        class: "prose prose-sm dark:prose-invert max-w-none min-h-[200px] p-4 focus:outline-none",
+      },
+    },
+  });
+
+  useEffect(() => {
+    if (editor && !isLocalUpdate.current && !editor.isFocused) {
+      const currentHtml = editor.getHTML();
+      if (content && content !== currentHtml) {
+        editor.commands.setContent(content, false);
+      }
+    }
+  }, [content, editor]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  if (!editor) return null;
+
+  return (
+    <div className="border rounded-lg overflow-hidden bg-white dark:bg-[#1A1225] dark:border-[#2A1E35]" data-testid={`tiptap-editor-${chapterId}`}>
+      <div className="flex items-center gap-0.5 p-2 border-b bg-muted/30 dark:bg-[#0F0A14] dark:border-[#2A1E35] flex-wrap">
+        <Button
+          type="button"
+          variant={editor.isActive("bold") ? "default" : "ghost"}
+          size="icon"
+          className="h-7 w-7"
+          onClick={() => editor.chain().focus().toggleBold().run()}
+          data-testid="toolbar-bold"
+        >
+          <Bold className="w-3.5 h-3.5" />
+        </Button>
+        <Button
+          type="button"
+          variant={editor.isActive("italic") ? "default" : "ghost"}
+          size="icon"
+          className="h-7 w-7"
+          onClick={() => editor.chain().focus().toggleItalic().run()}
+          data-testid="toolbar-italic"
+        >
+          <Italic className="w-3.5 h-3.5" />
+        </Button>
+        <div className="w-px h-5 bg-border mx-1" />
+        <Button
+          type="button"
+          variant={editor.isActive("heading", { level: 2 }) ? "default" : "ghost"}
+          size="icon"
+          className="h-7 w-7"
+          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          data-testid="toolbar-h2"
+        >
+          <Heading2 className="w-3.5 h-3.5" />
+        </Button>
+        <Button
+          type="button"
+          variant={editor.isActive("heading", { level: 3 }) ? "default" : "ghost"}
+          size="icon"
+          className="h-7 w-7"
+          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+          data-testid="toolbar-h3"
+        >
+          <Heading3 className="w-3.5 h-3.5" />
+        </Button>
+        <div className="w-px h-5 bg-border mx-1" />
+        <Button
+          type="button"
+          variant={editor.isActive("blockquote") ? "default" : "ghost"}
+          size="icon"
+          className="h-7 w-7"
+          onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          data-testid="toolbar-quote"
+        >
+          <Quote className="w-3.5 h-3.5" />
+        </Button>
+        <Button
+          type="button"
+          variant={editor.isActive("bulletList") ? "default" : "ghost"}
+          size="icon"
+          className="h-7 w-7"
+          onClick={() => editor.chain().focus().toggleBulletList().run()}
+          data-testid="toolbar-ul"
+        >
+          <List className="w-3.5 h-3.5" />
+        </Button>
+        <Button
+          type="button"
+          variant={editor.isActive("orderedList") ? "default" : "ghost"}
+          size="icon"
+          className="h-7 w-7"
+          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          data-testid="toolbar-ol"
+        >
+          <ListOrdered className="w-3.5 h-3.5" />
+        </Button>
+        <div className="w-px h-5 bg-border mx-1" />
+        <Button
+          type="button"
+          variant={editor.isActive("highlight") ? "default" : "ghost"}
+          size="icon"
+          className="h-7 w-7"
+          onClick={() => editor.chain().focus().toggleHighlight().run()}
+          title="Mark as Key Insight"
+          data-testid="toolbar-highlight"
+        >
+          <Highlighter className="w-3.5 h-3.5" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={() => editor.chain().focus().setHorizontalRule().run()}
+          data-testid="toolbar-hr"
+        >
+          <Minus className="w-3.5 h-3.5" />
+        </Button>
+      </div>
+      <EditorContent editor={editor} />
+    </div>
+  );
+}
+
+function ChapterAudioPreview({ audioUrl }: { audioUrl: string }) {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [duration, setDuration] = useState(0);
+
+  const togglePlay = useCallback(() => {
+    if (!audioRef.current) return;
+    if (playing) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play().catch(() => {});
+    }
+    setPlaying(!playing);
+  }, [playing]);
+
+  return (
+    <div className="flex items-center gap-2 mt-2 p-2 bg-muted/30 rounded-lg" data-testid="audio-preview">
+      <audio
+        ref={audioRef}
+        src={audioUrl}
+        onLoadedMetadata={() => {
+          if (audioRef.current) setDuration(Math.round(audioRef.current.duration));
+        }}
+        onEnded={() => setPlaying(false)}
+      />
+      <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={togglePlay}>
+        {playing ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+      </Button>
+      <span className="text-xs text-muted-foreground">
+        {duration > 0 ? `${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, "0")}` : "Loading..."}
+      </span>
+    </div>
+  );
+}
 
 interface ChapterEditorProps {
   bookId: string;
@@ -17,6 +228,15 @@ interface ChapterEditorProps {
 
 export function ChapterEditor({ bookId, chapters }: ChapterEditorProps) {
   const { toast } = useToast();
+  const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
+
+  const toggleExpanded = useCallback((id: string) => {
+    setExpandedChapters(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
 
   const createMutation = useMutation({
     mutationFn: async () => {
@@ -27,9 +247,10 @@ export function ChapterEditor({ bookId, chapters }: ChapterEditorProps) {
       });
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/books", bookId, "chapter-summaries"] });
       queryClient.invalidateQueries({ queryKey: ["/api/books", bookId, "content-counts"] });
+      if (data?.id) setExpandedChapters(prev => new Set(prev).add(data.id));
     },
     onError: () => toast({ title: "Error", description: "Failed to create chapter", variant: "destructive" }),
   });
@@ -55,25 +276,14 @@ export function ChapterEditor({ bookId, chapters }: ChapterEditorProps) {
     onError: () => toast({ title: "Error", description: "Failed to delete chapter", variant: "destructive" }),
   });
 
-  const addCard = (chapter: ChapterSummary) => {
-    const existingCards = (chapter.cards as any[]) || [];
+  const handleContentUpdate = useCallback((chapterId: string, html: string) => {
+    const readTime = calculateReadTime(html);
+    const cards = extractCardsFromHtml(html);
     updateMutation.mutate({
-      id: chapter.id,
-      data: { cards: [...existingCards, { text: "Enter insight..." }] },
+      id: chapterId,
+      data: { content: html, estimatedReadTime: readTime, cards },
     });
-  };
-
-  const updateCard = (chapter: ChapterSummary, cardIndex: number, text: string) => {
-    const existingCards = [...((chapter.cards as any[]) || [])];
-    existingCards[cardIndex] = { ...existingCards[cardIndex], text };
-    updateMutation.mutate({ id: chapter.id, data: { cards: existingCards } });
-  };
-
-  const removeCard = (chapter: ChapterSummary, cardIndex: number) => {
-    const existingCards = [...((chapter.cards as any[]) || [])];
-    existingCards.splice(cardIndex, 1);
-    updateMutation.mutate({ id: chapter.id, data: { cards: existingCards } });
-  };
+  }, [updateMutation]);
 
   return (
     <section id="section-chapters" data-testid="editor-chapters">
@@ -90,7 +300,9 @@ export function ChapterEditor({ bookId, chapters }: ChapterEditorProps) {
 
       <div className="space-y-4">
         {chapters.map((chapter) => {
-          const cards = (chapter.cards as any[]) || [];
+          const isExpanded = expandedChapters.has(chapter.id);
+          const readTime = chapter.estimatedReadTime || (chapter.content ? calculateReadTime(chapter.content) : 0);
+
           return (
             <Card key={chapter.id} className="p-4 group relative" data-testid={`chapter-block-${chapter.id}`}>
               <div className="flex items-center gap-3 mb-3">
@@ -102,6 +314,28 @@ export function ChapterEditor({ bookId, chapters }: ChapterEditorProps) {
                   className="flex-1 h-8 text-sm font-semibold"
                   data-testid={`input-chapter-title-${chapter.id}`}
                 />
+                {readTime > 0 && (
+                  <Badge variant="outline" className="text-[9px] gap-1 shrink-0">
+                    <Clock className="w-3 h-3" />
+                    {readTime} min
+                  </Badge>
+                )}
+                {chapter.audioUrl && (
+                  <Badge variant="outline" className="text-[9px] gap-1 shrink-0 text-green-600 border-green-300">
+                    <Music className="w-3 h-3" />
+                    Audio
+                  </Badge>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-[10px] px-2"
+                  onClick={() => toggleExpanded(chapter.id)}
+                  data-testid={`button-toggle-chapter-${chapter.id}`}
+                >
+                  {isExpanded ? "Collapse" : "Edit"}
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -113,37 +347,47 @@ export function ChapterEditor({ bookId, chapters }: ChapterEditorProps) {
                 </Button>
               </div>
 
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {cards.map((card: any, i: number) => (
-                  <div key={i} className="min-w-[180px] max-w-[200px] flex-shrink-0 bg-muted/30 rounded-lg p-3 relative group/card">
-                    <Badge variant="outline" className="text-[9px] mb-2">Tap {i + 1}</Badge>
-                    <Textarea
-                      value={card.text}
-                      onChange={(e) => updateCard(chapter, i, e.target.value)}
-                      rows={3}
-                      className="text-xs resize-none"
-                      placeholder="Tap screen text..."
-                      data-testid={`input-card-text-${chapter.id}-${i}`}
+              {!isExpanded && chapter.content && (
+                <p className="text-xs text-muted-foreground line-clamp-2 ml-7">
+                  {chapter.content.replace(/<[^>]*>/g, " ").substring(0, 150)}...
+                </p>
+              )}
+
+              {isExpanded && (
+                <div className="space-y-4 mt-4 ml-7">
+                  <div>
+                    <label className="text-xs font-semibold mb-1 block">Subtitle</label>
+                    <Input
+                      value={chapter.subtitle || ""}
+                      onChange={(e) => updateMutation.mutate({ id: chapter.id, data: { subtitle: e.target.value } })}
+                      placeholder="Brief chapter description (1-2 sentences)"
+                      className="h-8 text-sm"
+                      data-testid={`input-chapter-subtitle-${chapter.id}`}
                     />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute top-1 right-1 h-5 w-5 opacity-0 group-hover/card:opacity-100 text-destructive"
-                      onClick={() => removeCard(chapter, i)}
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
                   </div>
-                ))}
-                <button
-                  onClick={() => addCard(chapter)}
-                  className="min-w-[120px] flex-shrink-0 border-2 border-dashed rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors"
-                  data-testid={`button-add-card-${chapter.id}`}
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  <span className="text-xs">Add Tap</span>
-                </button>
-              </div>
+
+                  <div>
+                    <label className="text-xs font-semibold mb-1 block">Chapter Content</label>
+                    <TipTapEditor
+                      content={chapter.content || ""}
+                      onUpdate={(html) => handleContentUpdate(chapter.id, html)}
+                      chapterId={chapter.id}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold mb-1 block">Chapter Audio (MP3)</label>
+                    <FileUpload
+                      accept="audio"
+                      value={chapter.audioUrl || ""}
+                      onChange={(url) => updateMutation.mutate({ id: chapter.id, data: { audioUrl: url } })}
+                      maxSize={50}
+                      placeholder="Upload chapter narration MP3"
+                    />
+                    {chapter.audioUrl && <ChapterAudioPreview audioUrl={chapter.audioUrl} />}
+                  </div>
+                </div>
+              )}
             </Card>
           );
         })}

@@ -30,6 +30,7 @@ const AudioPage = lazy(() => import("@/pages/audio"));
 const Vault = lazy(() => import("@/pages/vault"));
 const BookDetail = lazy(() => import("@/pages/book-detail"));
 const StoryEngine = lazy(() => import("@/pages/story-engine"));
+const ChapterReader = lazy(() => import("@/pages/chapter-reader"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 const AdminBooks = lazy(() => import("@/pages/admin/admin-books"));
 const AdminBookEditor = lazy(() => import("@/pages/admin/admin-book-editor"));
@@ -103,6 +104,7 @@ function AuthenticatedApp() {
               <Route path="/audio" component={AudioPage} />
               <Route path="/vault" component={Vault} />
               <Route path="/book/:id" component={BookDetail} />
+              <Route path="/book/:id/read" component={ChapterReader} />
               <Route path="/book/:id/journey/:section" component={StoryEngine} />
               <Route path="/book/:id/journey" component={StoryEngine} />
               <Route component={NotFound} />

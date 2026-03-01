@@ -241,11 +241,21 @@ export default function BookDetail() {
         <div className="w-full max-w-md space-y-3">
           <Button
             className="w-full gap-2"
+            onClick={() => navigate(`/book/${id}/read`)}
+            data-testid="button-read-chapters"
+          >
+            <BookOpen className="w-4 h-4" />
+            Read Chapters
+          </Button>
+
+          <Button
+            variant="outline"
+            className="w-full gap-2"
             onClick={() => navigate(`/book/${id}/journey`)}
             data-testid="button-start-journey"
           >
-            <BookOpen className="w-4 h-4" />
-            {cardProgress > 0 ? `Resume (${cardProgress}%)` : "Read"}
+            <Film className="w-4 h-4" />
+            {cardProgress > 0 ? `Interactive Journey (${cardProgress}%)` : "Interactive Journey"}
           </Button>
 
           <div className="relative">
