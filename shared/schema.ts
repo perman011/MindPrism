@@ -8,7 +8,6 @@ import {
   timestamp,
   jsonb,
   date,
-  real,
   index,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
@@ -43,17 +42,9 @@ export const books = pgTable("books", {
   audioDuration: integer("audio_duration"),
   featured: boolean("featured").default(false),
   status: text("status").default("draft"),
-  principleCount: integer("principle_count").default(0),
-  storyCount: integer("story_count").default(0),
-  exerciseCount: integer("exercise_count").default(0),
   primaryChakra: text("primary_chakra"),
   secondaryChakra: text("secondary_chakra"),
-  premiumOnly: boolean("premium_only").default(false),
-  freePreviewCards: integer("free_preview_cards").default(5),
-  affiliateUrl: varchar("affiliate_url", { length: 500 }),
   updatedAt: timestamp("updated_at").defaultNow(),
-  currentDraftVersionId: varchar("current_draft_version_id"),
-  currentPublishedVersionId: varchar("current_published_version_id"),
 }, (table) => ({
   statusCategoryIdx: index("books_status_category_idx").on(table.status, table.categoryId),
 }));
@@ -72,50 +63,6 @@ export const bookVersions = pgTable("book_versions", {
   publishedAt: timestamp("published_at"),
 });
 
-export const principles = pgTable("principles", {
-  id: varchar("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  bookId: varchar("book_id")
-    .references(() => books.id)
-    .notNull(),
-  title: text("title").notNull(),
-  content: text("content").notNull(),
-  orderIndex: integer("order_index").notNull(),
-  icon: text("icon"),
-  visualType: text("visual_type"),
-  visualData: jsonb("visual_data"),
-});
-
-export const stories = pgTable("stories", {
-  id: varchar("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  bookId: varchar("book_id")
-    .references(() => books.id)
-    .notNull(),
-  principleId: varchar("principle_id"),
-  title: text("title").notNull(),
-  content: text("content").notNull(),
-  moral: text("moral"),
-  orderIndex: integer("order_index").notNull(),
-});
-
-export const exercises = pgTable("exercises", {
-  id: varchar("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  bookId: varchar("book_id")
-    .references(() => books.id)
-    .notNull(),
-  title: text("title").notNull(),
-  description: text("description").notNull(),
-  type: text("type").notNull(),
-  content: jsonb("content").notNull(),
-  impact: text("impact").default("medium"),
-  powersUpChakra: text("powers_up_chakra"),
-  orderIndex: integer("order_index").notNull(),
-});
 
 export const chapterSummaries = pgTable("chapter_summaries", {
   id: varchar("id")
@@ -142,44 +89,6 @@ export const mentalModels = pgTable("mental_models", {
   orderIndex: integer("order_index").notNull(),
 });
 
-export const commonMistakes = pgTable("common_mistakes", {
-  id: varchar("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  bookId: varchar("book_id")
-    .references(() => books.id)
-    .notNull(),
-  mistake: text("mistake").notNull(),
-  correction: text("correction").notNull(),
-  orderIndex: integer("order_index").notNull(),
-});
-
-export const infographics = pgTable("infographics", {
-  id: varchar("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  bookId: varchar("book_id")
-    .references(() => books.id)
-    .notNull(),
-  title: text("title").notNull(),
-  description: text("description").notNull(),
-  imageUrl: text("image_url"),
-  steps: jsonb("steps").notNull(),
-  orderIndex: integer("order_index").notNull(),
-});
-
-export const actionItems = pgTable("action_items", {
-  id: varchar("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  bookId: varchar("book_id")
-    .references(() => books.id)
-    .notNull(),
-  text: text("text").notNull(),
-  type: text("type").notNull(),
-  powersUpChakra: text("powers_up_chakra"),
-  orderIndex: integer("order_index").notNull(),
-});
 
 export const userProgress = pgTable("user_progress", {
   id: varchar("id")
@@ -191,8 +100,6 @@ export const userProgress = pgTable("user_progress", {
   bookId: varchar("book_id")
     .references(() => books.id)
     .notNull(),
-  completedPrinciples: text("completed_principles").array().default([]),
-  completedExercises: text("completed_exercises").array().default([]),
   bookmarked: boolean("bookmarked").default(false),
   lastAccessedAt: timestamp("last_accessed_at").defaultNow(),
   currentCardIndex: integer("current_card_index").default(0),
@@ -209,7 +116,6 @@ export const journalEntries = pgTable("journal_entries", {
   userId: varchar("user_id")
     .references(() => users.id)
     .notNull(),
-  exerciseId: varchar("exercise_id"),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
@@ -239,7 +145,6 @@ export const userStreaks = pgTable("user_streaks", {
   longestStreak: integer("longest_streak").default(0),
   lastActiveDate: date("last_active_date"),
   totalMinutesListened: integer("total_minutes_listened").default(0),
-  totalExercisesCompleted: integer("total_exercises_completed").default(0),
   totalBooksStarted: integer("total_books_started").default(0),
   streakFreezeAvailable: boolean("streak_freeze_available").default(true),
   lastFreezeUsedAt: timestamp("last_freeze_used_at"),
@@ -255,7 +160,6 @@ export const savedHighlights = pgTable("saved_highlights", {
   bookId: varchar("book_id")
     .references(() => books.id)
     .notNull(),
-  principleId: varchar("principle_id"),
   content: text("content").notNull(),
   type: text("type").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
@@ -270,7 +174,6 @@ export const chakraProgress = pgTable("chakra_progress", {
     .notNull(),
   chakra: text("chakra").notNull(),
   points: integer("points").default(0),
-  exercisesCompleted: integer("exercises_completed").default(0),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
@@ -365,14 +268,8 @@ export const booksRelations = relations(books, ({ one, many }) => ({
     fields: [books.categoryId],
     references: [categories.id],
   }),
-  principles: many(principles),
-  stories: many(stories),
-  exercises: many(exercises),
   chapterSummaries: many(chapterSummaries),
   mentalModels: many(mentalModels),
-  commonMistakes: many(commonMistakes),
-  actionItems: many(actionItems),
-  infographics: many(infographics),
   versions: many(bookVersions),
   shorts: many(shorts),
 }));
@@ -381,22 +278,6 @@ export const bookVersionsRelations = relations(bookVersions, ({ one }) => ({
   book: one(books, { fields: [bookVersions.bookId], references: [books.id] }),
 }));
 
-export const principlesRelations = relations(principles, ({ one, many }) => ({
-  book: one(books, { fields: [principles.bookId], references: [books.id] }),
-  stories: many(stories),
-}));
-
-export const storiesRelations = relations(stories, ({ one }) => ({
-  book: one(books, { fields: [stories.bookId], references: [books.id] }),
-  principle: one(principles, {
-    fields: [stories.principleId],
-    references: [principles.id],
-  }),
-}));
-
-export const exercisesRelations = relations(exercises, ({ one }) => ({
-  book: one(books, { fields: [exercises.bookId], references: [books.id] }),
-}));
 
 export const chapterSummariesRelations = relations(
   chapterSummaries,
@@ -412,17 +293,6 @@ export const mentalModelsRelations = relations(mentalModels, ({ one }) => ({
   book: one(books, { fields: [mentalModels.bookId], references: [books.id] }),
 }));
 
-export const commonMistakesRelations = relations(commonMistakes, ({ one }) => ({
-  book: one(books, { fields: [commonMistakes.bookId], references: [books.id] }),
-}));
-
-export const infographicsRelations = relations(infographics, ({ one }) => ({
-  book: one(books, { fields: [infographics.bookId], references: [books.id] }),
-}));
-
-export const actionItemsRelations = relations(actionItems, ({ one }) => ({
-  book: one(books, { fields: [actionItems.bookId], references: [books.id] }),
-}));
 
 export const userProgressRelations = relations(userProgress, ({ one }) => ({
   user: one(users, { fields: [userProgress.userId], references: [users.id] }),
@@ -466,17 +336,8 @@ export const commentsRelations = relations(comments, ({ one }) => ({
 
 export const insertBookSchema = createInsertSchema(books).omit({
   id: true,
-  currentDraftVersionId: true,
-  currentPublishedVersionId: true,
 });
 export const insertBookVersionSchema = createInsertSchema(bookVersions).omit({
-  id: true,
-});
-export const insertPrincipleSchema = createInsertSchema(principles).omit({
-  id: true,
-});
-export const insertStorySchema = createInsertSchema(stories).omit({ id: true });
-export const insertExerciseSchema = createInsertSchema(exercises).omit({
   id: true,
 });
 export const insertUserProgressSchema = createInsertSchema(userProgress).omit({
@@ -503,15 +364,6 @@ export const insertChapterSummarySchema = createInsertSchema(
 export const insertMentalModelSchema = createInsertSchema(mentalModels).omit({
   id: true,
 });
-export const insertCommonMistakeSchema = createInsertSchema(
-  commonMistakes,
-).omit({ id: true });
-export const insertInfographicSchema = createInsertSchema(infographics).omit({
-  id: true,
-});
-export const insertActionItemSchema = createInsertSchema(actionItems).omit({
-  id: true,
-});
 export const insertChakraProgressSchema = createInsertSchema(
   chakraProgress,
 ).omit({ id: true });
@@ -523,12 +375,6 @@ export type InsertBook = z.infer<typeof insertBookSchema>;
 export type Book = typeof books.$inferSelect;
 export type InsertBookVersion = z.infer<typeof insertBookVersionSchema>;
 export type BookVersion = typeof bookVersions.$inferSelect;
-export type InsertPrinciple = z.infer<typeof insertPrincipleSchema>;
-export type Principle = typeof principles.$inferSelect;
-export type InsertStory = z.infer<typeof insertStorySchema>;
-export type Story = typeof stories.$inferSelect;
-export type InsertExercise = z.infer<typeof insertExerciseSchema>;
-export type Exercise = typeof exercises.$inferSelect;
 export type InsertUserProgress = z.infer<typeof insertUserProgressSchema>;
 export type UserProgress = typeof userProgress.$inferSelect;
 export type InsertJournalEntry = z.infer<typeof insertJournalEntrySchema>;
@@ -545,12 +391,6 @@ export type InsertChapterSummary = z.infer<typeof insertChapterSummarySchema>;
 export type ChapterSummary = typeof chapterSummaries.$inferSelect;
 export type InsertMentalModel = z.infer<typeof insertMentalModelSchema>;
 export type MentalModel = typeof mentalModels.$inferSelect;
-export type InsertCommonMistake = z.infer<typeof insertCommonMistakeSchema>;
-export type CommonMistake = typeof commonMistakes.$inferSelect;
-export type InsertInfographic = z.infer<typeof insertInfographicSchema>;
-export type Infographic = typeof infographics.$inferSelect;
-export type InsertActionItem = z.infer<typeof insertActionItemSchema>;
-export type ActionItem = typeof actionItems.$inferSelect;
 export type InsertChakraProgress = z.infer<typeof insertChakraProgressSchema>;
 export type ChakraProgress = typeof chakraProgress.$inferSelect;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
@@ -630,47 +470,6 @@ export const insertUserActivityLogSchema = createInsertSchema(
 export type InsertUserActivityLog = z.infer<typeof insertUserActivityLogSchema>;
 export type UserActivityLog = typeof userActivityLog.$inferSelect;
 
-export const flashcardProgress = pgTable("flashcard_progress", {
-  id: varchar("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull(),
-  bookId: varchar("book_id")
-    .notNull()
-    .references(() => books.id, { onDelete: "cascade" }),
-  principleId: varchar("principle_id")
-    .notNull()
-    .references(() => principles.id, { onDelete: "cascade" }),
-  status: varchar("status").notNull().default("new"),
-  nextReviewDate: timestamp("next_review_date").defaultNow(),
-  easeFactor: real("ease_factor").default(2.5),
-  interval: integer("interval").default(0),
-  repetitions: integer("repetitions").default(0),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-export const flashcardProgressRelations = relations(
-  flashcardProgress,
-  ({ one }) => ({
-    book: one(books, {
-      fields: [flashcardProgress.bookId],
-      references: [books.id],
-    }),
-    principle: one(principles, {
-      fields: [flashcardProgress.principleId],
-      references: [principles.id],
-    }),
-  }),
-);
-
-export const insertFlashcardProgressSchema = createInsertSchema(
-  flashcardProgress,
-).omit({ id: true, createdAt: true, updatedAt: true });
-export type InsertFlashcardProgress = z.infer<
-  typeof insertFlashcardProgressSchema
->;
-export type FlashcardProgress = typeof flashcardProgress.$inferSelect;
 
 export const quizResults = pgTable("quiz_results", {
   id: varchar("id")

@@ -5,14 +5,8 @@ import { authStorage } from "./replit_integrations/auth/storage";
 import { isAuthenticated } from "./replit_integrations/auth";
 import {
   insertBookSchema,
-  insertPrincipleSchema,
-  insertStorySchema,
-  insertExerciseSchema,
   insertChapterSummarySchema,
   insertMentalModelSchema,
-  insertCommonMistakeSchema,
-  insertInfographicSchema,
-  insertActionItemSchema,
   insertCommentSchema,
   bookVersions,
   books,
@@ -342,7 +336,7 @@ export function registerAdminRoutes(app: Express) {
         const publishedSnapshot: Record<string, any> = {};
         const snapshotFields = ["title", "author", "coverImage", "description", "coreThesis",
           "categoryId", "readTime", "listenTime", "audioUrl", "audioDuration", "featured",
-          "primaryChakra", "secondaryChakra", "premiumOnly", "freePreviewCards"] as const;
+          "primaryChakra", "secondaryChakra"] as const;
         for (const f of snapshotFields) {
           publishedSnapshot[f] = book[f];
         }
@@ -354,7 +348,6 @@ export function registerAdminRoutes(app: Express) {
 
       await db.update(books)
         .set({
-          currentDraftVersionId: draft.id,
           status: book.status === "published" || book.status === "published_with_changes"
             ? "published_with_changes" : book.status,
           updatedAt: new Date(),
@@ -437,8 +430,7 @@ export function registerAdminRoutes(app: Express) {
 
       await db.update(books)
         .set({
-          currentPublishedVersionId: draft.id,
-          currentDraftVersionId: null,
+          updatedAt: new Date(),
         })
         .where(eq(books.id, bookId));
 
@@ -461,7 +453,7 @@ export function registerAdminRoutes(app: Express) {
 
       const revertStatus = book.status === "published_with_changes" ? "published" : book.status;
       await db.update(books)
-        .set({ currentDraftVersionId: null, status: revertStatus, updatedAt: new Date() })
+        .set({ status: revertStatus, updatedAt: new Date() })
         .where(eq(books.id, bookId));
 
       const updatedBook = await storage.getBook(bookId);
@@ -589,215 +581,6 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
-  app.post("/api/admin/books/:bookId/principles", isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const data = { ...req.body, bookId: req.params.bookId };
-      const parsed = insertPrincipleSchema.safeParse(data);
-      if (!parsed.success) return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
-      const principle = await storage.createPrinciple(parsed.data);
-      res.status(201).json(principle);
-    } catch (error) {
-      console.error("Error creating principle:", error);
-      res.status(500).json({ message: "Failed to create principle" });
-    }
-  });
-
-  app.put("/api/admin/principles/:id", isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const partial = insertPrincipleSchema.partial().safeParse(req.body);
-      if (!partial.success) return res.status(400).json({ message: "Invalid data", errors: partial.error.errors });
-      const principle = await storage.updatePrinciple(req.params.id, partial.data);
-      res.json(principle);
-    } catch (error) {
-      console.error("Error updating principle:", error);
-      res.status(500).json({ message: "Failed to update principle" });
-    }
-  });
-
-  app.delete("/api/admin/principles/:id", isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      await storage.deletePrinciple(req.params.id);
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error deleting principle:", error);
-      res.status(500).json({ message: "Failed to delete principle" });
-    }
-  });
-
-  app.post("/api/admin/books/:bookId/stories", isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const data = { ...req.body, bookId: req.params.bookId };
-      const parsed = insertStorySchema.safeParse(data);
-      if (!parsed.success) return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
-      const story = await storage.createStory(parsed.data);
-      res.status(201).json(story);
-    } catch (error) {
-      console.error("Error creating story:", error);
-      res.status(500).json({ message: "Failed to create story" });
-    }
-  });
-
-  app.put("/api/admin/stories/:id", isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const partial = insertStorySchema.partial().safeParse(req.body);
-      if (!partial.success) return res.status(400).json({ message: "Invalid data", errors: partial.error.errors });
-      const story = await storage.updateStory(req.params.id, partial.data);
-      res.json(story);
-    } catch (error) {
-      console.error("Error updating story:", error);
-      res.status(500).json({ message: "Failed to update story" });
-    }
-  });
-
-  app.delete("/api/admin/stories/:id", isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      await storage.deleteStory(req.params.id);
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error deleting story:", error);
-      res.status(500).json({ message: "Failed to delete story" });
-    }
-  });
-
-  app.post("/api/admin/books/:bookId/common-mistakes", isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const data = { ...req.body, bookId: req.params.bookId };
-      const parsed = insertCommonMistakeSchema.safeParse(data);
-      if (!parsed.success) return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
-      const mistake = await storage.createCommonMistake(parsed.data);
-      res.status(201).json(mistake);
-    } catch (error) {
-      console.error("Error creating common mistake:", error);
-      res.status(500).json({ message: "Failed to create common mistake" });
-    }
-  });
-
-  app.put("/api/admin/common-mistakes/:id", isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const partial = insertCommonMistakeSchema.partial().safeParse(req.body);
-      if (!partial.success) return res.status(400).json({ message: "Invalid data", errors: partial.error.errors });
-      const mistake = await storage.updateCommonMistake(req.params.id, partial.data);
-      res.json(mistake);
-    } catch (error) {
-      console.error("Error updating common mistake:", error);
-      res.status(500).json({ message: "Failed to update common mistake" });
-    }
-  });
-
-  app.delete("/api/admin/common-mistakes/:id", isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      await storage.deleteCommonMistake(req.params.id);
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error deleting common mistake:", error);
-      res.status(500).json({ message: "Failed to delete common mistake" });
-    }
-  });
-
-  app.post("/api/admin/books/:bookId/infographics", isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const data = { ...req.body, bookId: req.params.bookId };
-      const parsed = insertInfographicSchema.safeParse(data);
-      if (!parsed.success) return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
-      const infographic = await storage.createInfographic(parsed.data);
-      res.status(201).json(infographic);
-    } catch (error) {
-      console.error("Error creating infographic:", error);
-      res.status(500).json({ message: "Failed to create infographic" });
-    }
-  });
-
-  app.put("/api/admin/infographics/:id", isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const partial = insertInfographicSchema.partial().safeParse(req.body);
-      if (!partial.success) return res.status(400).json({ message: "Invalid data", errors: partial.error.errors });
-      const infographic = await storage.updateInfographic(req.params.id, partial.data);
-      res.json(infographic);
-    } catch (error) {
-      console.error("Error updating infographic:", error);
-      res.status(500).json({ message: "Failed to update infographic" });
-    }
-  });
-
-  app.delete("/api/admin/infographics/:id", isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      await storage.deleteInfographic(req.params.id);
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error deleting infographic:", error);
-      res.status(500).json({ message: "Failed to delete infographic" });
-    }
-  });
-
-  app.post("/api/admin/books/:bookId/exercises", isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const data = { ...req.body, bookId: req.params.bookId };
-      const parsed = insertExerciseSchema.safeParse(data);
-      if (!parsed.success) return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
-      const exercise = await storage.createExercise(parsed.data);
-      res.status(201).json(exercise);
-    } catch (error) {
-      console.error("Error creating exercise:", error);
-      res.status(500).json({ message: "Failed to create exercise" });
-    }
-  });
-
-  app.put("/api/admin/exercises/:id", isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const partial = insertExerciseSchema.partial().safeParse(req.body);
-      if (!partial.success) return res.status(400).json({ message: "Invalid data", errors: partial.error.errors });
-      const exercise = await storage.updateExercise(req.params.id, partial.data);
-      res.json(exercise);
-    } catch (error) {
-      console.error("Error updating exercise:", error);
-      res.status(500).json({ message: "Failed to update exercise" });
-    }
-  });
-
-  app.delete("/api/admin/exercises/:id", isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      await storage.deleteExercise(req.params.id);
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error deleting exercise:", error);
-      res.status(500).json({ message: "Failed to delete exercise" });
-    }
-  });
-
-  app.post("/api/admin/books/:bookId/action-items", isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const data = { ...req.body, bookId: req.params.bookId };
-      const parsed = insertActionItemSchema.safeParse(data);
-      if (!parsed.success) return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
-      const item = await storage.createActionItem(parsed.data);
-      res.status(201).json(item);
-    } catch (error) {
-      console.error("Error creating action item:", error);
-      res.status(500).json({ message: "Failed to create action item" });
-    }
-  });
-
-  app.put("/api/admin/action-items/:id", isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const partial = insertActionItemSchema.partial().safeParse(req.body);
-      if (!partial.success) return res.status(400).json({ message: "Invalid data", errors: partial.error.errors });
-      const item = await storage.updateActionItem(req.params.id, partial.data);
-      res.json(item);
-    } catch (error) {
-      console.error("Error updating action item:", error);
-      res.status(500).json({ message: "Failed to update action item" });
-    }
-  });
-
-  app.delete("/api/admin/action-items/:id", isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      await storage.deleteActionItem(req.params.id);
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error deleting action item:", error);
-      res.status(500).json({ message: "Failed to delete action item" });
-    }
-  });
 
   app.post("/api/admin/books/bulk-status", isAuthenticated, isAdmin, requireRole("editor"), async (req: any, res) => {
     try {
@@ -909,15 +692,9 @@ export function registerAdminRoutes(app: Express) {
       const allBooks = await storage.getBooks();
       const scores = await Promise.all(
         allBooks.map(async (book) => {
-          const [principles, stories, exercises, chapters, mentalModels, commonMistakes, infographics, actionItems] = await Promise.all([
-            storage.getPrinciplesByBook(book.id),
-            storage.getStoriesByBook(book.id),
-            storage.getExercisesByBook(book.id),
+          const [chapters, mentalModels] = await Promise.all([
             storage.getChapterSummariesByBook(book.id),
             storage.getMentalModelsByBook(book.id),
-            storage.getCommonMistakesByBook(book.id),
-            storage.getInfographicsByBook(book.id),
-            storage.getActionItemsByBook(book.id),
           ]);
 
           const sections = {
@@ -927,53 +704,17 @@ export function registerAdminRoutes(app: Express) {
               maxScore: 5,
               details: [] as string[],
             },
-            principles: {
-              label: "Principles",
-              score: Math.min(principles.length, 3),
-              maxScore: 3,
-              details: principles.length === 0 ? ["No principles added"] : [],
-            },
-            stories: {
-              label: "Stories",
-              score: Math.min(stories.length, 2),
-              maxScore: 2,
-              details: stories.length === 0 ? ["No stories added"] : [],
-            },
-            exercises: {
-              label: "Exercises",
-              score: Math.min(exercises.length, 2),
-              maxScore: 2,
-              details: exercises.length === 0 ? ["No exercises added"] : [],
-            },
             chapters: {
               label: "Chapters",
-              score: Math.min(chapters.length, 2),
-              maxScore: 2,
+              score: Math.min(chapters.length, 3),
+              maxScore: 3,
               details: chapters.length === 0 ? ["No chapter summaries"] : [],
             },
             mentalModels: {
               label: "Mental Models",
-              score: Math.min(mentalModels.length, 1),
-              maxScore: 1,
-              details: mentalModels.length === 0 ? ["No mental models"] : [],
-            },
-            commonMistakes: {
-              label: "Common Mistakes",
-              score: Math.min(commonMistakes.length, 1),
-              maxScore: 1,
-              details: commonMistakes.length === 0 ? ["No common mistakes"] : [],
-            },
-            infographics: {
-              label: "Infographics",
-              score: Math.min(infographics.length, 1),
-              maxScore: 1,
-              details: infographics.length === 0 ? ["No infographics"] : [],
-            },
-            actionItems: {
-              label: "Action Items",
-              score: Math.min(actionItems.length, 2),
+              score: Math.min(mentalModels.length, 2),
               maxScore: 2,
-              details: actionItems.length === 0 ? ["No action items"] : [],
+              details: mentalModels.length === 0 ? ["No mental models"] : [],
             },
           };
 
@@ -1005,14 +746,8 @@ export function registerAdminRoutes(app: Express) {
             maxScore,
             sections,
             counts: {
-              principles: principles.length,
-              stories: stories.length,
-              exercises: exercises.length,
               chapters: chapters.length,
               mentalModels: mentalModels.length,
-              commonMistakes: commonMistakes.length,
-              infographics: infographics.length,
-              actionItems: actionItems.length,
             },
           };
         })

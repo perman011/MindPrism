@@ -4,8 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import { useRoute, Link } from "wouter";
 import type {
-  Book, ChapterSummary, MentalModel, Principle, Story,
-  CommonMistake, Infographic, Exercise, ActionItem, BookVersion, Short,
+  Book, ChapterSummary, MentalModel, BookVersion, Short,
 } from "@shared/schema";
 import { MindTree } from "./mind-tree";
 import { MobilePreview } from "./mobile-preview";
@@ -13,11 +12,6 @@ import { PublishPanel } from "./publish-panel";
 import { BookSetupEditor } from "./editors/book-setup-editor";
 import { ChapterEditor } from "./editors/chapter-editor";
 import { MentalModelEditor } from "./editors/mental-model-editor";
-import { PrincipleEditor } from "./editors/principle-editor";
-import { MistakeEditor } from "./editors/mistake-editor";
-import { InfographicEditor } from "./editors/infographic-editor";
-import { ExerciseEditor } from "./editors/exercise-editor";
-import { ActionItemEditor } from "./editors/action-item-editor";
 import { PreviewMode } from "@/components/admin/PreviewMode";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -313,42 +307,6 @@ export default function AdminBookEditor() {
     enabled: !!bookId,
   });
 
-  const { data: principles = [] } = useQuery<Principle[]>({
-    queryKey: ["/api/books", bookId, "principles"],
-    queryFn: getQueryFn({ on401: "throw" }),
-    enabled: !!bookId,
-  });
-
-  const { data: stories = [] } = useQuery<Story[]>({
-    queryKey: ["/api/books", bookId, "stories"],
-    queryFn: getQueryFn({ on401: "throw" }),
-    enabled: !!bookId,
-  });
-
-  const { data: mistakes = [] } = useQuery<CommonMistake[]>({
-    queryKey: ["/api/books", bookId, "common-mistakes"],
-    queryFn: getQueryFn({ on401: "throw" }),
-    enabled: !!bookId,
-  });
-
-  const { data: infographics = [] } = useQuery<Infographic[]>({
-    queryKey: ["/api/books", bookId, "infographics"],
-    queryFn: getQueryFn({ on401: "throw" }),
-    enabled: !!bookId,
-  });
-
-  const { data: exercises = [] } = useQuery<Exercise[]>({
-    queryKey: ["/api/books", bookId, "exercises"],
-    queryFn: getQueryFn({ on401: "throw" }),
-    enabled: !!bookId,
-  });
-
-  const { data: actionItems = [] } = useQuery<ActionItem[]>({
-    queryKey: ["/api/books", bookId, "action-items"],
-    queryFn: getQueryFn({ on401: "throw" }),
-    enabled: !!bookId,
-  });
-
   const { data: allShorts = [] } = useQuery<Short[]>({
     queryKey: ["/api/admin/shorts"],
     queryFn: getQueryFn({ on401: "throw" }),
@@ -421,11 +379,6 @@ export default function AdminBookEditor() {
     switch (activeSection) {
       case "chapters": return chapters;
       case "mental-models": return mentalModels;
-      case "principles": return principles;
-      case "common-mistakes": return mistakes;
-      case "infographics": return infographics;
-      case "exercises": return exercises;
-      case "action-items": return actionItems;
       default: return undefined;
     }
   };

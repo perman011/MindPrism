@@ -76,7 +76,7 @@ export function PremiumGate({ children, isPremium }: PremiumGateProps) {
           </div>
           <h3 className="text-lg font-bold" data-testid="text-premium-title">Premium Content</h3>
           <p className="text-sm text-muted-foreground max-w-[240px]" data-testid="text-premium-description">
-            Unlock all book breakdowns, exercises, and audio summaries.
+            Unlock all book breakdowns and audio summaries.
           </p>
           {!stripeConfigured && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground" data-testid="text-stripe-not-configured">

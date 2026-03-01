@@ -1,19 +1,11 @@
-import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
-  Target, BookOpen, Brain, Lightbulb, AlertTriangle,
-  BarChart3, Dumbbell, ListChecks, ChevronDown, ChevronRight,
-  Film,
+  Target, BookOpen, Brain,
 } from "lucide-react";
 
 interface ContentCounts {
   chapterSummaries: number;
   mentalModels: number;
-  principles: number;
-  commonMistakes: number;
-  exercises: number;
-  actionItems: number;
-  infographics: number;
   shorts?: number;
 }
 
@@ -33,16 +25,6 @@ interface MindTreeProps {
 }
 
 export function MindTree({ counts, activeSection, onSectionClick, bookTitle }: MindTreeProps) {
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["chapters", "principles"]));
-
-  const toggleExpand = (section: string) => {
-    setExpandedSections((prev) => {
-      const next = new Set(prev);
-      next.has(section) ? next.delete(section) : next.add(section);
-      return next;
-    });
-  };
-
   const sections: TreeItem[] = [
     { id: "setup", label: "Book Setup", icon: Target, section: "setup" },
     { id: "thesis", label: "Core Thesis", icon: Target, section: "thesis" },
@@ -55,7 +37,6 @@ export function MindTree({ counts, activeSection, onSectionClick, bookTitle }: M
     const map: Record<string, number> = {
       chapters: counts.chapterSummaries,
       "mental-models": counts.mentalModels,
-      principles: counts.principles,
     };
     return map[sectionId] ?? 0;
   };

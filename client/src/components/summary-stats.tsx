@@ -1,21 +1,21 @@
 import { Card } from "@/components/ui/card";
-import { Brain, BookOpen, Flame } from "lucide-react";
+import { BookOpen, Flame, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface SummaryStatsProps {
-  principlesLearned: number;
-  storiesRead: number;
+  booksStarted: number;
   currentStreak: number;
+  minutesListened: number;
 }
 
 const stats = [
-  { key: "principles-learned", icon: Brain, label: "Principles Learned" },
-  { key: "stories-read", icon: BookOpen, label: "Stories Read" },
+  { key: "books-started", icon: BookOpen, label: "Books Started" },
   { key: "current-streak", icon: Flame, label: "Current Streak" },
+  { key: "minutes-listened", icon: Clock, label: "Minutes Listened" },
 ] as const;
 
-export function SummaryStats({ principlesLearned, storiesRead, currentStreak }: SummaryStatsProps) {
-  const values = [principlesLearned, storiesRead, currentStreak];
+export function SummaryStats({ booksStarted, currentStreak, minutesListened }: SummaryStatsProps) {
+  const values = [booksStarted, currentStreak, minutesListened];
 
   return (
     <div className="grid grid-cols-3 gap-3" data-testid="summary-stats-row">

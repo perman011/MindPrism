@@ -1,6 +1,6 @@
 import { storage } from "./storage";
 import { db } from "./db";
-import { books, chapterSummaries, mentalModels, commonMistakes, actionItems, infographics, shorts } from "@shared/schema";
+import { books, shorts } from "@shared/schema";
 import { users } from "@shared/models/auth";
 import { eq } from "drizzle-orm";
 
@@ -38,7 +38,6 @@ export async function seedDatabase() {
   const catEmotions = await storage.createCategory({ name: "Emotions", slug: "emotions", icon: "lightbulb", color: "rose" });
   const catMeaning = await storage.createCategory({ name: "Purpose", slug: "meaning", icon: "sparkles", color: "indigo" });
 
-  // ===================== BOOK 1: Atomic Habits =====================
   const book1 = await storage.createBook({
     title: "Atomic Habits",
     author: "James Clear",
@@ -47,12 +46,9 @@ export async function seedDatabase() {
     coreThesis: "You do not rise to the level of your goals. You fall to the level of your systems. Small habits compound into extraordinary results when you focus on becoming 1% better every day.",
     categoryId: catHabits.id,
     readTime: 12, listenTime: 10, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", audioDuration: 600, featured: true,
-    principleCount: 7, storyCount: 5, exerciseCount: 4,
     primaryChakra: "solar_plexus", secondaryChakra: "sacral",
-    affiliateUrl: "https://www.amazon.com/dp/0735211299",
   });
 
-  // Chapter Summaries
   await storage.createChapterSummary({ bookId: book1.id, chapterNumber: 1, chapterTitle: "The Surprising Power of Atomic Habits", cards: [
     { text: "Habits are the compound interest of self-improvement. Getting 1% better every day seems small, but it adds up fast." },
     { text: "If you get 1% better each day for one year, you'll end up 37 times better. 1% worse each day, and you'll decline to nearly zero." },
@@ -73,7 +69,6 @@ export async function seedDatabase() {
     { text: "This simple framework gives you a practical playbook for any behavior you want to change." },
   ]});
 
-  // Mental Models
   await storage.createMentalModel({ bookId: book1.id, title: "The Habit Loop", description: "The four-step neurological pattern behind every habit.", orderIndex: 1, steps: [
     { label: "Cue", explanation: "A trigger that tells your brain to initiate a behavior. It predicts a reward." },
     { label: "Craving", explanation: "The motivational force. You don't crave the habit itself, but the change in state it delivers." },
@@ -86,52 +81,6 @@ export async function seedDatabase() {
     { label: "The Ice Cube Analogy", explanation: "Imagine heating an ice cube from 25 to 31 degrees. Nothing visible happens. At 32 degrees, it begins to melt. The work wasn't wasted — it was being stored." },
   ]});
 
-  // Principles (with stories nested)
-  const p1_1 = await storage.createPrinciple({ bookId: book1.id, title: "The 1% Rule", content: "Habits are the compound interest of self-improvement. Getting 1% better every day counts for a lot in the long-run. If you get 1% better each day for one year, you'll end up 37 times better by the time you're done.", orderIndex: 1, icon: "trending_up" });
-  await storage.createStory({ bookId: book1.id, principleId: p1_1.id, title: "The British Cycling Revolution", content: "In 2003, Dave Brailsford became the coach of the British Cycling team. They had nearly 100 years of mediocrity. Instead of pursuing massive improvement, Brailsford searched for tiny 1% improvements in everything: redesigned bike seats, tested different fabrics for racing suits, painted the inside of the team truck white to spot dust. Within 5 years, British cyclists dominated the road and track cycling events at the 2008 Olympic Games.", moral: "Aggregating marginal gains — searching for tiny improvements in every area — can lead to remarkable results over time.", orderIndex: 1 });
-
-  const p1_2 = await storage.createPrinciple({ bookId: book1.id, title: "Identity-Based Habits", content: "The most effective way to change your habits is to focus not on what you want to achieve, but on who you wish to become. Your identity emerges from your habits. Every action is a vote for the type of person you wish to become.", orderIndex: 2, icon: "person" });
-
-  const p1_3 = await storage.createPrinciple({ bookId: book1.id, title: "The Four Laws of Behavior Change", content: "Make it obvious. Make it attractive. Make it easy. Make it satisfying. These four laws are a simple set of rules for creating good habits and breaking bad ones.", orderIndex: 3, icon: "list" });
-
-  const p1_4 = await storage.createPrinciple({ bookId: book1.id, title: "Environment Design", content: "Environment is the invisible hand that shapes human behavior. Many people think they lack motivation when they actually lack clarity. Make the cues of good habits obvious in your environment.", orderIndex: 4, icon: "home" });
-  await storage.createStory({ bookId: book1.id, principleId: p1_4.id, title: "The Paper Clip Strategy", content: "A young stockbroker named Trent Dyrsmid began each morning with two jars on his desk. One was filled with 120 paper clips. The other was empty. As soon as he settled in each day, he would make a sales call. After each call, he would move one paper clip from the full jar to the empty jar and repeat. Within 18 months, Dyrsmid was bringing in $5 million to the firm.", moral: "Visual cues and tracking systems make habits obvious and satisfying. The paper clip strategy is a visual trigger that makes your progress concrete.", orderIndex: 2 });
-
-  const p1_5 = await storage.createPrinciple({ bookId: book1.id, title: "The Two-Minute Rule", content: "When you start a new habit, it should take less than two minutes to do. A new habit should not feel like a challenge. The actions that follow can be challenging, but the first two minutes should be easy.", orderIndex: 5, icon: "timer" });
-
-  // Common Mistakes
-  await storage.createCommonMistake({ bookId: book1.id, mistake: "Setting ambitious goals without building systems to support them. 'I'll run a marathon this year' with no daily running habit.", correction: "Focus on the system, not the goal. Build a daily identity: 'I am a runner who shows up every day, even if it's just for 2 minutes.'", orderIndex: 1 });
-  await storage.createCommonMistake({ bookId: book1.id, mistake: "Trying to make massive changes overnight. Going from zero exercise to an hour every day.", correction: "Use the Two-Minute Rule. Start so small it's impossible to fail: put on your running shoes, do 2 push-ups, meditate for 60 seconds.", orderIndex: 2 });
-  await storage.createCommonMistake({ bookId: book1.id, mistake: "Relying on motivation and willpower instead of designing your environment.", correction: "Redesign your surroundings. Put the book on the pillow, the fruit on the counter, the gym clothes by the door. Make good cues obvious.", orderIndex: 3 });
-
-  // Exercises (with impact)
-  await storage.createExercise({ bookId: book1.id, title: "Habit Scorecard", description: "Create awareness of your daily habits by scoring each one.", type: "reflection", impact: "high", content: { prompt: "Write down your complete daily routine from waking up to going to bed. Next to each habit, write +, -, or = to rate whether it's positive, negative, or neutral for the person you want to become." }, orderIndex: 1 });
-  await storage.createExercise({ bookId: book1.id, title: "The Four Laws Quiz", description: "Test your understanding of the four laws of behavior change.", type: "quiz", impact: "medium", content: { questions: [{ question: "What is the first law of behavior change?", options: ["Make it attractive", "Make it obvious", "Make it easy", "Make it satisfying"], correct: 1 }, { question: "According to James Clear, the best way to start a new habit is to:", options: ["Set a big goal", "Find an accountability partner", "Link it to a specific time and location", "Reward yourself immediately"], correct: 2 }, { question: "What is 'habit stacking'?", options: ["Doing many habits at once", "Linking a new habit to an existing one", "Building habits in sequence", "Removing bad habits one by one"], correct: 1 }] }, orderIndex: 2 });
-  await storage.createExercise({ bookId: book1.id, title: "Implementation Intention", description: "Create a specific plan for when and where you will perform a new habit.", type: "action_plan", impact: "high", content: { steps: ["Choose one habit you want to build this week", "Decide the exact time you will do it", "Decide the exact location where you will do it", "Write it down: 'I will [BEHAVIOR] at [TIME] in [LOCATION]'", "Set a reminder on your phone for the chosen time", "Track your completion for 7 days straight"] }, orderIndex: 3 });
-
-  // Action Items
-  await storage.createActionItem({ bookId: book1.id, text: "Write down 3 habits you want to build and reframe each as an identity statement (e.g., 'I am a writer')", type: "immediate", orderIndex: 1 });
-  await storage.createActionItem({ bookId: book1.id, text: "Pick one room and redesign it to make one good habit cue visible and one bad habit cue invisible", type: "immediate", orderIndex: 2 });
-  await storage.createActionItem({ bookId: book1.id, text: "Create a Two-Minute version of a habit you've been procrastinating on and do it right now", type: "immediate", orderIndex: 3 });
-  await storage.createActionItem({ bookId: book1.id, text: "Track one keystone habit daily for 30 days using a habit tracker (paper or app)", type: "long_term", orderIndex: 4 });
-  await storage.createActionItem({ bookId: book1.id, text: "Conduct a monthly Habit Scorecard review: rate all habits and identify one to add and one to remove", type: "long_term", orderIndex: 5 });
-  await storage.createActionItem({ bookId: book1.id, text: "Build a habit stack of 3 connected morning routines and practice for 60 days", type: "long_term", orderIndex: 6 });
-
-  // Infographics
-  await storage.createInfographic({ bookId: book1.id, title: "The Habit Loop", description: "How every habit works in 4 steps", steps: [
-    { label: "1. Cue", explanation: "A trigger that tells your brain to initiate a behavior. It could be a time, location, emotion, or preceding action." },
-    { label: "2. Craving", explanation: "The motivational force behind every habit. You don't crave the habit itself—you crave the change in state it delivers." },
-    { label: "3. Response", explanation: "The actual habit you perform—a thought or action. It depends on how motivated you are and how much friction is involved." },
-    { label: "4. Reward", explanation: "The end goal of every habit. Rewards satisfy your craving and teach your brain which actions are worth remembering." },
-  ], orderIndex: 1 });
-  await storage.createInfographic({ bookId: book1.id, title: "1% Better Every Day", description: "The power of tiny gains compounding over time", steps: [
-    { label: "Day 1", explanation: "Start with a habit so small it takes less than 2 minutes. Read one page. Do one push-up." },
-    { label: "Day 30", explanation: "Consistency builds identity. You've cast 30 votes for the person you want to become." },
-    { label: "Day 180", explanation: "The plateau of latent potential is behind you. Results become visible as the compound effect kicks in." },
-    { label: "Day 365", explanation: "1% daily improvement = 37x better in a year. Your system is now automatic and self-reinforcing." },
-  ], orderIndex: 2 });
-
-  // ===================== BOOK 2: Thinking, Fast and Slow =====================
   const book2 = await storage.createBook({
     title: "Thinking, Fast and Slow",
     author: "Daniel Kahneman",
@@ -140,9 +89,7 @@ export async function seedDatabase() {
     coreThesis: "Our minds operate through two systems: fast intuitive thinking and slow deliberate reasoning. Understanding both helps us make better decisions.",
     categoryId: catMindset.id,
     readTime: 15, listenTime: 12, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", audioDuration: 720, featured: true,
-    principleCount: 8, storyCount: 4, exerciseCount: 3,
     primaryChakra: "third_eye", secondaryChakra: "crown",
-    affiliateUrl: "https://www.amazon.com/dp/0374533555",
   });
 
   await storage.createChapterSummary({ bookId: book2.id, chapterNumber: 1, chapterTitle: "The Characters of the Story", cards: [
@@ -165,36 +112,6 @@ export async function seedDatabase() {
     { label: "When System 2 Fails", explanation: "Under cognitive load, time pressure, or fatigue, System 2 can't override System 1's mistakes. This is when we make our worst decisions." },
   ]});
 
-  const p2_1 = await storage.createPrinciple({ bookId: book2.id, title: "System 1 and System 2", content: "Your mind operates with two systems. System 1 is fast, automatic, and intuitive — it handles everyday decisions effortlessly. System 2 is slow, deliberate, and logical — it engages when you face complex problems. Most errors in judgment occur when System 1 takes over tasks that require System 2.", orderIndex: 1, icon: "brain" });
-  await storage.createStory({ bookId: book2.id, principleId: p2_1.id, title: "The Invisible Gorilla", content: "In a famous experiment by Christopher Chabris and Daniel Simons, participants were asked to watch a video of people passing basketballs and count the number of passes made by the team wearing white. While focused on counting, about half the participants completely failed to notice a person in a gorilla suit walking through the scene, stopping to beat their chest, and walking off.", moral: "Our System 1 creates a coherent story from limited information. When we focus intensely on one thing, we can be blind to what is literally right in front of us.", orderIndex: 1 });
-
-  const p2_2 = await storage.createPrinciple({ bookId: book2.id, title: "Anchoring Effect", content: "People's estimates are heavily influenced by initial values or 'anchors,' even when those anchors are random. When making judgments, the first piece of information we receive has an outsized effect on our final decision.", orderIndex: 2, icon: "anchor" });
-
-  const p2_3 = await storage.createPrinciple({ bookId: book2.id, title: "Loss Aversion", content: "Losses loom larger than gains. The pain of losing $100 is about twice as powerful as the pleasure of gaining $100. This asymmetry between the power of positive and negative expectations explains many patterns of human behavior.", orderIndex: 3, icon: "shield" });
-  await storage.createStory({ bookId: book2.id, principleId: p2_3.id, title: "The Halo Effect in Action", content: "Kahneman describes grading student essays. When he graded them sequentially, his impression of the first essay influenced his judgment of later essays. A brilliant first answer created a 'halo' that made subsequent mediocre answers seem better than they were.", moral: "First impressions create a halo that colors all subsequent judgments. To make better decisions, evaluate each piece of evidence independently.", orderIndex: 2 });
-
-  const p2_4 = await storage.createPrinciple({ bookId: book2.id, title: "The Planning Fallacy", content: "People tend to underestimate the time, costs, and risks of future actions and overestimate their benefits. This bias explains why projects run over budget, why we're always late, and why optimism often defeats realism.", orderIndex: 4, icon: "calendar" });
-
-  await storage.createCommonMistake({ bookId: book2.id, mistake: "Trusting your gut feeling for complex financial decisions, job changes, or relationship choices.", correction: "Slow down. Engage System 2 deliberately: write out pros and cons, assign probabilities, and ask 'what information am I missing?'", orderIndex: 1 });
-  await storage.createCommonMistake({ bookId: book2.id, mistake: "Letting the first number in a negotiation (the anchor) dictate the entire outcome without questioning it.", correction: "Recognize the anchor and deliberately counter it. Research your own independent baseline before entering any negotiation.", orderIndex: 2 });
-
-  await storage.createExercise({ bookId: book2.id, title: "Spot Your System 1 Biases", description: "Reflect on recent decisions where your fast-thinking System 1 may have led you astray.", type: "reflection", impact: "high", content: { prompt: "Think about the last important decision you made quickly. What assumptions did your 'gut feeling' make? Looking back, what information did you overlook? How might the outcome have been different if you had slowed down?" }, orderIndex: 1 });
-  await storage.createExercise({ bookId: book2.id, title: "Cognitive Bias Quiz", description: "Test your understanding of common cognitive biases.", type: "quiz", impact: "medium", content: { questions: [{ question: "What is the anchoring effect?", options: ["Being stuck in one viewpoint", "Initial values disproportionately influencing estimates", "Fear of change", "Repeating past mistakes"], correct: 1 }, { question: "Why do losses feel more powerful than equivalent gains?", options: ["We're naturally pessimistic", "Evolution wired us to avoid threats more than seek rewards", "We have bad memory for gains", "Social conditioning"], correct: 1 }] }, orderIndex: 2 });
-
-  await storage.createActionItem({ bookId: book2.id, text: "Before your next big decision, write down 3 assumptions your gut is making and fact-check each one", type: "immediate", orderIndex: 1 });
-  await storage.createActionItem({ bookId: book2.id, text: "In your next negotiation, research your number independently before hearing any anchors", type: "immediate", orderIndex: 2 });
-  await storage.createActionItem({ bookId: book2.id, text: "Keep a Decision Journal: log every major decision, your reasoning, and review outcomes monthly", type: "long_term", orderIndex: 3 });
-  await storage.createActionItem({ bookId: book2.id, text: "Practice the 'pre-mortem' technique before starting any new project: imagine it failed and list why", type: "long_term", orderIndex: 4 });
-
-  // Infographics
-  await storage.createInfographic({ bookId: book2.id, title: "System 1 vs System 2", description: "Two modes of thinking that drive every decision", steps: [
-    { label: "System 1: Fast", explanation: "Automatic, effortless, emotional. Handles routine decisions in milliseconds. Prone to biases and shortcuts." },
-    { label: "System 2: Slow", explanation: "Deliberate, effortful, logical. Activated for complex problems. Requires focus and mental energy." },
-    { label: "The Conflict", explanation: "System 1 makes quick judgments. System 2 is supposed to check them — but it's lazy and often just endorses System 1's answer." },
-    { label: "The Fix", explanation: "Recognize when System 1 is driving. For important decisions, deliberately activate System 2 by slowing down and questioning assumptions." },
-  ], orderIndex: 1 });
-
-  // ===================== BOOK 3: The Power of Now =====================
   const book3 = await storage.createBook({
     title: "The Power of Now",
     author: "Eckhart Tolle",
@@ -203,10 +120,7 @@ export async function seedDatabase() {
     coreThesis: "True freedom and enlightenment come from living fully in the present moment, free from the dominance of the thinking mind and ego.",
     categoryId: catMindfulness.id,
     readTime: 10, listenTime: 8, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", audioDuration: 480, featured: false,
-    principleCount: 5, storyCount: 3, exerciseCount: 2,
     primaryChakra: "third_eye", secondaryChakra: "crown",
-    premiumOnly: false, freePreviewCards: 5,
-    affiliateUrl: "https://www.amazon.com/dp/1577314808",
   });
 
   await storage.createChapterSummary({ bookId: book3.id, chapterNumber: 1, chapterTitle: "You Are Not Your Mind", cards: [
@@ -229,31 +143,6 @@ export async function seedDatabase() {
     { label: "The Practice", explanation: "Ask yourself: 'Am I at ease in this moment?' If not, what are you resisting? Accept what is, then act from clarity, not fear." },
   ]});
 
-  const p3_1 = await storage.createPrinciple({ bookId: book3.id, title: "The Present Moment Is All You Have", content: "Nothing has happened in the past; it happened in the Now. Nothing will ever happen in the future; it will happen in the Now. The present moment is the only thing you ever have.", orderIndex: 1, icon: "circle" });
-  await storage.createStory({ bookId: book3.id, principleId: p3_1.id, title: "The Beggar on the Box", content: "Tolle tells the story of a beggar who sat on a box at the side of the road for years. One day a passerby asked what was in the box. 'Nothing,' said the beggar. The passerby insisted he look. The beggar pried open the lid and discovered the box was filled with gold.", moral: "Stop looking outside yourself for fulfillment. Everything you need is already within you, accessible through present-moment awareness.", orderIndex: 1 });
-
-  await storage.createPrinciple({ bookId: book3.id, title: "You Are Not Your Mind", content: "The beginning of freedom is the realization that you are not the possessing entity — the thinker. The moment you start watching the thinker, a higher level of consciousness becomes activated.", orderIndex: 2, icon: "eye" });
-  await storage.createPrinciple({ bookId: book3.id, title: "The Pain-Body", content: "The pain-body is a semi-autonomous energy form that lives within most human beings. It is the accumulated emotional pain from the past. It can be dormant or active.", orderIndex: 3, icon: "heart" });
-
-  await storage.createCommonMistake({ bookId: book3.id, mistake: "Using meditation or mindfulness as another goal to achieve, another thing to 'get right.'", correction: "Presence isn't something you accomplish. It's what remains when you stop doing. Simply notice you're thinking — that IS the practice.", orderIndex: 1 });
-  await storage.createCommonMistake({ bookId: book3.id, mistake: "Believing you need to stop all thoughts to be 'present.' Getting frustrated when thoughts keep coming.", correction: "You can't stop thoughts. But you can stop identifying with them. Watch them pass like clouds — you are the sky, not the weather.", orderIndex: 2 });
-
-  await storage.createExercise({ bookId: book3.id, title: "One-Minute Presence", description: "Practice being fully present for 60 seconds.", type: "action_plan", impact: "high", content: { steps: ["Close your eyes and take three deep breaths", "Focus your attention on the sensations in your body", "Notice sounds around you without labeling them", "Feel the aliveness in your hands", "When thoughts arise, simply observe them without engaging", "Open your eyes and notice how you feel"] }, orderIndex: 1 });
-  await storage.createExercise({ bookId: book3.id, title: "Watching the Thinker", description: "Practice observing your thoughts without attachment.", type: "reflection", impact: "high", content: { prompt: "Set a timer for 5 minutes. Sit quietly and observe the stream of thoughts that passes through your mind. Don't judge or try to stop any thoughts. After the exercise, write about what you noticed." }, orderIndex: 2 });
-
-  await storage.createActionItem({ bookId: book3.id, text: "Right now, take 3 conscious breaths and feel the sensation of air entering your body", type: "immediate", orderIndex: 1 });
-  await storage.createActionItem({ bookId: book3.id, text: "Choose one daily activity (washing dishes, walking) and do it with 100% attention today", type: "immediate", orderIndex: 2 });
-  await storage.createActionItem({ bookId: book3.id, text: "Practice 5 minutes of 'watching the thinker' meditation every morning for 30 days", type: "long_term", orderIndex: 3 });
-  await storage.createActionItem({ bookId: book3.id, text: "Set 3 random daily alarms labeled 'Am I present?' as mindfulness triggers for 60 days", type: "long_term", orderIndex: 4 });
-
-  // Infographics
-  await storage.createInfographic({ bookId: book3.id, title: "The Layers of Presence", description: "Moving from thought to awareness in 3 levels", steps: [
-    { label: "Level 1: Thinking", explanation: "Lost in the stream of thoughts. Past regrets and future anxieties dominate. You identify completely with your mind." },
-    { label: "Level 2: Observing", explanation: "You notice you're thinking. A gap opens between you and your thoughts. This is the beginning of presence." },
-    { label: "Level 3: Being", explanation: "Pure awareness without labels. You experience life directly — sounds, sensations, aliveness — without the filter of mental commentary." },
-  ], orderIndex: 1 });
-
-  // ===================== BOOK 4: Emotional Intelligence =====================
   const book4 = await storage.createBook({
     title: "Emotional Intelligence",
     author: "Daniel Goleman",
@@ -262,58 +151,30 @@ export async function seedDatabase() {
     coreThesis: "Emotional intelligence — the ability to recognize, understand, and manage emotions — is as important as IQ for success in life.",
     categoryId: catEmotions.id,
     readTime: 14, listenTime: 11, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", audioDuration: 660, featured: false,
-    principleCount: 6, storyCount: 4, exerciseCount: 3,
     primaryChakra: "heart", secondaryChakra: "throat",
-    affiliateUrl: "https://www.amazon.com/dp/055338371X",
   });
 
   await storage.createChapterSummary({ bookId: book4.id, chapterNumber: 1, chapterTitle: "What Are Emotions For?", cards: [
-    { text: "Emotions evolved as survival signals. Fear triggers the fight-or-flight response. Anger prepares you to confront threats." },
-    { text: "The problem: our emotional brain was designed for prehistoric threats, not modern stressors like emails and traffic." },
-    { text: "The amygdala — our emotional alarm system — can hijack rational thinking in milliseconds, before the thinking brain even has a chance." },
-    { text: "Understanding this hijack is the first step to emotional intelligence: creating space between stimulus and response." },
+    { text: "Emotions are action signals. Fear prepares you to flee, anger prepares you to fight, joy signals safety and opportunity." },
+    { text: "The emotional brain (amygdala) can react before the rational brain (prefrontal cortex) even processes the situation." },
+    { text: "This 'amygdala hijack' explains why we sometimes say things in anger that we later deeply regret." },
+    { text: "Emotional intelligence is not about suppressing emotions — it's about understanding and channeling them wisely." },
   ]});
-  await storage.createChapterSummary({ bookId: book4.id, chapterNumber: 2, chapterTitle: "The Five Pillars of EQ", cards: [
-    { text: "Pillar 1: Self-Awareness — knowing what you're feeling as you feel it." },
-    { text: "Pillar 2: Self-Regulation — managing impulses and distressing emotions effectively." },
-    { text: "Pillar 3: Motivation — using emotions to drive you toward goals despite setbacks." },
-    { text: "Pillars 4 & 5: Empathy and Social Skills — reading others' emotions and managing relationships successfully." },
+  await storage.createChapterSummary({ bookId: book4.id, chapterNumber: 2, chapterTitle: "The Five Domains of EQ", cards: [
+    { text: "Self-Awareness: recognizing your emotions as they happen. This is the foundation of all emotional intelligence." },
+    { text: "Self-Regulation: managing disruptive emotions. The ability to pause between stimulus and response." },
+    { text: "Motivation: using emotions to drive toward goals. Resilience in the face of setbacks." },
+    { text: "Empathy and Social Skills: reading others' emotions and managing relationships — the interpersonal dimensions of EQ." },
   ]});
 
-  await storage.createMentalModel({ bookId: book4.id, title: "The EQ Framework", description: "Daniel Goleman's five components of emotional intelligence.", orderIndex: 1, steps: [
-    { label: "Self-Awareness", explanation: "Recognizing your emotions in real-time. This is the foundation — you can't manage what you don't notice." },
-    { label: "Self-Regulation", explanation: "The ability to pause before reacting. Managing impulses, anxiety, and anger constructively." },
-    { label: "Motivation", explanation: "Using emotional energy to pursue goals with persistence. Delaying gratification for long-term rewards." },
+  await storage.createMentalModel({ bookId: book4.id, title: "The Five Pillars of EQ", description: "Goleman's framework for emotional intelligence mastery.", orderIndex: 1, steps: [
+    { label: "Self-Awareness", explanation: "Recognizing your own emotions in real-time. Knowing your strengths, weaknesses, and emotional triggers." },
+    { label: "Self-Regulation", explanation: "Managing disruptive impulses and moods. Thinking before acting. Choosing your response instead of reacting." },
+    { label: "Motivation", explanation: "Being driven to achieve for the sake of achievement. Optimism and commitment even when facing setbacks." },
     { label: "Empathy", explanation: "Sensing what others feel without them telling you. Reading body language, tone, and unspoken signals." },
     { label: "Social Skills", explanation: "Managing relationships effectively. Influence, conflict resolution, collaboration, and leadership." },
   ]});
 
-  const p4_1 = await storage.createPrinciple({ bookId: book4.id, title: "Self-Awareness Is the Foundation", content: "Emotional intelligence begins with self-awareness — the ability to recognize and understand your own emotions as they occur.", orderIndex: 1, icon: "mirror" });
-  const p4_2 = await storage.createPrinciple({ bookId: book4.id, title: "Emotional Hijacking", content: "The amygdala can trigger an emotional response before the rational brain has time to process the situation. This 'amygdala hijack' explains why we sometimes say or do things in anger that we later regret.", orderIndex: 2, icon: "zap" });
-  await storage.createStory({ bookId: book4.id, principleId: p4_2.id, title: "The Road Rage Incident", content: "Goleman describes a man who cut off another driver in traffic. The offended driver chased him for miles, eventually forcing both cars to stop. In the confrontation, one man was shot. A trivial driving incident escalated to tragedy because the amygdala hijacked all rational thought — the emotional brain took the wheel.", moral: "An amygdala hijack can turn a minor irritation into a life-altering disaster. The pause between stimulus and response is where your power lives.", orderIndex: 1 });
-  await storage.createPrinciple({ bookId: book4.id, title: "Empathy Drives Connection", content: "Empathy — the ability to sense other people's emotions — is the most important people skill. It is built on self-awareness; the more open we are to our own emotions, the more skilled we become at reading others.", orderIndex: 3, icon: "users" });
-
-  await storage.createCommonMistake({ bookId: book4.id, mistake: "Suppressing emotions and pretending everything is fine. 'I don't get angry' is usually a red flag, not a strength.", correction: "Acknowledge the emotion without acting on it. Say 'I notice I'm feeling angry right now' — naming the emotion reduces its intensity by up to 50%.", orderIndex: 1 });
-  await storage.createCommonMistake({ bookId: book4.id, mistake: "Confusing empathy with agreement. Thinking that understanding someone's perspective means you endorse their behavior.", correction: "Empathy is about understanding, not agreeing. You can fully understand why someone is angry AND still disagree with their actions.", orderIndex: 2 });
-
-  await storage.createExercise({ bookId: book4.id, title: "Emotion Log", description: "Track your emotions throughout the day to build self-awareness.", type: "reflection", impact: "high", content: { prompt: "For the next 24 hours, pause three times and ask yourself: What am I feeling right now? What triggered this feeling? How is this emotion affecting my behavior?" }, orderIndex: 1 });
-  await storage.createExercise({ bookId: book4.id, title: "EQ Fundamentals Quiz", description: "Test your understanding of emotional intelligence concepts.", type: "quiz", impact: "low", content: { questions: [{ question: "What is the foundation of emotional intelligence?", options: ["Social skills", "Self-awareness", "Motivation", "Empathy"], correct: 1 }, { question: "What is an 'amygdala hijack'?", options: ["A memory loss event", "An emotional response before rational processing", "A manipulation technique", "A learning disability"], correct: 1 }] }, orderIndex: 2 });
-
-  await storage.createActionItem({ bookId: book4.id, text: "Name your current emotion right now. Say it out loud: 'I am feeling ___.'", type: "immediate", orderIndex: 1 });
-  await storage.createActionItem({ bookId: book4.id, text: "In your next difficult conversation, pause for 6 seconds before responding (one full breath cycle)", type: "immediate", orderIndex: 2 });
-  await storage.createActionItem({ bookId: book4.id, text: "Keep an Emotion Log for 30 days: 3 check-ins per day noting emotion, trigger, and behavior", type: "long_term", orderIndex: 3 });
-  await storage.createActionItem({ bookId: book4.id, text: "Practice active listening in one conversation daily: reflect back what you heard before responding", type: "long_term", orderIndex: 4 });
-
-  // Infographics
-  await storage.createInfographic({ bookId: book4.id, title: "The 5 Pillars of EQ", description: "Five skills that define emotional intelligence", steps: [
-    { label: "1. Self-Awareness", explanation: "Recognize your emotions as they happen. Know your strengths, weaknesses, and emotional triggers." },
-    { label: "2. Self-Regulation", explanation: "Manage disruptive emotions. Pause before reacting. Choose your response instead of being controlled by impulse." },
-    { label: "3. Motivation", explanation: "Drive yourself toward goals with optimism and resilience, even when facing setbacks." },
-    { label: "4. Empathy", explanation: "Sense and understand other people's emotions. See situations from their perspective." },
-    { label: "5. Social Skills", explanation: "Build relationships, manage conflict, inspire and influence others through effective communication." },
-  ], orderIndex: 1 });
-
-  // ===================== BOOK 5: Man's Search for Meaning =====================
   const book5 = await storage.createBook({
     title: "Man's Search for Meaning",
     author: "Viktor E. Frankl",
@@ -322,9 +183,7 @@ export async function seedDatabase() {
     coreThesis: "Those who have a 'why' to live can bear with almost any 'how.' Meaning can be found even in the worst suffering.",
     categoryId: catMeaning.id,
     readTime: 8, listenTime: 7, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", audioDuration: 420, featured: false,
-    principleCount: 5, storyCount: 5, exerciseCount: 2,
     primaryChakra: "crown", secondaryChakra: "heart",
-    affiliateUrl: "https://www.amazon.com/dp/0807014273",
   });
 
   await storage.createChapterSummary({ bookId: book5.id, chapterNumber: 1, chapterTitle: "Experiences in a Concentration Camp", cards: [
@@ -346,163 +205,68 @@ export async function seedDatabase() {
     { label: "Attitudinal Values", explanation: "Meaning through the stance you take toward unavoidable suffering. The highest form of meaning — turning tragedy into triumph." },
   ]});
 
-  const p5_1 = await storage.createPrinciple({ bookId: book5.id, title: "The Last Human Freedom", content: "Everything can be taken from a man but one thing: the last of the human freedoms — to choose one's attitude in any given set of circumstances.", orderIndex: 1, icon: "key" });
-  await storage.createStory({ bookId: book5.id, principleId: p5_1.id, title: "The Imagined Lecture", content: "During his time in the concentration camps, Frankl kept himself going by imagining himself giving a lecture after the war about the psychology of the concentration camp. This mental exercise gave him a sense of purpose — transforming his suffering into a subject for future teaching.", moral: "When you find a 'why' to live for, you can endure almost any 'how.' Projecting purpose into the future can sustain you through present suffering.", orderIndex: 1 });
-
-  await storage.createPrinciple({ bookId: book5.id, title: "Meaning Through Suffering", content: "If there is meaning in life at all, then there must be meaning in suffering. The way in which a person takes up their cross gives them ample opportunity to add a deeper meaning to life.", orderIndex: 2, icon: "mountain" });
-  await storage.createPrinciple({ bookId: book5.id, title: "Logotherapy: The Will to Meaning", content: "Frankl's therapeutic approach, logotherapy, is based on the premise that the primary motivational force of an individual is to find meaning in life.", orderIndex: 3, icon: "compass" });
-
-  await storage.createCommonMistake({ bookId: book5.id, mistake: "Pursuing happiness directly. Making 'being happy' the goal of your life.", correction: "Happiness cannot be pursued; it must ensue. It comes as a side effect of dedicating yourself to a cause greater than yourself or loving another person.", orderIndex: 1 });
-  await storage.createCommonMistake({ bookId: book5.id, mistake: "Believing suffering is always meaningless and should be avoided at all costs.", correction: "Unavoidable suffering can become meaningful when you choose your response to it. This doesn't mean seeking suffering — but when it comes, find the lesson.", orderIndex: 2 });
-
-  await storage.createExercise({ bookId: book5.id, title: "Finding Your 'Why'", description: "Reflect on what gives your life meaning and purpose.", type: "reflection", impact: "high", content: { prompt: "Frankl believed there are three sources of meaning: (1) creating a work or doing a deed, (2) experiencing something or encountering someone, and (3) the attitude we take toward unavoidable suffering. Reflect on your life through these three lenses." }, orderIndex: 1 });
-
-  await storage.createActionItem({ bookId: book5.id, text: "Write down one thing that gives your life meaning right now. Put it where you'll see it daily.", type: "immediate", orderIndex: 1 });
-  await storage.createActionItem({ bookId: book5.id, text: "Think of a current struggle. Write down what lesson or growth it could be teaching you.", type: "immediate", orderIndex: 2 });
-  await storage.createActionItem({ bookId: book5.id, text: "Create a personal mission statement using Frankl's three sources of meaning. Revisit it monthly.", type: "long_term", orderIndex: 3 });
-  await storage.createActionItem({ bookId: book5.id, text: "Practice 'attitudinal values' by reframing one difficult situation each week as an opportunity for growth", type: "long_term", orderIndex: 4 });
-
-  // Infographics
-  await storage.createInfographic({ bookId: book5.id, title: "Three Sources of Meaning", description: "Frankl's framework for finding purpose in any circumstance", steps: [
-    { label: "1. Creative Values", explanation: "Find meaning through what you give to the world — your work, art, ideas, or deeds. What can you create or contribute?" },
-    { label: "2. Experiential Values", explanation: "Find meaning through what you receive from the world — love, beauty, truth, nature. What moments take your breath away?" },
-    { label: "3. Attitudinal Values", explanation: "Find meaning through the stance you take toward unavoidable suffering. When you can't change the situation, you can still choose your response." },
-  ], orderIndex: 1 });
-
-  // ===================== SHORTS =====================
   await storage.createShort({
-    bookId: book1.id,
-    title: "The 1% Rule That Changes Everything",
+    bookId: book1.id, title: "The 1% Rule That Changes Everything",
     content: "If you get just 1% better each day, you'll be 37 times better in one year. The secret isn't massive action — it's tiny, consistent improvements that compound over time. Your habits are the compound interest of self-improvement.",
-    mediaType: "text",
-    backgroundGradient: "linear-gradient(135deg, #6B21A8, #9333EA, #A855F7)",
-    duration: 15,
-    orderIndex: 1,
-    status: "published",
+    mediaType: "text", backgroundGradient: "linear-gradient(135deg, #6B21A8, #9333EA, #A855F7)", duration: 15, orderIndex: 1, status: "published",
   });
-
   await storage.createShort({
-    bookId: book1.id,
-    title: "You Don't Rise to Your Goals",
+    bookId: book1.id, title: "You Don't Rise to Your Goals",
     content: "You don't rise to the level of your goals. You fall to the level of your systems. Every Olympic athlete wants to win gold — the difference is in the daily systems they build. Stop obsessing over outcomes. Build better systems instead.",
-    mediaType: "text",
-    backgroundGradient: "linear-gradient(135deg, #7C3AED, #8B5CF6, #C084FC)",
-    duration: 15,
-    orderIndex: 2,
-    status: "published",
+    mediaType: "text", backgroundGradient: "linear-gradient(135deg, #7C3AED, #8B5CF6, #C084FC)", duration: 15, orderIndex: 2, status: "published",
   });
-
   await storage.createShort({
-    bookId: book2.id,
-    title: "Your Brain Has Two Pilots",
+    bookId: book2.id, title: "Your Brain Has Two Pilots",
     content: "System 1 is your autopilot — fast, intuitive, and often wrong. System 2 is your co-pilot — slow, deliberate, and lazy. Most of your 'decisions' are actually System 1 reflexes that System 2 never bothered to check. The key? Know which system is flying.",
-    mediaType: "text",
-    backgroundGradient: "linear-gradient(135deg, #1E3A5F, #2563EB, #60A5FA)",
-    duration: 15,
-    orderIndex: 3,
-    status: "published",
+    mediaType: "text", backgroundGradient: "linear-gradient(135deg, #1E3A5F, #2563EB, #60A5FA)", duration: 15, orderIndex: 3, status: "published",
   });
-
   await storage.createShort({
-    bookId: book2.id,
-    title: "The Anchoring Trap",
+    bookId: book2.id, title: "The Anchoring Trap",
     content: "The first number you hear in any negotiation becomes your anchor — and it silently controls the entire outcome. Even random numbers influence your estimates. Next time someone throws out a number first, pause. Ask yourself: is this anchor real, or is it manipulating me?",
-    mediaType: "text",
-    backgroundGradient: "linear-gradient(135deg, #0F766E, #14B8A6, #5EEAD4)",
-    duration: 15,
-    orderIndex: 4,
-    status: "published",
+    mediaType: "text", backgroundGradient: "linear-gradient(135deg, #0F766E, #14B8A6, #5EEAD4)", duration: 15, orderIndex: 4, status: "published",
   });
-
   await storage.createShort({
-    bookId: book3.id,
-    title: "The Only Moment That Exists",
+    bookId: book3.id, title: "The Only Moment That Exists",
     content: "Nothing has ever happened in the past. It happened in the Now. Nothing will ever happen in the future. It will happen in the Now. The present moment is literally all you ever have. Yet most people spend their entire lives lost in memories and projections.",
-    mediaType: "text",
-    backgroundGradient: "linear-gradient(135deg, #581C87, #7E22CE, #D8B4FE)",
-    duration: 15,
-    orderIndex: 5,
-    status: "published",
+    mediaType: "text", backgroundGradient: "linear-gradient(135deg, #581C87, #7E22CE, #D8B4FE)", duration: 15, orderIndex: 5, status: "published",
   });
-
   await storage.createShort({
-    bookId: book3.id,
-    title: "You Are Not Your Thoughts",
+    bookId: book3.id, title: "You Are Not Your Thoughts",
     content: "The moment you realize you are not present, you ARE present. You can't observe the thinker if you ARE the thinker. This gap — between the thought and the awareness of the thought — is where freedom lives. Watch your mind like you'd watch clouds passing.",
-    mediaType: "text",
-    backgroundGradient: "linear-gradient(135deg, #4C1D95, #6D28D9, #A78BFA)",
-    duration: 15,
-    orderIndex: 6,
-    status: "published",
+    mediaType: "text", backgroundGradient: "linear-gradient(135deg, #4C1D95, #6D28D9, #A78BFA)", duration: 15, orderIndex: 6, status: "published",
   });
-
   await storage.createShort({
-    bookId: book4.id,
-    title: "The 6-Second Rule",
+    bookId: book4.id, title: "The 6-Second Rule",
     content: "Your amygdala can hijack your brain in milliseconds — triggering anger, fear, or panic before your rational mind even wakes up. The antidote? Six seconds. One full breath cycle. That's all it takes to let your prefrontal cortex catch up and choose a better response.",
-    mediaType: "text",
-    backgroundGradient: "linear-gradient(135deg, #9F1239, #E11D48, #FB7185)",
-    duration: 15,
-    orderIndex: 7,
-    status: "published",
+    mediaType: "text", backgroundGradient: "linear-gradient(135deg, #9F1239, #E11D48, #FB7185)", duration: 15, orderIndex: 7, status: "published",
   });
-
   await storage.createShort({
-    bookId: book4.id,
-    title: "Name It to Tame It",
+    bookId: book4.id, title: "Name It to Tame It",
     content: "When you name an emotion — 'I notice I'm feeling anxious right now' — brain scans show the amygdala's activity drops by up to 50%. Labeling emotions engages your prefrontal cortex, which calms the emotional brain. Awareness is not weakness. It's your superpower.",
-    mediaType: "text",
-    backgroundGradient: "linear-gradient(135deg, #B91C1C, #DC2626, #F87171)",
-    duration: 15,
-    orderIndex: 8,
-    status: "published",
+    mediaType: "text", backgroundGradient: "linear-gradient(135deg, #B91C1C, #DC2626, #F87171)", duration: 15, orderIndex: 8, status: "published",
   });
-
   await storage.createShort({
-    bookId: book5.id,
-    title: "The Last Human Freedom",
+    bookId: book5.id, title: "The Last Human Freedom",
     content: "Everything can be taken from a person except one thing: the freedom to choose your attitude in any circumstance. Viktor Frankl discovered this in Auschwitz. The guards could control his body, but never his mind. Between stimulus and response, there is a space. In that space is your power.",
-    mediaType: "text",
-    backgroundGradient: "linear-gradient(135deg, #1E40AF, #3B82F6, #93C5FD)",
-    duration: 15,
-    orderIndex: 9,
-    status: "published",
+    mediaType: "text", backgroundGradient: "linear-gradient(135deg, #1E40AF, #3B82F6, #93C5FD)", duration: 15, orderIndex: 9, status: "published",
   });
-
   await storage.createShort({
-    bookId: book5.id,
-    title: "Why Happiness Can't Be Chased",
+    bookId: book5.id, title: "Why Happiness Can't Be Chased",
     content: "Happiness cannot be pursued — it must ensue. The more you chase happiness directly, the more it eludes you. It comes as a side effect of dedicating yourself to a cause greater than yourself, or loving another person deeply. Stop chasing. Start meaning.",
-    mediaType: "text",
-    backgroundGradient: "linear-gradient(135deg, #312E81, #4338CA, #818CF8)",
-    duration: 15,
-    orderIndex: 10,
-    status: "published",
+    mediaType: "text", backgroundGradient: "linear-gradient(135deg, #312E81, #4338CA, #818CF8)", duration: 15, orderIndex: 10, status: "published",
   });
-
   await storage.createShort({
-    bookId: book1.id,
-    title: "Identity Beats Motivation",
+    bookId: book1.id, title: "Identity Beats Motivation",
     content: "Don't say 'I want to read more.' Say 'I am a reader.' Every action you take is a vote for the type of person you wish to become. No single vote is decisive, but as the votes build up, the evidence of your new identity builds up too. Become the person, then the habits follow.",
-    mediaType: "text",
-    backgroundGradient: "linear-gradient(135deg, #92400E, #D97706, #FCD34D)",
-    duration: 15,
-    orderIndex: 11,
-    status: "published",
+    mediaType: "text", backgroundGradient: "linear-gradient(135deg, #92400E, #D97706, #FCD34D)", duration: 15, orderIndex: 11, status: "published",
   });
-
   await storage.createShort({
-    bookId: book2.id,
-    title: "Losses Hit Twice as Hard",
+    bookId: book2.id, title: "Losses Hit Twice as Hard",
     content: "Losing $100 feels about twice as painful as gaining $100 feels good. This asymmetry — loss aversion — shapes almost every decision you make. It's why you hold losing stocks too long, stay in bad relationships, and fear change even when the odds favor it.",
-    mediaType: "text",
-    backgroundGradient: "linear-gradient(135deg, #065F46, #059669, #6EE7B7)",
-    duration: 15,
-    orderIndex: 12,
-    status: "published",
+    mediaType: "text", backgroundGradient: "linear-gradient(135deg, #065F46, #059669, #6EE7B7)", duration: 15, orderIndex: 12, status: "published",
   });
 
-  console.log("Database seeded successfully with new taxonomy!");
+  console.log("Database seeded successfully!");
 }
 
 async function seedShortsForExistingBooks() {
@@ -521,18 +285,18 @@ async function seedShortsForExistingBooks() {
   }
 
   const shortsData = [
-    { bookId: book1.id, title: "The 1% Rule That Changes Everything", content: "If you get just 1% better each day, you'll be 37 times better in one year. The secret isn't massive action — it's tiny, consistent improvements that compound over time. Your habits are the compound interest of self-improvement.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #6B21A8, #9333EA, #A855F7)", duration: 15, orderIndex: 1, status: "published" },
-    { bookId: book1.id, title: "You Don't Rise to Your Goals", content: "You don't rise to the level of your goals. You fall to the level of your systems. Every Olympic athlete wants to win gold — the difference is in the daily systems they build. Stop obsessing over outcomes. Build better systems instead.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #7C3AED, #8B5CF6, #C084FC)", duration: 15, orderIndex: 2, status: "published" },
-    { bookId: book2.id, title: "Your Brain Has Two Pilots", content: "System 1 is your autopilot — fast, intuitive, and often wrong. System 2 is your co-pilot — slow, deliberate, and lazy. Most of your 'decisions' are actually System 1 reflexes that System 2 never bothered to check. The key? Know which system is flying.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #1E3A5F, #2563EB, #60A5FA)", duration: 15, orderIndex: 3, status: "published" },
-    { bookId: book2.id, title: "The Anchoring Trap", content: "The first number you hear in any negotiation becomes your anchor — and it silently controls the entire outcome. Even random numbers influence your estimates. Next time someone throws out a number first, pause. Ask yourself: is this anchor real, or is it manipulating me?", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #0F766E, #14B8A6, #5EEAD4)", duration: 15, orderIndex: 4, status: "published" },
-    { bookId: book3.id, title: "The Only Moment That Exists", content: "Nothing has ever happened in the past. It happened in the Now. Nothing will ever happen in the future. It will happen in the Now. The present moment is literally all you ever have. Yet most people spend their entire lives lost in memories and projections.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #581C87, #7E22CE, #D8B4FE)", duration: 15, orderIndex: 5, status: "published" },
-    { bookId: book3.id, title: "You Are Not Your Thoughts", content: "The moment you realize you are not present, you ARE present. You can't observe the thinker if you ARE the thinker. This gap — between the thought and the awareness of the thought — is where freedom lives. Watch your mind like you'd watch clouds passing.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #4C1D95, #6D28D9, #A78BFA)", duration: 15, orderIndex: 6, status: "published" },
-    { bookId: book4.id, title: "The 6-Second Rule", content: "Your amygdala can hijack your brain in milliseconds — triggering anger, fear, or panic before your rational mind even wakes up. The antidote? Six seconds. One full breath cycle. That's all it takes to let your prefrontal cortex catch up and choose a better response.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #9F1239, #E11D48, #FB7185)", duration: 15, orderIndex: 7, status: "published" },
-    { bookId: book4.id, title: "Name It to Tame It", content: "When you name an emotion — 'I notice I'm feeling anxious right now' — brain scans show the amygdala's activity drops by up to 50%. Labeling emotions engages your prefrontal cortex, which calms the emotional brain. Awareness is not weakness. It's your superpower.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #B91C1C, #DC2626, #F87171)", duration: 15, orderIndex: 8, status: "published" },
-    { bookId: book5.id, title: "The Last Human Freedom", content: "Everything can be taken from a person except one thing: the freedom to choose your attitude in any circumstance. Viktor Frankl discovered this in Auschwitz. The guards could control his body, but never his mind. Between stimulus and response, there is a space. In that space is your power.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #1E40AF, #3B82F6, #93C5FD)", duration: 15, orderIndex: 9, status: "published" },
-    { bookId: book5.id, title: "Why Happiness Can't Be Chased", content: "Happiness cannot be pursued — it must ensue. The more you chase happiness directly, the more it eludes you. It comes as a side effect of dedicating yourself to a cause greater than yourself, or loving another person deeply. Stop chasing. Start meaning.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #312E81, #4338CA, #818CF8)", duration: 15, orderIndex: 10, status: "published" },
-    { bookId: book1.id, title: "Identity Beats Motivation", content: "Don't say 'I want to read more.' Say 'I am a reader.' Every action you take is a vote for the type of person you wish to become. No single vote is decisive, but as the votes build up, the evidence of your new identity builds up too. Become the person, then the habits follow.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #92400E, #D97706, #FCD34D)", duration: 15, orderIndex: 11, status: "published" },
-    { bookId: book2.id, title: "Losses Hit Twice as Hard", content: "Losing $100 feels about twice as painful as gaining $100 feels good. This asymmetry — loss aversion — shapes almost every decision you make. It's why you hold losing stocks too long, stay in bad relationships, and fear change even when the odds favor it.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #065F46, #059669, #6EE7B7)", duration: 15, orderIndex: 12, status: "published" },
+    { bookId: book1.id, title: "The 1% Rule That Changes Everything", content: "If you get just 1% better each day, you'll be 37 times better in one year.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #6B21A8, #9333EA, #A855F7)", duration: 15, orderIndex: 1, status: "published" },
+    { bookId: book1.id, title: "You Don't Rise to Your Goals", content: "You don't rise to the level of your goals. You fall to the level of your systems.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #7C3AED, #8B5CF6, #C084FC)", duration: 15, orderIndex: 2, status: "published" },
+    { bookId: book2.id, title: "Your Brain Has Two Pilots", content: "System 1 is your autopilot — fast, intuitive, and often wrong. System 2 is your co-pilot — slow, deliberate, and lazy.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #1E3A5F, #2563EB, #60A5FA)", duration: 15, orderIndex: 3, status: "published" },
+    { bookId: book2.id, title: "The Anchoring Trap", content: "The first number you hear in any negotiation becomes your anchor — and it silently controls the entire outcome.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #0F766E, #14B8A6, #5EEAD4)", duration: 15, orderIndex: 4, status: "published" },
+    { bookId: book3.id, title: "The Only Moment That Exists", content: "Nothing has ever happened in the past. It happened in the Now. The present moment is literally all you ever have.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #581C87, #7E22CE, #D8B4FE)", duration: 15, orderIndex: 5, status: "published" },
+    { bookId: book3.id, title: "You Are Not Your Thoughts", content: "The moment you realize you are not present, you ARE present. This gap is where freedom lives.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #4C1D95, #6D28D9, #A78BFA)", duration: 15, orderIndex: 6, status: "published" },
+    { bookId: book4.id, title: "The 6-Second Rule", content: "Your amygdala can hijack your brain in milliseconds. The antidote? Six seconds. One full breath cycle.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #9F1239, #E11D48, #FB7185)", duration: 15, orderIndex: 7, status: "published" },
+    { bookId: book4.id, title: "Name It to Tame It", content: "When you name an emotion, brain scans show the amygdala's activity drops by up to 50%. Awareness is your superpower.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #B91C1C, #DC2626, #F87171)", duration: 15, orderIndex: 8, status: "published" },
+    { bookId: book5.id, title: "The Last Human Freedom", content: "Everything can be taken from a person except the freedom to choose your attitude in any circumstance.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #1E40AF, #3B82F6, #93C5FD)", duration: 15, orderIndex: 9, status: "published" },
+    { bookId: book5.id, title: "Why Happiness Can't Be Chased", content: "Happiness cannot be pursued — it must ensue. It comes as a side effect of dedicating yourself to a cause greater than yourself.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #312E81, #4338CA, #818CF8)", duration: 15, orderIndex: 10, status: "published" },
+    { bookId: book1.id, title: "Identity Beats Motivation", content: "Don't say 'I want to read more.' Say 'I am a reader.' Every action is a vote for the type of person you wish to become.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #92400E, #D97706, #FCD34D)", duration: 15, orderIndex: 11, status: "published" },
+    { bookId: book2.id, title: "Losses Hit Twice as Hard", content: "Losing $100 feels about twice as painful as gaining $100 feels good. This asymmetry shapes almost every decision you make.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #065F46, #059669, #6EE7B7)", duration: 15, orderIndex: 12, status: "published" },
   ];
 
   for (const shortData of shortsData) {

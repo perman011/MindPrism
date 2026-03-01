@@ -12,7 +12,7 @@ interface SEOHeadProps {
 
 const SITE_NAME = "MindPrism";
 const DEFAULT_DESCRIPTION =
-  "Transform dense psychology books into bite-sized principles, interactive exercises, stories, and audio summaries.";
+  "Transform dense psychology books into bite-sized chapters, mental models, and audio summaries.";
 
 export function SEOHead({
   title,

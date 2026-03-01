@@ -71,9 +71,9 @@ const slides = [
     description: "Every dense psychology book distilled into its most powerful ideas — visual, interactive, and unforgettable.",
   },
   {
-    title: "Visuals, Exercises &",
+    title: "Chapters, Models &",
     highlight: "Audio Summaries.",
-    description: "For the busy mind. Learn through interactive cards, reflection exercises, and listen on the go.",
+    description: "For the busy mind. Learn through interactive cards, mental models, and listen on the go.",
   },
   {
     title: "Track your growth.",
@@ -111,7 +111,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
       <SEOHead
         title="Welcome"
-        description="Transform dense psychology books into bite-sized principles, interactive exercises, stories, and audio summaries. Start your personal growth journey today."
+        description="Transform dense psychology books into bite-sized chapters, mental models, and audio summaries. Start your personal growth journey today."
         ogImage="/images/mindprism-logo.jpeg"
       />
       <div className="absolute inset-0 z-0">

@@ -7,7 +7,7 @@ import { registerStripeRoutes } from "./stripe-routes";
 import { z } from "zod";
 import { encrypt, decrypt } from "./crypto";
 import { db } from "./db";
-import { userActivityLog, userProgress, books, categories, journalEntries, flashcardProgress, quizResults, principles, chapterSummaries, stories, shorts, shortViews } from "@shared/schema";
+import { userActivityLog, userProgress, books, categories, journalEntries, quizResults, chapterSummaries, shorts, shortViews } from "@shared/schema";
 import { eq, and, sql as dsql, desc, gte, count, lte, asc } from "drizzle-orm";
 
 export async function registerRoutes(
@@ -235,36 +235,6 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/books/:id/principles", async (req, res) => {
-    try {
-      const p = await storage.getPrinciplesByBook(req.params.id);
-      res.json(p);
-    } catch (error) {
-      console.error("Error fetching principles:", error);
-      res.status(500).json({ message: "Failed to fetch principles" });
-    }
-  });
-
-  app.get("/api/books/:id/stories", async (req, res) => {
-    try {
-      const s = await storage.getStoriesByBook(req.params.id);
-      res.json(s);
-    } catch (error) {
-      console.error("Error fetching stories:", error);
-      res.status(500).json({ message: "Failed to fetch stories" });
-    }
-  });
-
-  app.get("/api/books/:id/exercises", async (req, res) => {
-    try {
-      const e = await storage.getExercisesByBookSorted(req.params.id);
-      res.json(e);
-    } catch (error) {
-      console.error("Error fetching exercises:", error);
-      res.status(500).json({ message: "Failed to fetch exercises" });
-    }
-  });
-
   app.get("/api/books/:id/chapter-summaries", async (req, res) => {
     try {
       const cs = await storage.getChapterSummariesByBook(req.params.id);
@@ -285,36 +255,6 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/books/:id/common-mistakes", async (req, res) => {
-    try {
-      const cm = await storage.getCommonMistakesByBook(req.params.id);
-      res.json(cm);
-    } catch (error) {
-      console.error("Error fetching common mistakes:", error);
-      res.status(500).json({ message: "Failed to fetch common mistakes" });
-    }
-  });
-
-  app.get("/api/books/:id/infographics", async (req, res) => {
-    try {
-      const inf = await storage.getInfographicsByBook(req.params.id);
-      res.json(inf);
-    } catch (error) {
-      console.error("Error fetching infographics:", error);
-      res.status(500).json({ message: "Failed to fetch infographics" });
-    }
-  });
-
-  app.get("/api/books/:id/action-items", async (req, res) => {
-    try {
-      const type = req.query.type as string | undefined;
-      const ai = await storage.getActionItemsByBook(req.params.id, type);
-      res.json(ai);
-    } catch (error) {
-      console.error("Error fetching action items:", error);
-      res.status(500).json({ message: "Failed to fetch action items" });
-    }
-  });
 
   app.get("/api/books/:id/cards/:section", async (req, res) => {
     try {
@@ -323,17 +263,6 @@ export async function registerRoutes(
 
       const book = await storage.getBook(id);
       if (!book) return res.status(404).json({ message: "Book not found" });
-
-      let isPremiumUser = false;
-      try {
-        const user = (req as any).user;
-        if (user?.claims?.sub) {
-          const { authStorage } = await import("./replit_integrations/auth/storage");
-          const dbUser = await authStorage.getUser(user.claims.sub);
-          if (dbUser?.isPremium) isPremiumUser = true;
-        }
-      } catch {}
-
 
       switch (section) {
         case "chapter-summaries": {
@@ -360,75 +289,8 @@ export async function registerRoutes(
           });
           break;
         }
-        case "principles": {
-          const [bookPrinciples, allPrincipleStories] = await Promise.all([
-            storage.getPrinciplesByBook(id),
-            storage.getStoriesByBook(id),
-          ]);
-          const storiesByPrinciple = new Map<string, typeof allPrincipleStories>();
-          for (const s of allPrincipleStories) {
-            if (s.principleId) {
-              const existing = storiesByPrinciple.get(s.principleId) || [];
-              existing.push(s);
-              storiesByPrinciple.set(s.principleId, existing);
-            }
-          }
-          for (const p of bookPrinciples) {
-            cards.push({ type: "principle", data: p });
-            const pStories = storiesByPrinciple.get(p.id) || [];
-            pStories.forEach((s) => {
-              cards.push({ type: "story", data: s });
-            });
-          }
+        default:
           break;
-        }
-        case "common-mistakes": {
-          const mistakes = await storage.getCommonMistakesByBook(id);
-          mistakes.forEach((m) => {
-            cards.push({ type: "common-mistake", data: m });
-          });
-          break;
-        }
-        case "exercises": {
-          const exs = await storage.getExercisesByBookSorted(id);
-          exs.forEach((e) => {
-            cards.push({ type: "exercise", data: e });
-          });
-          break;
-        }
-        case "action-items": {
-          const items = await storage.getActionItemsByBook(id);
-          cards.push({ type: "action-items-list", data: { items } });
-          break;
-        }
-        case "infographics": {
-          const infs = await storage.getInfographicsByBook(id);
-          infs.forEach((inf) => {
-            cards.push({ type: "infographic-intro", data: { id: inf.id, title: inf.title, description: inf.description, imageUrl: inf.imageUrl, totalSteps: (inf.steps as any[]).length } });
-            (inf.steps as any[]).forEach((step, i) => {
-              cards.push({ type: "infographic-step", data: { ...step, infographicTitle: inf.title, stepIndex: i, totalSteps: (inf.steps as any[]).length, infographicId: inf.id } });
-            });
-          });
-          break;
-        }
-        default: {
-          const [bookPrinciples2, bookStories, bookExercises] = await Promise.all([
-            storage.getPrinciplesByBook(id),
-            storage.getStoriesByBook(id),
-            storage.getExercisesByBook(id),
-          ]);
-          bookPrinciples2.forEach((p) => cards.push({ type: "principle", data: p }));
-          bookStories.forEach((s) => cards.push({ type: "story", data: s }));
-          bookExercises.forEach((e) => cards.push({ type: "exercise", data: e }));
-        }
-      }
-
-      if (book.premiumOnly && !isPremiumUser) {
-        const limit = book.freePreviewCards ?? 5;
-        const truncated = cards.length > limit;
-        cards = cards.slice(0, limit);
-        res.json({ cards, truncated, totalCards: truncated ? cards.length + 1 : cards.length });
-        return;
       }
 
       res.json(cards);
@@ -438,46 +300,17 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/books/:id/cards", async (req, res) => {
-    try {
-      const [bookPrinciples, bookStories, bookExercises] = await Promise.all([
-        storage.getPrinciplesByBook(req.params.id),
-        storage.getStoriesByBook(req.params.id),
-        storage.getExercisesByBook(req.params.id),
-      ]);
-
-      const cards: any[] = [];
-      bookPrinciples.forEach((p) => cards.push({ type: "principle", data: p }));
-      bookStories.forEach((s) => cards.push({ type: "story", data: s }));
-      bookExercises.forEach((e) => cards.push({ type: "exercise", data: e }));
-
-      res.json(cards);
-    } catch (error) {
-      console.error("Error fetching cards:", error);
-      res.status(500).json({ message: "Failed to fetch cards" });
-    }
-  });
 
   app.get("/api/books/:id/content-counts", async (req, res) => {
     try {
       const id = req.params.id;
-      const [chapters, models, principles, mistakes, exercises, items, infs] = await Promise.all([
+      const [chapters, models] = await Promise.all([
         storage.getChapterSummariesByBook(id),
         storage.getMentalModelsByBook(id),
-        storage.getPrinciplesByBook(id),
-        storage.getCommonMistakesByBook(id),
-        storage.getExercisesByBook(id),
-        storage.getActionItemsByBook(id),
-        storage.getInfographicsByBook(id),
       ]);
       res.json({
         chapterSummaries: chapters.length,
         mentalModels: models.length,
-        principles: principles.length,
-        commonMistakes: mistakes.length,
-        exercises: exercises.length,
-        actionItems: items.length,
-        infographics: infs.length,
       });
     } catch (error) {
       console.error("Error fetching content counts:", error);
@@ -518,17 +351,6 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/progress/:bookId/principle/:principleId", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const result = await storage.togglePrincipleComplete(userId, req.params.bookId, req.params.principleId);
-      res.json(result);
-    } catch (error) {
-      console.error("Error toggling principle:", error);
-      res.status(500).json({ message: "Failed to toggle principle" });
-    }
-  });
-
   app.post("/api/progress/:bookId/card", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -548,17 +370,15 @@ export async function registerRoutes(
     try {
       const userId = req.user.claims.sub;
       const journalSchema = z.object({
-        exerciseId: z.string().optional(),
         content: z.string().min(1),
       });
       const parsed = journalSchema.safeParse(req.body);
       if (!parsed.success) {
         return res.status(400).json({ message: "content is required" });
       }
-      const { exerciseId, content } = parsed.data;
+      const { content } = parsed.data;
       const encryptedContent = encrypt(content);
-      const entry = await storage.createJournalEntry({ userId, exerciseId, content: encryptedContent });
-      await storage.incrementExercisesCompleted(userId);
+      const entry = await storage.createJournalEntry({ userId, content: encryptedContent });
       await storage.updateUserStreak(userId);
       res.json({ ...entry, content });
     } catch (error) {
@@ -614,43 +434,13 @@ export async function registerRoutes(
     try {
       const userId = req.user.claims.sub;
       const streak = await storage.getUserStreak(userId);
-      res.json(streak ?? { currentStreak: 0, longestStreak: 0, totalMinutesListened: 0, totalExercisesCompleted: 0, totalBooksStarted: 0 });
+      res.json(streak ?? { currentStreak: 0, longestStreak: 0, totalMinutesListened: 0, totalBooksStarted: 0 });
     } catch (error) {
       console.error("Error fetching streak:", error);
       res.status(500).json({ message: "Failed to fetch streak" });
     }
   });
 
-  app.get("/api/daily-insight", isAuthenticated, async (_req: any, res) => {
-    try {
-      const allPrinciples = await db.select({
-        id: principles.id,
-        title: principles.title,
-        content: principles.content,
-        bookId: principles.bookId,
-      }).from(principles).where(dsql`${principles.content} IS NOT NULL AND ${principles.content} != ''`);
-
-      if (allPrinciples.length === 0) {
-        return res.json(null);
-      }
-
-      const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
-      const insight = allPrinciples[dayOfYear % allPrinciples.length];
-
-      const book = await db.select({ title: books.title }).from(books).where(eq(books.id, insight.bookId)).limit(1);
-
-      res.json({
-        id: insight.id,
-        title: insight.title,
-        content: insight.content,
-        bookTitle: book[0]?.title || "Unknown",
-        bookId: insight.bookId,
-      });
-    } catch (error) {
-      console.error("Error fetching daily insight:", error);
-      res.status(500).json({ message: "Failed to fetch daily insight" });
-    }
-  });
 
   app.post("/api/streak/activity", isAuthenticated, async (req: any, res) => {
     try {
@@ -707,7 +497,6 @@ export async function registerRoutes(
       const userId = req.user.claims.sub;
       const schema = z.object({
         bookId: z.string().min(1),
-        principleId: z.string().optional(),
         content: z.string().min(1),
         type: z.string().min(1),
       });
@@ -781,7 +570,7 @@ export async function registerRoutes(
       const schema = z.object({
         eventType: z.enum([
           "book_opened", "chapter_completed", "section_viewed",
-          "audio_played", "exercise_completed", "journal_entry_created",
+          "audio_played", "journal_entry_created",
           "book_completed", "session_start", "session_end", "affiliate_click"
         ]),
         eventData: z.record(z.any()).optional(),
@@ -819,9 +608,6 @@ export async function registerRoutes(
         const total = p.totalCards ?? 1;
         return total > 0 && (p.currentCardIndex ?? 0) >= total;
       }).length;
-
-      const principlesMastered = allProgress.reduce((sum, p) => sum + (p.completedPrinciples?.length ?? 0), 0);
-      const exercisesDone = allProgress.reduce((sum, p) => sum + (p.completedExercises?.length ?? 0), 0);
 
       const startedBookIds = new Set(allProgress.filter(p => (p.currentCardIndex ?? 0) > 0).map(p => p.bookId));
       const categoriesExplored = new Set(
@@ -893,16 +679,12 @@ export async function registerRoutes(
       res.json({
         booksStarted,
         booksCompleted,
-        principlesMastered,
-        exercisesDone,
-        storiesRead: principlesMastered,
         categoriesExplored,
         totalTimeInvested,
         avgTimePerBook,
         currentStreak: streak?.currentStreak ?? 0,
         longestStreak: streak?.longestStreak ?? 0,
         totalMinutesListened: totalListenTime,
-        totalExercisesCompleted: streak?.totalExercisesCompleted ?? 0,
         journalEntries: journalCount?.count ? Number(journalCount.count) : 0,
         weeklyActivity: weekDays,
         monthlyActivity: monthDays,
@@ -934,8 +716,6 @@ export async function registerRoutes(
         const total = p.totalCards ?? 1;
         return total > 0 && (p.currentCardIndex ?? 0) >= total;
       }).length;
-      const principlesMastered = allProgress.reduce((sum, p) => sum + (p.completedPrinciples?.length ?? 0), 0);
-
       const startedBookIds = new Set(allProgress.filter(p => (p.currentCardIndex ?? 0) > 0).map(p => p.bookId));
       const totalReadTime = publishedBooks
         .filter(b => startedBookIds.has(b.id))
@@ -947,7 +727,6 @@ export async function registerRoutes(
         stats: {
           booksStarted,
           booksCompleted,
-          principlesMastered,
           totalTimeInvested,
           currentStreak: streak?.currentStreak ?? 0,
           longestStreak: streak?.longestStreak ?? 0,
@@ -972,87 +751,6 @@ export async function registerRoutes(
     }
   });
 
-  // ===== FLASHCARD ROUTES =====
-
-  app.get("/api/books/:bookId/flashcards", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { bookId } = req.params;
-
-      const bookPrinciples = await db.select().from(principles)
-        .where(eq(principles.bookId, bookId));
-
-      const progress = await db.select().from(flashcardProgress)
-        .where(and(eq(flashcardProgress.userId, userId), eq(flashcardProgress.bookId, bookId)));
-
-      const progressMap = new Map(progress.map(p => [p.principleId, p]));
-
-      const cards = bookPrinciples.map(p => ({
-        principle: p,
-        progress: progressMap.get(p.id) || null,
-      }));
-
-      const dueCount = progress.filter(p => p.nextReviewDate && new Date(p.nextReviewDate) <= new Date()).length;
-      const masteredCount = progress.filter(p => p.status === "mastered").length;
-
-      res.json({ cards, dueCount, masteredCount, total: bookPrinciples.length });
-    } catch (error) {
-      console.error("Error fetching flashcards:", error);
-      res.status(500).json({ message: "Failed to fetch flashcards" });
-    }
-  });
-
-  app.post("/api/books/:bookId/flashcards/:principleId/review", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { bookId, principleId } = req.params;
-      const schema = z.object({ quality: z.number().min(0).max(5) });
-      const { quality } = schema.parse(req.body);
-
-      const [existing] = await db.select().from(flashcardProgress)
-        .where(and(
-          eq(flashcardProgress.userId, userId),
-          eq(flashcardProgress.bookId, bookId),
-          eq(flashcardProgress.principleId, principleId),
-        ));
-
-      let easeFactor = existing?.easeFactor ?? 2.5;
-      let interval = existing?.interval ?? 0;
-      let repetitions = existing?.repetitions ?? 0;
-
-      if (quality < 3) {
-        repetitions = 0;
-        interval = 1;
-      } else {
-        if (repetitions === 0) interval = 1;
-        else if (repetitions === 1) interval = 6;
-        else interval = Math.round(interval * easeFactor);
-        repetitions += 1;
-      }
-
-      easeFactor = Math.max(1.3, easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)));
-
-      const nextReviewDate = new Date();
-      nextReviewDate.setDate(nextReviewDate.getDate() + interval);
-
-      const status = quality >= 4 && repetitions >= 3 ? "mastered" : quality < 3 ? "needs_review" : "learning";
-
-      if (existing) {
-        await db.update(flashcardProgress)
-          .set({ easeFactor, interval, repetitions, nextReviewDate, status, updatedAt: new Date() })
-          .where(eq(flashcardProgress.id, existing.id));
-      } else {
-        await db.insert(flashcardProgress).values({
-          userId, bookId, principleId, easeFactor, interval, repetitions, nextReviewDate, status,
-        });
-      }
-
-      res.json({ status, easeFactor, interval, nextReviewDate, repetitions });
-    } catch (error) {
-      console.error("Error reviewing flashcard:", error);
-      res.status(500).json({ message: "Failed to review flashcard" });
-    }
-  });
 
   // ===== QUIZ ROUTES =====
 
@@ -1063,12 +761,6 @@ export async function registerRoutes(
       const chapters = await db.select().from(chapterSummaries)
         .where(eq(chapterSummaries.bookId, bookId))
         .orderBy(asc(chapterSummaries.chapterNumber));
-
-      const bookPrinciples = await db.select().from(principles)
-        .where(eq(principles.bookId, bookId));
-
-      const bookStories = await db.select().from(stories)
-        .where(eq(stories.bookId, bookId));
 
       const getChapterSummary = (ch: any): string | null => {
         const cardsArr = Array.isArray(ch.cards) ? ch.cards : [];
@@ -1105,31 +797,6 @@ export async function registerRoutes(
         }
 
         return chapterQuestions;
-      });
-
-      bookPrinciples.forEach(p => {
-        if (p.description) {
-          const otherPrinciples = bookPrinciples
-            .filter(op => op.id !== p.id && op.description)
-            .sort(() => Math.random() - 0.5)
-            .slice(0, 3);
-
-          const distractors = otherPrinciples.map(op => op.title);
-          while (distractors.length < 3) {
-            distractors.push("None of the above");
-          }
-
-          questions.push({
-            id: `pr-${p.id}`,
-            chapterId: chapters[0]?.id || bookId,
-            question: `Which principle states: "${p.description.substring(0, 100)}..."?`,
-            options: shuffleArray([
-              { text: p.title, correct: true },
-              ...distractors.map(d => ({ text: d, correct: false })),
-            ]),
-            explanation: `${p.title}: ${p.description.substring(0, 120)}`,
-          });
-        }
       });
 
       res.json({
@@ -1315,12 +982,11 @@ export async function registerRoutes(
       const type = (req.query.type as string) || "all";
 
       if (!q || q.length < 2) {
-        return res.json({ books: [], principles: [] });
+        return res.json({ books: [] });
       }
 
       const pattern = `%${q}%`;
       const bookResults: any[] = [];
-      const principleResults: any[] = [];
 
       if (type === "books" || type === "all") {
         const matchedBooks = await db
@@ -1357,40 +1023,7 @@ export async function registerRoutes(
         }
       }
 
-      if (type === "principles" || type === "all") {
-        const matchedPrinciples = await db
-          .select({
-            id: principles.id,
-            title: principles.title,
-            content: principles.content,
-            bookId: principles.bookId,
-            bookTitle: books.title,
-          })
-          .from(principles)
-          .innerJoin(books, eq(principles.bookId, books.id))
-          .where(
-            and(
-              dsql`(${books.status} = 'published' OR ${books.status} = 'published_with_changes' OR ${books.status} IS NULL)`,
-              dsql`(${principles.title} ILIKE ${pattern} OR ${principles.content} ILIKE ${pattern})`
-            )
-          )
-          .limit(20);
-
-        for (const p of matchedPrinciples) {
-          const highlightField = (text: string) => {
-            if (!text) return text;
-            const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-            return text.replace(regex, '<mark>$1</mark>');
-          };
-          principleResults.push({
-            ...p,
-            highlightedTitle: highlightField(p.title),
-            highlightedContent: highlightField(p.content),
-          });
-        }
-      }
-
-      res.json({ books: bookResults, principles: principleResults });
+      res.json({ books: bookResults });
     } catch (error) {
       console.error("Error in search:", error);
       res.status(500).json({ message: "Search failed" });

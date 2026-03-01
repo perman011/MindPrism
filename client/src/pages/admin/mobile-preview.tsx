@@ -54,9 +54,9 @@ function PreviewBookDetail({ title, author, thesis }: { title?: string; author?:
           <p className="text-xs leading-relaxed">{thesis}</p>
         </div>
       )}
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">Blueprint</p>
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">Content</p>
       <div className="grid grid-cols-2 gap-2">
-        {["Chapters", "Models", "Principles", "Mistakes", "Infographics", "Exercises", "Actions"].map((label) => (
+        {["Chapters", "Mental Models"].map((label) => (
           <div key={label} className="p-2 bg-muted/30 rounded-lg text-center">
             <p className="text-[10px] font-medium">{label}</p>
           </div>
@@ -86,10 +86,10 @@ function PreviewSection({ section, data }: { section: string; data?: any }) {
         {data && Array.isArray(data) ? (
           data.slice(0, 5).map((item: any, i: number) => (
             <div key={i} className="p-3 bg-muted/20 rounded-lg">
-              <p className="text-xs font-medium">{item.title || item.chapterTitle || item.mistake || item.text || `Item ${i + 1}`}</p>
+              <p className="text-xs font-medium">{item.title || item.chapterTitle || item.text || `Item ${i + 1}`}</p>
               {renderContent(item)}
               {item.description && <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">{item.description}</p>}
-              {item.correction && <p className="text-[10px] text-emerald-600 mt-1 line-clamp-2">Fix: {item.correction}</p>}
+              
             </div>
           ))
         ) : (

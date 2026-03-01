@@ -7,7 +7,7 @@ import type { Book, Category, UserStreak, UserProgress, ChakraProgress, ChakraTy
 import { CHAKRA_MAP } from "@shared/schema";
 import { BookCard } from "@/components/book-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Brain, Flame, ArrowRight, Sparkles, BookOpen, ChevronRight, ChevronLeft, X, Lightbulb, Film, Headphones, Play, Trophy, Star, Shield, Zap, Award } from "lucide-react";
+import { Brain, Flame, ArrowRight, Sparkles, BookOpen, ChevronRight, ChevronLeft, X, Film, Headphones, Play, Trophy, Star, Shield, Zap, Award } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import type { Short } from "@shared/schema";
 import { ShortsPlayer, ShortCard } from "@/components/shorts-player";
@@ -241,11 +241,6 @@ export default function Dashboard() {
 
   const { data: becauseYouRead } = useQuery<{ sourceBook: { id: string; title: string } | null; books: Book[] } | null>({
     queryKey: ["/api/books/because-you-read"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
-  });
-
-  const { data: dailyInsight, isLoading: insightLoading } = useQuery<{ id: string; title: string; content: string; bookTitle: string; bookId: string } | null>({
-    queryKey: ["/api/daily-insight"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
@@ -513,45 +508,6 @@ export default function Dashboard() {
           </motion.section>
         )}
       </AnimatePresence>
-
-      {insightLoading && !dailyInsight && (
-        <div className="px-5 mb-8">
-          <div className="p-5 rounded-md border border-border">
-            <div className="flex items-start gap-4">
-              <Skeleton className="w-1 self-stretch rounded-full flex-shrink-0" style={{ minHeight: 80 }} />
-              <Skeleton className="w-10 h-10 rounded-md flex-shrink-0" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-3 w-20" />
-                <Skeleton className="h-5 w-3/4" />
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-3 w-5/6" />
-                <Skeleton className="h-2.5 w-28 mt-1" />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {dailyInsight && (
-        <div className="px-5 mb-8">
-          <Link href={`/book/${dailyInsight.bookId}`}>
-            <Card className="p-5 bg-card shadow-sm cursor-pointer overflow-visible" data-testid="card-daily-insight">
-              <div className="flex items-start gap-4">
-                <div className="w-1 self-stretch rounded-full bg-[#3B82F6] flex-shrink-0" />
-                <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Lightbulb className="w-5 h-5 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-[10px] font-semibold text-primary uppercase tracking-widest mb-1.5">Daily Insight</p>
-                  <p className="text-base font-bold mb-1.5" data-testid="text-insight-title">{dailyInsight.title}</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3" data-testid="text-insight-content">{dailyInsight.content}</p>
-                  <p className="text-[10px] text-muted-foreground/60 mt-2">From: {dailyInsight.bookTitle}</p>
-                </div>
-              </div>
-            </Card>
-          </Link>
-        </div>
-      )}
 
       {publishedShorts && publishedShorts.length > 0 && (
         <HorizontalScroll title="Quick Bites" accentLabel="Bite-sized insights" actionHref="/shorts" actionLabel="Watch All" testId="section-quick-bites">

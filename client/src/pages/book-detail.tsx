@@ -4,14 +4,13 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import type { Book, UserProgress } from "@shared/schema";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  ArrowLeft, BookOpen, Lightbulb, Brain, AlertTriangle,
-  Dumbbell, ListChecks, Layers, Bookmark, BookmarkCheck,
-  Clock, Headphones, ChevronRight, BarChart3, ShoppingCart, Share2,
-  GraduationCap, HelpCircle, Film, Crown,
+  ArrowLeft, BookOpen, Brain,
+  Bookmark, BookmarkCheck,
+  Clock, Headphones, Share2,
+  Film,
 } from "lucide-react";
 import type { Short } from "@shared/schema";
 import { ShortsPlayer, ShortCard } from "@/components/shorts-player";
@@ -23,64 +22,6 @@ import { Home } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { trackBookOpen } from "@/lib/analytics";
 import { ShareModal } from "@/components/share-modal";
-import { FlashcardPractice } from "@/components/flashcard-practice";
-import { BookQuiz } from "@/components/book-quiz";
-import confetti from "canvas-confetti";
-
-interface ContentCounts {
-  chapterSummaries: number;
-  mentalModels: number;
-  principles: number;
-  commonMistakes: number;
-  exercises: number;
-  actionItems: number;
-  infographics: number;
-}
-
-const BLUEPRINT_TILES = [
-  {
-    key: "chapter-summaries",
-    label: "Chapter Summaries",
-    icon: Layers,
-    countKey: "chapterSummaries" as keyof ContentCounts,
-  },
-  {
-    key: "mental-models",
-    label: "Mental Models",
-    icon: Brain,
-    countKey: "mentalModels" as keyof ContentCounts,
-  },
-  {
-    key: "principles",
-    label: "Principles & Stories",
-    icon: Lightbulb,
-    countKey: "principles" as keyof ContentCounts,
-  },
-  {
-    key: "common-mistakes",
-    label: "Common Mistakes",
-    icon: AlertTriangle,
-    countKey: "commonMistakes" as keyof ContentCounts,
-  },
-  {
-    key: "infographics",
-    label: "Infographics",
-    icon: BarChart3,
-    countKey: "infographics" as keyof ContentCounts,
-  },
-  {
-    key: "exercises",
-    label: "Exercises",
-    icon: Dumbbell,
-    countKey: "exercises" as keyof ContentCounts,
-  },
-  {
-    key: "action-items",
-    label: "Action Items",
-    icon: ListChecks,
-    countKey: "actionItems" as keyof ContentCounts,
-  },
-];
 
 function hasValidAudioUrl(audioUrl: string | null | undefined): boolean {
   if (!audioUrl) return false;
@@ -96,15 +37,8 @@ export default function BookDetail() {
   const { play } = useAudio();
   const [, navigate] = useLocation();
   const [showShareModal, setShowShareModal] = useState(false);
-  const [showFlashcards, setShowFlashcards] = useState(false);
-  const [showQuiz, setShowQuiz] = useState(false);
   const [showShortsPlayer, setShowShortsPlayer] = useState(false);
   const [shortsPlayerIndex, setShortsPlayerIndex] = useState(0);
-
-  const triggerCelebration = useCallback(() => {
-    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ["#3B82F6", "#60A5FA", "#DBEAFE", "#ffffff"] });
-    setTimeout(() => confetti({ particleCount: 50, spread: 60, origin: { y: 0.5 } }), 200);
-  }, []);
 
   const { data: book, isLoading: bookLoading, isFetching: bookFetching } = useQuery<Book>({
     queryKey: ["/api/books", id],
@@ -117,12 +51,6 @@ export default function BookDetail() {
       trackBookOpen(book.id, book.title);
     }
   }, [book]);
-
-  const { data: contentCounts } = useQuery<ContentCounts>({
-    queryKey: ["/api/books", id, "content-counts"],
-    queryFn: getQueryFn({ on401: "throw" }),
-    enabled: !!id,
-  });
 
   const { data: progress } = useQuery<UserProgress | null>({
     queryKey: ["/api/progress", id],
@@ -198,23 +126,6 @@ export default function BookDetail() {
               <Skeleton className="h-10 rounded-xl" />
               <Skeleton className="h-10 rounded-xl" />
             </div>
-            <Skeleton className="h-10 w-full rounded-xl" />
-          </div>
-        </div>
-        <div className="px-5 pt-2 pb-8">
-          <Skeleton className="h-20 w-full rounded-md mb-6" />
-          <Skeleton className="h-4 w-20 mb-1" />
-          <Skeleton className="h-6 w-24 mb-4" />
-          <div className="grid grid-cols-2 gap-3">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="rounded-md border border-border p-4 space-y-2">
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <Skeleton className="w-8 h-8 rounded-md" />
-                  <Skeleton className="h-5 w-8 rounded-full" />
-                </div>
-                <Skeleton className="h-4 w-3/4" />
-              </div>
-            ))}
           </div>
         </div>
       </div>
@@ -235,32 +146,11 @@ export default function BookDetail() {
     );
   }
 
-  if (showFlashcards && book) {
-    return (
-      <FlashcardPractice
-        bookId={book.id}
-        bookTitle={book.title}
-        onClose={() => setShowFlashcards(false)}
-      />
-    );
-  }
-
-  if (showQuiz && book) {
-    return (
-      <BookQuiz
-        bookId={book.id}
-        bookTitle={book.title}
-        onClose={() => setShowQuiz(false)}
-        onCelebrate={triggerCelebration}
-      />
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
         title={book?.title ? `${book.title} by ${book.author}` : "Book Detail"}
-        description={book?.description || "Explore interactive psychology book breakdowns with principles, stories, exercises, and audio summaries."}
+        description={book?.description || "Explore interactive book breakdowns with chapter summaries, mental models, and audio summaries."}
         ogType="article"
         ogImage={book?.coverImage || undefined}
         noIndex
@@ -331,16 +221,6 @@ export default function BookDetail() {
 
         <p className="text-[10px] uppercase tracking-[0.2em] text-primary font-semibold mb-1.5" data-testid="text-summary-label">Summary</p>
         <h1 className="text-2xl font-sans font-bold text-foreground mb-1 text-center leading-tight" data-testid="text-book-title">{book.title}</h1>
-        {book.premiumOnly && (
-          <Badge
-            className="mt-1 mb-1 gap-1 text-[10px] font-semibold"
-            style={{ backgroundColor: "hsl(var(--accent-gold))", color: "hsl(0 0% 10%)" }}
-            data-testid="badge-premium"
-          >
-            <Crown className="w-3 h-3" />
-            Premium
-          </Badge>
-        )}
         <p className="text-sm text-muted-foreground mb-2" data-testid="text-book-author">by {book.author}</p>
         {book.description && (
           <p className="text-muted-foreground text-sm text-center mb-4 leading-relaxed max-w-md" data-testid="text-book-description">{book.description}</p>
@@ -377,7 +257,7 @@ export default function BookDetail() {
               data-testid="button-play-audio"
             >
               <Headphones className="w-4 h-4" />
-              {audioAvailable ? "Listen" : "Listen"}
+              Listen
             </Button>
             {!audioAvailable && (
               <Badge variant="secondary" className="absolute -top-2 -right-2 text-[9px] font-semibold" data-testid="badge-coming-soon">
@@ -400,84 +280,12 @@ export default function BookDetail() {
               </Button>
             </Link>
           </div>
-
-          <a
-            href={book.affiliateUrl || `https://www.amazon.com/s?k=${encodeURIComponent(book.title + ' ' + book.author)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => {
-              fetch("/api/user/activity", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({ eventType: "affiliate_click" as const, bookId: book.id }),
-              }).catch(() => {});
-            }}
-            data-testid="button-buy-book"
-          >
-            <Button
-              variant="outline"
-              className="w-full gap-2"
-              style={{ borderColor: "hsl(var(--accent-gold))", color: "hsl(var(--accent-gold))" }}
-            >
-              <ShoppingCart className="w-4 h-4" />
-              Buy This Book
-            </Button>
-          </a>
         </div>
       </div>
 
       <div className="px-5 pt-2 pb-8">
-        {book.coreThesis && (
-          <Card className="p-4 mb-6" data-testid="card-core-thesis">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center">
-                <Lightbulb className="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-wider text-primary font-semibold mb-1">Core Thesis</p>
-                <p className="text-sm leading-relaxed" data-testid="text-core-thesis">{book.coreThesis}</p>
-              </div>
-            </div>
-          </Card>
-        )}
-
-        {contentCounts && (
-          <div className="mb-6" data-testid="section-blueprint">
-            <div className="flex items-center gap-2 mb-1">
-              <Layers className="w-4 h-4 text-primary" />
-              <p className="text-[10px] uppercase tracking-[0.15em] text-primary font-semibold">Content</p>
-            </div>
-            <h3 className="text-lg font-bold mb-4">Blueprint</h3>
-            <div className="grid grid-cols-2 gap-3">
-              {BLUEPRINT_TILES.map((tile) => {
-                const count = contentCounts[tile.countKey] ?? 0;
-                const TileIcon = tile.icon;
-                return (
-                  <Card
-                    key={tile.key}
-                    className={`p-4 hover-elevate cursor-pointer transition-opacity ${count === 0 ? "opacity-40" : ""}`}
-                    onClick={() => count > 0 ? navigate(`/book/${id}/journey?section=${tile.key}`) : undefined}
-                    data-testid={`card-blueprint-${tile.key}`}
-                  >
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <TileIcon className="w-4 h-4 text-primary" />
-                      </div>
-                      <Badge variant="secondary" className="text-[10px] font-semibold" data-testid={`badge-count-${tile.key}`}>
-                        {count}
-                      </Badge>
-                    </div>
-                    <p className="text-sm font-medium leading-snug">{tile.label}</p>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
         {bookShorts && bookShorts.length > 0 && (
-          <div className="mt-4" data-testid="section-book-shorts">
+          <div data-testid="section-book-shorts">
             <div className="flex items-center gap-2 mb-1">
               <Film className="w-4 h-4 text-primary" />
               <p className="text-[10px] uppercase tracking-[0.15em] text-primary font-semibold">Quick Bites</p>

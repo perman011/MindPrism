@@ -68,16 +68,10 @@ function PreviewBookDetail({ book }: { book: Book }) {
           </button>
         </div>
 
-        {book.affiliateUrl && (
-          <button className="w-full bg-[#C4A35A] text-white rounded-full py-3 text-sm font-semibold">
-            Buy This Book
-          </button>
-        )}
-
         <div className="bg-white dark:bg-[#1A1225] rounded-2xl p-5 shadow-sm">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">What You'll Learn</h3>
           <div className="grid grid-cols-2 gap-3">
-            {["Chapters", "Mental Models", "Principles", "Exercises", "Mistakes", "Actions"].map((section) => (
+            {["Chapters", "Mental Models"].map((section) => (
               <div key={section} className="bg-muted/50 dark:bg-[#261530] rounded-lg p-3 text-center">
                 <p className="text-xs font-medium">{section}</p>
               </div>

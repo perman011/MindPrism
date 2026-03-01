@@ -3,7 +3,7 @@ import { getQueryFn } from "@/lib/queryClient";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  BookOpen, Trophy, Brain, Clock, Flame, TrendingUp,
+  BookOpen, Trophy, Clock, Flame, TrendingUp,
   Target, PenLine, BarChart3
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -12,19 +12,15 @@ import { ProgressShareCard } from "./progress-share-card";
 interface UserStats {
   booksStarted: number;
   booksCompleted: number;
-  principlesMastered: number;
-  exercisesDone: number;
   categoriesExplored: number;
   totalTimeInvested: number;
   avgTimePerBook: number;
   currentStreak: number;
   longestStreak: number;
   totalMinutesListened: number;
-  totalExercisesCompleted: number;
   journalEntries: number;
   weeklyActivity: { day: string; date: string; activities: number }[];
   monthlyActivity: { date: string; activities: number }[];
-  storiesRead: number;
 }
 
 export function PersonalStats() {
@@ -52,7 +48,6 @@ export function PersonalStats() {
   const statCards = [
     { icon: BookOpen, label: "Books Started", value: stats.booksStarted, color: "text-primary", bg: "bg-primary/10" },
     { icon: Trophy, label: "Books Completed", value: stats.booksCompleted, color: "text-success", bg: "bg-success/10" },
-    { icon: Brain, label: "Principles Mastered", value: stats.principlesMastered, color: "text-primary-light", bg: "bg-primary-light/10" },
     { icon: Target, label: "Domains Explored", value: stats.categoriesExplored, color: "text-accent-teal", bg: "bg-accent-teal/10" },
     { icon: Clock, label: "Minutes Invested", value: stats.totalTimeInvested, color: "text-primary-light", bg: "bg-primary-light/10" },
     { icon: TrendingUp, label: "Avg Min/Book", value: stats.avgTimePerBook, color: "text-warning", bg: "bg-warning/10" },
@@ -62,7 +57,7 @@ export function PersonalStats() {
     { icon: Flame, label: "Current Streak", value: `${stats.currentStreak} days`, color: "text-primary" },
     { icon: Trophy, label: "Longest Streak", value: `${stats.longestStreak} days`, color: "text-accent-gold" },
     { icon: PenLine, label: "Journal Entries", value: stats.journalEntries, color: "text-success" },
-    { icon: BarChart3, label: "Exercises Done", value: stats.exercisesDone, color: "text-primary-light" },
+    { icon: BarChart3, label: "Minutes Listened", value: stats.totalMinutesListened, color: "text-primary-light" },
   ];
 
   return (

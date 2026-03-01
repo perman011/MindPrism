@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { BookOpen, Search, Film, Clock, X, Lightbulb } from "lucide-react";
+import { BookOpen, Search, Film, Clock, X } from "lucide-react";
 import { useSearch, useLocation } from "wouter";
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import type { Short } from "@shared/schema";
@@ -55,15 +55,6 @@ interface SearchResult {
     highlightedTitle: string;
     highlightedAuthor: string;
     highlightedDescription: string;
-  }>;
-  principles: Array<{
-    id: string;
-    title: string;
-    content: string;
-    bookId: string;
-    bookTitle: string;
-    highlightedTitle: string;
-    highlightedContent: string;
   }>;
 }
 
@@ -223,7 +214,7 @@ export default function Discover() {
   const shortsCount = publishedShorts?.length ?? 0;
 
   const showRecentSearches = showSuggestions && searchQuery.length < 2 && recentSearches.length > 0;
-  const showSearchSuggestions = showSuggestions && debouncedQuery.length >= 2 && (topSuggestions.length > 0 || (searchResults?.principles?.length ?? 0) > 0);
+  const showSearchSuggestions = showSuggestions && debouncedQuery.length >= 2 && topSuggestions.length > 0;
 
   const hasActiveFilters = activeChakra !== "all" || activeCategory !== "all";
 
@@ -249,7 +240,7 @@ export default function Discover() {
           <Input
             ref={searchInputRef}
             type="search"
-            placeholder={activeTab === "books" ? "Search books, authors, principles..." : "Search shorts, topics..."}
+            placeholder={activeTab === "books" ? "Search books, authors..." : "Search shorts, topics..."}
             className="w-full pl-10 pr-10 bg-card border-[#E5E7EB] dark:border-border focus:border-primary rounded-xl text-sm h-12"
             value={searchQuery}
             onChange={(e) => {
@@ -361,30 +352,6 @@ export default function Discover() {
                 </>
               )}
 
-              {(searchResults?.principles?.length ?? 0) > 0 && (
-                <>
-                  <div className="px-4 py-2 border-t border-border">
-                    <span className="text-xs font-medium text-muted-foreground">Principles</span>
-                  </div>
-                  {searchResults!.principles.slice(0, 5).map((principle) => (
-                    <a
-                      key={principle.id}
-                      href={`/book/${principle.bookId}`}
-                      className="flex items-center gap-3 px-4 py-2.5 hover-elevate transition-colors"
-                      onClick={() => handleSearchSubmit(searchQuery)}
-                      data-testid={`suggestion-principle-${principle.id}`}
-                    >
-                      <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <Lightbulb className="w-4 h-4 text-primary/60" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium truncate" dangerouslySetInnerHTML={{ __html: principle.highlightedTitle }} />
-                        <p className="text-xs text-muted-foreground truncate">{principle.bookTitle}</p>
-                      </div>
-                    </a>
-                  ))}
-                </>
-              )}
             </div>
           )}
         </div>
@@ -434,7 +401,6 @@ export default function Discover() {
             <div className="px-5 pb-4">
               <p className="text-xs text-muted-foreground" data-testid="text-search-results-count">
                 {searchResults.books.length} book{searchResults.books.length !== 1 ? "s" : ""}
-                {searchResults.principles.length > 0 && ` and ${searchResults.principles.length} principle${searchResults.principles.length !== 1 ? "s" : ""}`}
                 {" "}found for "{searchQuery}"
               </p>
             </div>
@@ -543,25 +509,6 @@ export default function Discover() {
               </div>
             )}
 
-            {isSearchActive && searchResults && searchResults.principles.length > 0 && (
-              <div className="mt-8" data-testid="search-principles-results">
-                <h2 className="text-lg font-semibold mb-4">Matching Principles</h2>
-                <div className="space-y-3">
-                  {searchResults.principles.map((principle) => (
-                    <a
-                      key={principle.id}
-                      href={`/book/${principle.bookId}`}
-                      className="block p-4 bg-card border border-border rounded-md hover-elevate transition-colors"
-                      data-testid={`search-result-principle-${principle.id}`}
-                    >
-                      <p className="text-sm font-medium mb-1" dangerouslySetInnerHTML={{ __html: principle.highlightedTitle }} />
-                      <p className="text-xs text-muted-foreground line-clamp-2" dangerouslySetInnerHTML={{ __html: principle.highlightedContent }} />
-                      <p className="text-xs text-primary mt-2">{principle.bookTitle}</p>
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </>
       )}

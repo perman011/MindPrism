@@ -14,15 +14,12 @@ import featherLogoPath from "@assets/77531E8D-B1EB-4D23-A577-C8EC54A4B63C_177215
 interface UserStats {
   booksStarted: number;
   booksCompleted: number;
-  principlesMastered: number;
-  exercisesDone: number;
   categoriesExplored: number;
   totalTimeInvested: number;
   avgTimePerBook: number;
   currentStreak: number;
   longestStreak: number;
   totalMinutesListened: number;
-  totalExercisesCompleted: number;
   journalEntries: number;
   weeklyActivity: { day: string; date: string; activities: number }[];
 }
@@ -42,7 +39,7 @@ function getShareText(trigger: ShareTrigger, stats: UserStats): string {
       return `${trigger.milestone}-day learning streak on MindPrism! Consistency is key.`;
     case "progress":
     default:
-      return `My MindPrism journey: ${stats.booksStarted} books explored, ${stats.principlesMastered} principles mastered, ${stats.currentStreak}-day streak!`;
+      return `My MindPrism journey: ${stats.booksStarted} books explored, ${stats.currentStreak}-day streak!`;
   }
 }
 
@@ -154,7 +151,7 @@ export function ProgressShareCard({ trigger }: { trigger?: ShareTrigger }) {
     const statItems = [
       { label: "Books Read", value: stats.booksStarted.toString(), icon: "book" },
       { label: "Day Streak", value: stats.currentStreak.toString(), icon: "flame" },
-      { label: "Principles", value: stats.principlesMastered.toString(), icon: "brain" },
+      { label: "Domains", value: stats.categoriesExplored.toString(), icon: "brain" },
       { label: "Minutes", value: stats.totalTimeInvested.toString(), icon: "time" },
     ];
 

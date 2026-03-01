@@ -21,9 +21,9 @@ import { StreakChart } from "@/components/streak-chart";
 import { motion } from "framer-motion";
 
 interface VaultStats {
-  principlesMastered: number;
-  storiesRead: number;
+  booksStarted: number;
   currentStreak: number;
+  totalMinutesListened: number;
   monthlyActivity: { date: string; activities: number }[];
 }
 
@@ -173,8 +173,8 @@ export default function Vault() {
           <>
             <div className="mb-6">
               <SummaryStats
-                principlesLearned={vaultStats?.principlesMastered ?? 0}
-                storiesRead={vaultStats?.storiesRead ?? 0}
+                booksStarted={vaultStats?.booksStarted ?? 0}
+                minutesListened={vaultStats?.totalMinutesListened ?? 0}
                 currentStreak={vaultStats?.currentStreak ?? 0}
               />
             </div>
@@ -276,7 +276,7 @@ export default function Vault() {
                 <div className="text-center py-14">
                   <PenLine className="w-10 h-10 text-muted-foreground/20 mx-auto mb-3" />
                   <p className="text-sm font-medium text-muted-foreground">No journal entries yet</p>
-                  <p className="text-xs text-muted-foreground mt-1">Complete exercises to build your journal</p>
+                  <p className="text-xs text-muted-foreground mt-1">Start reading books to build your journal</p>
                 </div>
               ) : (
                 journalEntries.map((entry) => (
