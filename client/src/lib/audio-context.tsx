@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useRef, useCallback, useEffect } from "react";
 import type { Book } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
 
 interface AudioState {
   book: Book | null;
@@ -24,6 +25,7 @@ const AudioContext = createContext<AudioContextType | null>(null);
 
 export function AudioProvider({ children }: { children: React.ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { toast } = useToast();
   const [state, setState] = useState<AudioState>({
     book: null,
     isPlaying: false,
@@ -34,6 +36,13 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   });
 
   const play = useCallback((book: Book) => {
+    if (!book.audioUrl || book.audioUrl === "placeholder") {
+      toast({
+        title: "Audio Coming Soon",
+        description: `The audio summary for "${book.title}" is not yet available.`,
+      });
+      return;
+    }
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.src = "";
@@ -46,7 +55,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       duration: book.audioDuration || book.listenTime * 60,
       isFullScreen: true,
     }));
-  }, []);
+  }, [toast]);
 
   const togglePlay = useCallback(() => {
     setState((prev) => ({ ...prev, isPlaying: !prev.isPlaying }));

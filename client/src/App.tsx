@@ -1,4 +1,4 @@
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route, useLocation, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -96,9 +96,17 @@ function AuthenticatedApp() {
   );
 }
 
+function WelcomeRedirect() {
+  return <Redirect to="/" />;
+}
+
 function AppRouter() {
   const { user, isLoading } = useAuth();
   const [location] = useLocation();
+
+  if (location === "/welcome") {
+    return <WelcomeRedirect />;
+  }
 
   if (isLoading) {
     return (

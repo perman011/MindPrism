@@ -307,7 +307,10 @@ export default function BookDetail() {
               Premium
             </Badge>
           )}
-          <p className="text-sm text-purple-200/60 mb-4" data-testid="text-book-author">by {book.author}</p>
+          <p className="text-sm text-purple-200/60 mb-2" data-testid="text-book-author">by {book.author}</p>
+          {book.description && (
+            <p className="text-purple-200/60 text-sm text-center px-6 mb-4 leading-relaxed" data-testid="text-book-description">{book.description}</p>
+          )}
 
           <div className="flex items-center gap-1.5 mb-6 flex-wrap justify-center">
             <span className="flex items-center gap-1 text-xs text-purple-200/60" data-testid="text-read-time">
@@ -322,12 +325,14 @@ export default function BookDetail() {
           </div>
 
           <div className="grid grid-cols-2 gap-3 w-full px-6">
-            <Link href={`/book/${id}/journey`} className="col-span-1">
-              <Button className="w-full gap-2" data-testid="button-start-journey">
-                <BookOpen className="w-4 h-4" />
-                {cardProgress > 0 ? `Resume (${cardProgress}%)` : "Read"}
-              </Button>
-            </Link>
+            <Button
+              className="w-full gap-2 col-span-1"
+              onClick={() => navigate(`/book/${id}/journey`)}
+              data-testid="button-start-journey"
+            >
+              <BookOpen className="w-4 h-4" />
+              {cardProgress > 0 ? `Resume (${cardProgress}%)` : "Read"}
+            </Button>
             <Button
               variant="outline"
               className="col-span-1 gap-2 border-white/20 text-white"

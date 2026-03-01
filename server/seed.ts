@@ -43,6 +43,7 @@ export async function seedDatabase() {
     readTime: 12, listenTime: 10, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", audioDuration: 600, featured: true,
     principleCount: 7, storyCount: 5, exerciseCount: 4,
     primaryChakra: "solar_plexus", secondaryChakra: "sacral",
+    affiliateUrl: "https://www.amazon.com/dp/0735211299",
   });
 
   // Chapter Summaries
@@ -135,6 +136,7 @@ export async function seedDatabase() {
     readTime: 15, listenTime: 12, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", audioDuration: 720, featured: true,
     principleCount: 8, storyCount: 4, exerciseCount: 3,
     primaryChakra: "third_eye", secondaryChakra: "crown",
+    affiliateUrl: "https://www.amazon.com/dp/0374533555",
   });
 
   await storage.createChapterSummary({ bookId: book2.id, chapterNumber: 1, chapterTitle: "The Characters of the Story", cards: [
@@ -198,6 +200,7 @@ export async function seedDatabase() {
     principleCount: 5, storyCount: 3, exerciseCount: 2,
     primaryChakra: "third_eye", secondaryChakra: "crown",
     premiumOnly: false, freePreviewCards: 5,
+    affiliateUrl: "https://www.amazon.com/dp/1577314808",
   });
 
   await storage.createChapterSummary({ bookId: book3.id, chapterNumber: 1, chapterTitle: "You Are Not Your Mind", cards: [
@@ -255,6 +258,7 @@ export async function seedDatabase() {
     readTime: 14, listenTime: 11, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", audioDuration: 660, featured: false,
     principleCount: 6, storyCount: 4, exerciseCount: 3,
     primaryChakra: "heart", secondaryChakra: "throat",
+    affiliateUrl: "https://www.amazon.com/dp/055338371X",
   });
 
   await storage.createChapterSummary({ bookId: book4.id, chapterNumber: 1, chapterTitle: "What Are Emotions For?", cards: [
@@ -314,6 +318,7 @@ export async function seedDatabase() {
     readTime: 8, listenTime: 7, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", audioDuration: 420, featured: false,
     principleCount: 5, storyCount: 5, exerciseCount: 2,
     primaryChakra: "crown", secondaryChakra: "heart",
+    affiliateUrl: "https://www.amazon.com/dp/0807014273",
   });
 
   await storage.createChapterSummary({ bookId: book5.id, chapterNumber: 1, chapterTitle: "Experiences in a Concentration Camp", cards: [

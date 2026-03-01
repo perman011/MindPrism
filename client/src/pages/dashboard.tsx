@@ -257,7 +257,6 @@ export default function Dashboard() {
   const [shortsPlayerOpen, setShortsPlayerOpen] = useState(false);
   const [shortsPlayerIndex, setShortsPlayerIndex] = useState(0);
 
-  const featuredBooks = books?.filter((b) => b.featured) ?? [];
   const allBooks = books ?? [];
   const inProgressBooks = allProgress?.filter(p => p.currentCardIndex && p.currentCardIndex > 0 && p.totalCards && p.currentCardIndex < p.totalCards) ?? [];
 
@@ -684,32 +683,6 @@ export default function Dashboard() {
       {allBooks.length > 0 && (
         <BookSlider books={allBooks} title="All Books" testId="section-all-books" />
       )}
-
-      {featuredBooks.length > 0 && (
-        <HorizontalScroll title="Based on Your Goals" accentLabel="Recommended for you" actionHref="/discover" actionLabel="See All" testId="section-featured">
-          {booksLoading
-            ? Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="flex-shrink-0 w-44 h-60 rounded-xl" />
-              ))
-            : featuredBooks.map((book) => (
-                <div key={book.id} className="flex-shrink-0 w-44">
-                  <BookCard book={book} compact />
-                </div>
-              ))}
-        </HorizontalScroll>
-      )}
-
-      <HorizontalScroll title="Trending Audio Summaries" accentLabel="Popular this week" actionHref="/audio" actionLabel="Listen" testId="section-trending">
-        {booksLoading
-          ? Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="flex-shrink-0 w-44 h-60 rounded-xl" />
-            ))
-          : allBooks.filter(b => b.audioUrl).slice(0, 5).map((book) => (
-              <div key={book.id} className="flex-shrink-0 w-44 cursor-pointer" onClick={() => play(book)}>
-                <BookCard book={book} compact audioMode />
-              </div>
-            ))}
-      </HorizontalScroll>
 
       {categories && categories.length > 0 && (
         <section className="mb-10 px-5" data-testid="section-categories">

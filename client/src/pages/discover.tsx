@@ -257,7 +257,7 @@ export default function Discover() {
             {showRecentSearches && (
               <div
                 ref={suggestionsRef}
-                className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-md shadow-lg z-10 overflow-hidden"
+                className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-md shadow-lg z-50 overflow-hidden"
                 data-testid="recent-searches"
               >
                 <div className="px-4 py-2 flex items-center justify-between gap-2">
@@ -299,7 +299,7 @@ export default function Discover() {
             {showSearchSuggestions && (
               <div
                 ref={suggestionsRef}
-                className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-md shadow-lg z-10 overflow-hidden max-h-80 overflow-y-auto"
+                className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-md shadow-lg z-50 overflow-hidden max-h-80 overflow-y-auto"
                 data-testid="search-suggestions"
               >
                 {topSuggestions.length > 0 && (
