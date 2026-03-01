@@ -368,7 +368,7 @@ export default function Discover() {
                   ? "bg-white text-[#341539] shadow-sm"
                   : "text-white/70"
               }`}
-              onClick={() => { setActiveTab("books"); setSearchQuery(""); }}
+              onClick={() => { setActiveTab("books"); }}
               data-testid="tab-books"
               role="tab"
               aria-selected={activeTab === "books"}
@@ -382,7 +382,7 @@ export default function Discover() {
                   ? "bg-white text-[#341539] shadow-sm"
                   : "text-white/70"
               }`}
-              onClick={() => { setActiveTab("shorts"); setSearchQuery(""); }}
+              onClick={() => { setActiveTab("shorts"); }}
               data-testid="tab-shorts"
               role="tab"
               aria-selected={activeTab === "shorts"}
@@ -413,7 +413,7 @@ export default function Discover() {
             </div>
           )}
 
-          {!isSearchActive && categories && categories.length > 0 && (
+          {categories && categories.length > 0 && (
             <div className="flex items-center gap-2.5 px-5 mb-6 overflow-x-auto pb-2 scrollbar-hide" data-testid="category-pills">
               <button
                 className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all ${
@@ -445,7 +445,7 @@ export default function Discover() {
           )}
 
           <div className="px-5 pb-8">
-            {!isSearchActive && activeCategory && (
+            {activeCategory && (
               <p className="text-xs text-muted-foreground mb-3" data-testid="text-filter-label">
                 Showing {filteredBooks.length} {filteredBooks.length === 1 ? "book" : "books"}
                 {categories?.find(c => c.slug === activeCategory)

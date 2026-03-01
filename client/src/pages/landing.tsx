@@ -66,8 +66,8 @@ function FeatherRain() {
 
 const slides = [
   {
-    title: "Skip the 500 pages.",
-    highlight: "Master the principles.",
+    title: "Master psychology's most powerful concepts.",
+    highlight: "In minutes.",
     description: "Every dense psychology book distilled into its most powerful ideas — visual, interactive, and unforgettable.",
   },
   {
@@ -136,18 +136,10 @@ export default function LandingPage() {
           }}
         >
           <div className="flex flex-col items-center">
-            <img src={mindprismLogo} alt="MindPrism" className="h-28 object-contain" style={{ aspectRatio: '1.618' }} />
-            <span className="text-base font-semibold tracking-[0.15em] text-[#341539] mt-1 font-serif">Mind Prism</span>
+            <img src={mindprismLogo} alt="MindPrism" className="h-32 object-contain" style={{ aspectRatio: '1.618' }} />
+            <span className="text-lg font-bold tracking-[0.12em] text-[#341539] mt-1.5 font-serif">mindprism</span>
           </div>
         </motion.div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => { window.location.href = "/api/login"; }}
-          data-testid="button-login"
-        >
-          I already have an account
-        </Button>
       </nav>
 
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6">

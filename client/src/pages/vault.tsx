@@ -90,7 +90,7 @@ export default function Vault() {
 
   const tabs = [
     { id: "journal" as const, label: "Journal", icon: PenLine },
-    { id: "highlights" as const, label: "Saved", icon: Bookmark },
+    { id: "highlights" as const, label: "My Highlights", icon: Bookmark },
     { id: "settings" as const, label: "Settings", icon: Settings },
   ];
 

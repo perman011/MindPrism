@@ -29,7 +29,7 @@ export function BottomNav() {
               aria-current={active ? "page" : undefined}
               role="tab"
               aria-selected={active}
-              className={`flex flex-col items-center justify-center gap-1 flex-1 py-2 min-h-[2.75rem] rounded-md transition-all duration-150 active:scale-95 ${
+              className={`flex flex-col items-center justify-center gap-1 flex-1 py-2 min-h-[2.75rem] rounded-md transition-all duration-150 active:scale-95 touch-manipulation ${
                 active ? "text-primary" : "text-muted-foreground"
               }`}
               data-testid={item.testId}
