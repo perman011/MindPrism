@@ -1,5 +1,5 @@
 import { SEOHead } from "@/components/SEOHead";
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
@@ -215,9 +215,13 @@ export default function Dashboard() {
     }
   }, [streak?.currentStreak]);
 
+  const streakDataMemo = useMemo(
+    () => streak?.currentStreak != null ? { currentStreak: streak.currentStreak } : undefined,
+    [streak?.currentStreak]
+  );
   const { pendingTrigger: shareTrigger, dismissTrigger: dismissShareTrigger } = useShareTriggers(
     undefined,
-    streak?.currentStreak != null ? { currentStreak: streak.currentStreak } : undefined
+    streakDataMemo
   );
 
   const { data: allProgress } = useQuery<UserProgress[]>({
