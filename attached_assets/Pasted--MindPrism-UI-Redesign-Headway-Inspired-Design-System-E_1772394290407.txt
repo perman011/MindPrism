@@ -1,0 +1,443 @@
+# MindPrism UI Redesign — Headway-Inspired Design System & Execution Plan
+
+## Brand DNA Card
+
+MindPrism is a premium psychology book summary app. The new design is directly inspired by **Headway** — the #1 book summary app. We move from the current flat-black-with-gold look to a **warm, light, clean** aesthetic: cream/beige backgrounds, white cards, blue primary accent, colorful book covers, and spacious layouts. The feel is **warm, approachable, professional** — like a smart friend guiding you through psychology's best ideas.
+
+---
+
+## 1. COLOR SYSTEM (Headway-Inspired — Light Mode Primary)
+
+### Light Mode (DEFAULT)
+| Token | Hex | Usage |
+|-------|-----|-------|
+| **primary** | `#3B82F6` | Buttons, links, active states, CTAs (Headway blue) |
+| **primary-hover** | `#2563EB` | Hover/pressed states |
+| **primary-light** | `#DBEAFE` | Light blue backgrounds, selected pills, highlights |
+| **background** | `#F5F0EB` | Page background (warm cream/beige, Headway signature) |
+| **surface** | `#FFFFFF` | Cards, modals, elevated containers (white) |
+| **foreground** | `#111827` | Primary text (near-black) |
+| **muted** | `#6B7280` | Secondary text, placeholders, metadata |
+| **border** | `#E5E7EB` | Dividers, card outlines |
+| **success** | `#22C55E` | Completion, achievements |
+| **warning** | `#F97316` | Streaks, flames, orange accents (Headway-style) |
+| **error** | `#EF4444` | Errors, destructive |
+| **star** | `#F97316` | Ratings, orange stars (Headway uses orange stars) |
+
+### Dark Mode (Optional — can add later)
+| Token | Hex | Usage |
+|-------|-----|-------|
+| **primary** | `#60A5FA` | Blue, slightly lighter for dark bg |
+| **background** | `#111827` | Dark background |
+| **surface** | `#1F2937` | Cards on dark |
+| **foreground** | `#F9FAFB` | Light text |
+| **muted** | `#9CA3AF` | Secondary text |
+| **border** | `#374151` | Dividers |
+
+**PRIORITY: Build light mode first. Dark mode is optional/later.**
+
+---
+
+## 2. TYPOGRAPHY SYSTEM
+
+### Font Stack (Headway uses clean sans-serif)
+- **All text:** `Inter` — one font family, weights 400/500/600/700
+- **Book quotes (optional):** `Georgia` or `Source Serif 4` italic for quoted passages
+
+### Type Scale
+| Token | Size | Weight | Usage |
+|-------|------|--------|-------|
+| display | 32px | 700 | Hero headings, greeting |
+| title | 24px | 700 | Screen titles ("Discover") |
+| heading | 20px | 600 | Section headers ("Jump Back In") |
+| body-lg | 17px | 400 | Featured body text, key points |
+| body | 15px | 400 | Standard body, descriptions |
+| caption | 13px | 500 | Labels, timestamps, metadata |
+| small | 11px | 600 | Badges, pills, fine print |
+
+### CRITICAL FIX: Google Fonts
+Replace all current font imports with ONLY:
+```html
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+```
+Remove ALL other font families (Nunito, Source Serif Pro, Poppins, Playfair Display, etc.)
+
+---
+
+## 3. SPACING & LAYOUT
+
+- Screen horizontal padding: **20px**
+- Card padding: **16px**
+- Card border radius: **16px** (Headway uses generous rounding)
+- Between cards: **12px**
+- Between sections: **32px**
+- Section title to content: **12px**
+- Book cover radius: **12px**
+
+---
+
+## 4. COMPONENT SPECIFICATIONS (Headway Style)
+
+### Buttons
+| Variant | Style |
+|---------|-------|
+| Primary CTA | bg `#3B82F6`, text white, h-12, rounded-xl, font-semibold |
+| Secondary | bg white, text `#3B82F6`, border 1px `#E5E7EB`, h-11, rounded-xl |
+| Ghost | bg transparent, text `#3B82F6`, h-11 |
+| Pill/Chip | bg white, text `#374151`, border 1px `#E5E7EB`, rounded-full, px-4 py-2 |
+| Active Pill | bg `#3B82F6`, text white, rounded-full |
+
+### Cards (Headway Style — white on cream)
+```
+Background: #FFFFFF (white)
+Border: none (use shadow instead)
+Shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)
+Border radius: 16px
+Padding: 16px
+```
+
+### Book Cards (Discover Grid)
+```
+Image: cover-fill, aspect 3:4, border-radius 12px
+Title: BELOW image, 15px, weight 600, #111827
+Author: BELOW title, 13px, #6B7280
+No overlay text on cover images
+Gap between image and text: 8px
+Grid: 2 columns, 12px gap
+```
+
+### Category Pills (Headway uses emoji + text chips)
+```
+Inactive: bg white, text #374151, border 1px #E5E7EB, rounded-full, px-4 py-2
+Active: bg #3B82F6, text white, border none, rounded-full
+With emoji prefix (optional)
+Horizontal scroll row
+```
+
+### Search Bar
+```
+Height: 48px
+Background: #FFFFFF
+Border: 1px #E5E7EB
+Border radius: 12px
+Placeholder: "Search books, authors, principles..." in #9CA3AF
+Search icon: left, #9CA3AF
+```
+
+### Bottom Tab Bar
+```
+Background: #FFFFFF
+Border-top: 1px #E5E7EB
+Height: 56px + safe area
+Icons: 24px, Lucide set
+Active: #3B82F6 (blue), filled
+Inactive: #9CA3AF (gray), outline
+Label: 10px below icon
+4 tabs: Home, Discover, Audio, My Vault
+```
+
+### Daily Insight Card (Headway "Key Point" style)
+```
+Background: #FFFFFF (white card)
+Shadow: standard card shadow
+Border radius: 16px
+Left accent: 4px solid #3B82F6
+Padding: 16px
+Label: "DAILY INSIGHT" — 11px, #3B82F6, uppercase, letter-spacing 1px, font-weight 600
+Title: 17px, weight 600, #111827
+Body: 15px, #6B7280, max 3 lines
+Source: 13px, #9CA3AF, italic
+```
+
+### Streak Badge
+```
+Shape: pill, rounded-full
+Background: #FFF7ED (warm orange-50)
+Border: 1px #FDBA74 (orange-300)
+Icon: flame, #F97316
+Text: 13px, #F97316, font-weight 600
+```
+
+### Blueprint Grid (Book Detail)
+```
+Grid: 2x2, 12px gap
+Card: bg #FFFFFF, shadow, radius 16px, h-[120px], centered
+Icon: 28px, #3B82F6
+Label: 13px, #111827, center
+Count badge: bg #3B82F6, text white, 20px circle
+Empty (0 items): 40% opacity
+```
+
+---
+
+## 5. SCREEN-BY-SCREEN REDESIGN
+
+### 5A. Dashboard (Home)
+**Background: #F5F0EB (warm cream)**
+
+1. **Greeting** — "Good morning, Pete" (32px, #111827, bold) + streak badge (right)
+2. **Daily Insight** — white card with left blue accent bar
+3. **Energy Map** — white card container
+4. **Quick Bites** — horizontal carousel (only if shorts exist)
+5. **Jump Back In** — horizontal scroll, white book cards with cover + title + progress bar
+6. **Recommended For You** — horizontal scroll, "See All" link in blue
+
+### 5B. Discover
+**Background: #F5F0EB**
+
+1. **Title** — "Discover" (32px, bold) + subtitle
+2. **Search bar** — white, full width
+3. **Category pills** — horizontal scroll, white/blue chips
+4. **Book grid** — 2 columns, white cards, cover image + title + author below
+5. **Plans/Collections** — Headway-style collection cards ("7-day plan" format)
+
+### 5C. Book Detail
+**Background: #F5F0EB**
+
+1. **Nav bar** — back, home, share, bookmark
+2. **Cover image** — centered, shadow, radius 12px
+3. **Book info** — centered: label, title, author, read time
+4. **Action buttons** — "Read" = PRIMARY (blue bg), "Listen" = SECONDARY (white, outlined). **Read is primary.**
+5. **Blueprint** — 2x2 white cards with icons and count badges
+6. **Key Points preview** — Headway-style paginated cards
+
+### 5D. Audio & My Vault
+- White cards on cream background
+- Clean lists with book thumbnails
+
+---
+
+## 6. MASTER TICKET LIST
+
+### CRITICAL Priority
+
+| ID | Description |
+|----|-------------|
+| C-1 | Book content empty for 4/5 books — seed real psychology content |
+| C-2 | All books have audioUrl "placeholder" — fix or hide Listen |
+| C-3 | /api/daily-spark returns null — fix or replace with working insight |
+| C-4 | Source maps may be publicly accessible — disable in production |
+
+### HIGH Priority
+
+| ID | Description |
+|----|-------------|
+| H-1 | **FULL COLOR OVERHAUL** — Replace black+gold with Headway-style cream+blue+white |
+| H-2 | **TYPOGRAPHY FIX** — Replace 25+ fonts with Inter only, fix Google Fonts 503 |
+| H-3 | **Read button = PRIMARY CTA**, Listen = secondary (disabled if placeholder audio) |
+| H-4 | **Book cards** — remove overlay text from covers, title/author below |
+| H-5 | Seed real chapter summary content for all 5 books |
+| H-6 | Hide Stripe/subscription features until working (returns 503) |
+| H-7 | **CHAKRA + CATEGORY DROPDOWN FILTERS** — Two dependent dropdown filters on Discover page (see TICKET_H7_Chakra_Category_Filters.md for full spec) |
+
+### MEDIUM Priority
+
+| ID | Description |
+|----|-------------|
+| M-1 | "Emotional Intelligenct" typo on book cover image |
+| M-2 | Daily Insight card — redesign with Headway key-point style |
+| M-3 | Bottom tab bar — white bg, blue active, gray inactive |
+| M-4 | Blueprint grid — empty cards at 40% opacity |
+| M-5 | Category pills — white inactive, blue active (Headway style) |
+| M-6 | Skeleton loading screens (replace "Loading..." spinners) |
+| M-7 | Empty states with icon + title + CTA |
+| M-8 | Card shadows + 16px radius consistency |
+| M-9 | Streak badge — orange pill style |
+| M-10 | Search bar — white bg, subtle border |
+
+### LOW Priority
+
+| ID | Description |
+|----|-------------|
+| L-1 | Console async listener errors |
+| L-2 | "Mins Listened" counter always 0 |
+| L-3 | Press feedback animations |
+| L-4 | Screen transitions |
+| L-5 | Time-aware greeting |
+| L-6 | Create and publish Story Shorts content |
+
+---
+
+## 7. EXECUTION PLAN — STEP-BY-STEP FOR REPLIT AI
+
+### TASK 1 — Color System (Headway-Inspired)
+```
+COMPLETE COLOR OVERHAUL — Headway-inspired light theme.
+
+1. Update tailwind.config.ts colors:
+   - background: #F5F0EB (warm cream/beige — this is Headway's signature)
+   - surface: #FFFFFF (white cards)
+   - foreground: #111827 (near-black text)
+   - muted: #6B7280 (gray secondary text)
+   - border: #E5E7EB (light gray borders)
+   - primary: #3B82F6 (blue — Headway-style CTA blue)
+   - primary-hover: #2563EB
+   - primary-light: #DBEAFE (light blue highlights)
+   - success: #22C55E
+   - warning: #F97316 (orange for streaks)
+   - error: #EF4444
+
+2. Update CSS variables in index.css.
+
+3. REMOVE all #d4a017 (gold), #000000 (black backgrounds).
+   Replace gold accents → #3B82F6 (blue)
+   Replace black backgrounds → #F5F0EB (cream)
+   Replace dark card backgrounds → #FFFFFF (white)
+
+4. Update EVERY component file in client/src/:
+   - All bg-black → bg-[#F5F0EB]
+   - All text-amber/gold → text-[#3B82F6] (for accents)
+   - All card backgrounds → bg-white
+   - All text on dark backgrounds → text-[#111827] on light backgrounds
+
+5. Tab bar: bg white, active = #3B82F6, inactive = #9CA3AF
+
+DO NOT change features, routes, or API logic. ONLY colors.
+```
+
+### TASK 2 — Typography Fix
+```
+Fix the Google Fonts 503 error and standardize typography.
+
+1. In index.html, REPLACE ALL Google Fonts links with ONLY:
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+2. In tailwind.config.ts: fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
+
+3. Remove ALL inline font references to Nunito, Source Serif Pro, Poppins, Playfair Display from every component file.
+```
+
+### TASK 3 — Seed Real Book Content
+```
+4/5 books have ZERO content. For EACH book, create:
+- 3-5 Chapter Summaries (150-200 words of real psychology content each)
+- 2-3 Mental Models (title + description)
+- 3-5 Principles & Stories
+- 1-2 Common Mistakes
+- 1 Infographic entry
+
+Use real concepts from each book. Not placeholder text.
+Update seed data and ensure /api/books returns accurate counts.
+```
+
+### TASK 4 — Fix Daily Insight
+```
+GET /api/daily-spark returns null. Fix it:
+- Create a daily insights table (if needed) with 30+ psychology insights
+- Each has: title, body (2-3 sentences), source book
+- Endpoint returns 1 insight per day (date-based rotation)
+```
+
+### TASK 5 — Fix Audio / Read Button Priority
+```
+All books have audioUrl "placeholder". Fix the book detail page:
+- "Read" button = PRIMARY: bg-blue-500 text-white, full height
+- "Listen" button = SECONDARY: bg-white border text-gray, if audioUrl is "placeholder" show "Coming Soon" and disable
+- Swap their visual priority — Read should look more prominent than Listen
+```
+
+### TASK 6 — Dashboard Redesign
+```
+Redesign dashboard to Headway style:
+- Page background: #F5F0EB (cream)
+- All cards: bg-white, shadow-sm, rounded-2xl
+- Greeting: "Good morning/afternoon/evening, Pete" — 32px bold #111827
+- Streak badge: orange pill (bg-orange-50, border-orange-300, text-orange-500, flame icon)
+- Daily Insight card: white, left 4px blue accent bar, "DAILY INSIGHT" label in blue
+- Jump Back In: horizontal scroll of white cards with cover + title + progress
+- Recommended: horizontal scroll, "See All" in blue
+- Remove ALL black/dark backgrounds
+- Remove ALL gold colors
+```
+
+### TASK 7 — Discover Page Redesign + Chakra/Category Filters
+```
+Redesign discover page Headway style WITH dependent dropdown filters:
+- Background: #F5F0EB
+- "Discover" title: 32px bold
+- Search: white bg, border #E5E7EB, rounded-xl
+- REPLACE category pills with TWO DROPDOWN FILTERS: "Chakra" + "Category"
+  - Both are Headway-style dropdown buttons (white, rounded, 44px height)
+  - Side by side, equal width, gap 12px
+  - Dependent: selecting one updates the other's available options
+  - See TICKET_H7_Chakra_Category_Filters.md for FULL tech spec
+- Book grid: 2 columns, white card, book cover image (no overlay text), title + author BELOW
+- Remove text overlay on book covers
+- Remove "Emotional Intelligenct" text overlay (the title goes BELOW the image)
+- Empty state for zero filter results: icon + message + "Clear filters" CTA
+```
+
+### TASK 8 — Book Detail Redesign
+```
+Redesign book detail Headway style:
+- Background: #F5F0EB
+- Cover: centered, shadow, rounded
+- "SUMMARY" label: blue, uppercase
+- Title/author: centered, clean typography
+- Read = PRIMARY (blue bg, white text), Listen = SECONDARY (white bg, gray border)
+- Blueprint cards: white, shadow, blue icons, count badges
+- Cards with 0 content: 40% opacity
+```
+
+### TASK 9 — Tab Bar + Cards + Shadows
+```
+Polish pass:
+- Tab bar: bg-white, border-top #E5E7EB, active=#3B82F6, inactive=#9CA3AF
+- ALL cards: bg-white, shadow-sm (0 1px 3px rgba(0,0,0,0.08)), rounded-2xl
+- All interactive cards: hover:shadow-md transition
+- Consistent 16px padding in cards
+- 12px gap between cards
+```
+
+### TASK 10 — Skeleton Loading + Empty States
+```
+Replace all loading spinners with skeleton screens:
+- Skeleton color: #E5E7EB (light gray) with shimmer animation
+- Apply to all pages
+
+Add proper empty states:
+- Icon + title + description + CTA button
+- For: bookmarks, audio, search results, shorts, journeys
+```
+
+### TASK 11 — Security + Performance
+```
+- Disable source maps: vite.config.ts build.sourcemap = false
+- Lazy load all page components with React.lazy + Suspense
+- Fix console async listener errors
+- Add image loading="lazy" to all img tags
+- Hide Stripe features (set STRIPE_ENABLED=false gate)
+```
+
+---
+
+## 8. EXECUTION ORDER
+
+```
+Phase 1 — Foundation
+  Task 1: Color System (cream + blue + white)
+  Task 2: Typography (Inter only)
+  → QA CHECKPOINT
+
+Phase 2 — Data Fixes
+  Task 3: Seed book content + chakra values for all 5 books
+  Task 4: Fix daily insight
+  Task 5: Fix audio / Read priority
+  → QA CHECKPOINT
+
+Phase 3 — UI Overhaul
+  Task 6: Dashboard redesign
+  Task 7: Discover redesign + Chakra/Category dropdown filters (H-7)
+  Task 8: Book detail redesign
+  Task 9: Tab bar + cards polish
+  → QA CHECKPOINT
+
+Phase 4 — Polish
+  Task 10: Skeleton loading + empty states
+  Task 11: Security + performance
+  → FINAL QA → PUBLISH
+```
+
+**Total: 11 tasks (includes H-7 filter feature), 4 phases, 4 QA checkpoints**
