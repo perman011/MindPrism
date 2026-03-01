@@ -34,8 +34,8 @@ self.addEventListener("fetch", (event) => {
 
   if (event.request.method !== "GET") return;
 
-  if (url.pathname.startsWith("/api/books") || url.pathname.startsWith("/api/categories")) {
-    event.respondWith(networkFirst(event.request, API_CACHE));
+  if (url.pathname.startsWith("/api/books") || url.pathname.startsWith("/api/categories") || url.pathname.startsWith("/api/shorts")) {
+    event.respondWith(staleWhileRevalidate(event.request, API_CACHE));
     return;
   }
 
@@ -80,6 +80,29 @@ async function cacheFirst(request, cacheName) {
   } catch {
     return new Response("", { status: 503 });
   }
+}
+
+async function staleWhileRevalidate(request, cacheName) {
+  const cached = await caches.match(request);
+  const fetchPromise = fetch(request).then((response) => {
+    if (response.ok) {
+      const cache = caches.open(cacheName);
+      cache.then((c) => c.put(request, response.clone()));
+    }
+    return response;
+  }).catch(() => null);
+
+  if (cached) {
+    fetchPromise.catch(() => {});
+    return cached;
+  }
+
+  const networkResponse = await fetchPromise;
+  if (networkResponse) return networkResponse;
+  return new Response(JSON.stringify({ error: "Offline" }), {
+    status: 503,
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
 async function networkFirst(request, cacheName) {

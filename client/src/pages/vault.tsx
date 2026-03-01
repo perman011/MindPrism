@@ -37,7 +37,7 @@ export default function Vault() {
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
-  const { data: vaultStats } = useQuery<VaultStats>({
+  const { data: vaultStats, isLoading: statsLoading } = useQuery<VaultStats>({
     queryKey: ["/api/user/stats"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
@@ -102,35 +102,25 @@ export default function Vault() {
         noIndex
       />
 
-      <div className="relative bg-gradient-to-b from-[#341539] via-[#2A1130] via-85% to-background overflow-hidden">
-        <div className="absolute inset-0 opacity-15 pointer-events-none">
-          <div className="absolute top-6 left-8 w-1 h-1 rounded-full bg-purple-400 animate-pulse" />
-          <div className="absolute top-16 right-12 w-0.5 h-0.5 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "0.5s" }} />
-          <div className="absolute top-28 left-20 w-0.5 h-0.5 rounded-full bg-purple-400 animate-pulse" style={{ animationDelay: "1s" }} />
-          <div className="absolute bottom-20 right-8 w-1 h-1 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "1.5s" }} />
-          <div className="absolute bottom-32 left-16 w-0.5 h-0.5 rounded-full bg-purple-200 animate-pulse" style={{ animationDelay: "0.8s" }} />
-        </div>
-
-        <div className="relative z-10 px-5 pt-8 pb-4">
-          <div className="flex items-center gap-4 mb-4">
-            <Avatar className="h-14 w-14 ring-2 ring-white/20">
-              <AvatarImage src={user?.profileImageUrl ?? undefined} />
-              <AvatarFallback className="text-sm font-bold bg-white/15 text-white">{initials}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-bold font-serif text-white tracking-tight" data-testid="text-vault-name">
-                {user?.firstName} {user?.lastName}
-              </h1>
-              <p className="text-xs text-purple-200/60 mt-0.5">{user?.email}</p>
-            </div>
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-2 rounded-full border border-white/15" data-testid="badge-vault-streak">
-              <Flame className="w-4 h-4 text-orange-400" />
-              <span className="text-sm font-bold text-white">{streak?.currentStreak ?? 0}</span>
-            </div>
+      <div className="px-5 pt-8 pb-4">
+        <div className="flex items-center gap-4 mb-4">
+          <Avatar className="h-14 w-14 ring-2 ring-[#E5E7EB]">
+            <AvatarImage src={user?.profileImageUrl ?? undefined} />
+            <AvatarFallback className="text-sm font-bold bg-[#DBEAFE] text-[#3B82F6]">{initials}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-bold text-[#111827] tracking-tight" data-testid="text-vault-name">
+              {user?.firstName} {user?.lastName}
+            </h1>
+            <p className="text-xs text-[#6B7280] mt-0.5">{user?.email}</p>
+          </div>
+          <div className="flex items-center gap-2 bg-orange-50 px-3 py-2 rounded-full border border-orange-300" data-testid="badge-vault-streak">
+            <Flame className="w-4 h-4 text-[#F97316]" />
+            <span className="text-sm font-bold text-[#F97316]">{streak?.currentStreak ?? 0}</span>
           </div>
         </div>
 
-        <div className="relative z-10 flex justify-center pb-6">
+        <div className="flex justify-center pb-4">
           <ChakraAvatar
             activeChakra={selectedChakra}
             onChakraSelect={setSelectedChakra}
@@ -140,17 +130,17 @@ export default function Vault() {
         </div>
 
         {selectedChakra && (
-          <div className="relative z-10 text-center pb-4">
+          <div className="text-center pb-4">
             <p className="text-sm font-semibold" style={{ color: CHAKRA_MAP[selectedChakra].color }}>
               {CHAKRA_MAP[selectedChakra].name} Chakra
             </p>
-            <p className="text-[11px] text-purple-200/60 mt-0.5">
+            <p className="text-[11px] text-[#6B7280] mt-0.5">
               {chakraProgress?.find(p => p.chakra === selectedChakra)?.points ?? 0} points earned
             </p>
           </div>
         )}
         {!selectedChakra && (
-          <p className="relative z-10 text-[11px] text-purple-200/40 text-center pb-4">
+          <p className="text-[11px] text-[#9CA3AF] text-center pb-4">
             Tap a chakra to see your progress
           </p>
         )}
@@ -165,17 +155,34 @@ export default function Vault() {
         <div className="mb-2">
           <p className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-2">Your Progress</p>
         </div>
-        <div className="mb-6">
-          <SummaryStats
-            principlesLearned={vaultStats?.principlesMastered ?? 0}
-            storiesRead={vaultStats?.storiesRead ?? 0}
-            currentStreak={vaultStats?.currentStreak ?? 0}
-          />
-        </div>
-
-        <div className="mb-6">
-          <StreakChart data={vaultStats?.monthlyActivity ?? []} />
-        </div>
+        {statsLoading ? (
+          <>
+            <div className="mb-6 grid grid-cols-3 gap-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="rounded-md border border-border p-4 space-y-2">
+                  <Skeleton className="h-8 w-12 mx-auto" />
+                  <Skeleton className="h-3 w-16 mx-auto" />
+                </div>
+              ))}
+            </div>
+            <div className="mb-6">
+              <Skeleton className="h-40 w-full rounded-md" />
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="mb-6">
+              <SummaryStats
+                principlesLearned={vaultStats?.principlesMastered ?? 0}
+                storiesRead={vaultStats?.storiesRead ?? 0}
+                currentStreak={vaultStats?.currentStreak ?? 0}
+              />
+            </div>
+            <div className="mb-6">
+              <StreakChart data={vaultStats?.monthlyActivity ?? []} />
+            </div>
+          </>
+        )}
 
         <div className="mb-6" data-testid="card-streak-milestones">
           <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Streak Milestones</h3>
@@ -256,7 +263,14 @@ export default function Vault() {
             <div className="space-y-3">
               {journalLoading ? (
                 Array.from({ length: 3 }).map((_, i) => (
-                  <Skeleton key={i} className="h-24 rounded-md" />
+                  <div key={i} className="rounded-md border border-border p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="w-3.5 h-3.5 rounded-full" />
+                      <Skeleton className="h-3 w-28" />
+                    </div>
+                    <Skeleton className="h-3 w-full" />
+                    <Skeleton className="h-3 w-5/6" />
+                  </div>
                 ))
               ) : !journalEntries || journalEntries.length === 0 ? (
                 <div className="text-center py-14">
@@ -293,7 +307,14 @@ export default function Vault() {
             <div className="space-y-3">
               {highlightsLoading ? (
                 Array.from({ length: 3 }).map((_, i) => (
-                  <Skeleton key={i} className="h-20 rounded-md" />
+                  <div key={i} className="rounded-md border border-border p-4 space-y-2">
+                    <Skeleton className="h-3 w-full" />
+                    <Skeleton className="h-3 w-4/5" />
+                    <div className="flex items-center gap-2 mt-2">
+                      <Skeleton className="h-3 w-3 rounded-full" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                  </div>
                 ))
               ) : !highlights || highlights.length === 0 ? (
                 <div className="text-center py-14">

@@ -244,7 +244,7 @@ export default function Dashboard() {
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
-  const { data: dailyInsight } = useQuery<{ id: string; title: string; content: string; bookTitle: string; bookId: string } | null>({
+  const { data: dailyInsight, isLoading: insightLoading } = useQuery<{ id: string; title: string; content: string; bookTitle: string; bookId: string } | null>({
     queryKey: ["/api/daily-insight"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
@@ -282,24 +282,28 @@ export default function Dashboard() {
         description="Your personalized psychology learning dashboard. Track your streaks, explore insights, and continue your growth journey."
         noIndex
       />
-      <div className="relative bg-gradient-to-b from-[#341539] via-[#2A1130] via-85% to-background overflow-hidden">
-        <div className="absolute inset-0 opacity-15 pointer-events-none">
-          <div className="absolute top-6 left-8 w-1 h-1 rounded-full bg-purple-400 animate-pulse" />
-          <div className="absolute top-16 right-12 w-0.5 h-0.5 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "0.5s" }} />
-          <div className="absolute top-28 left-20 w-0.5 h-0.5 rounded-full bg-purple-400 animate-pulse" style={{ animationDelay: "1s" }} />
-          <div className="absolute bottom-20 right-8 w-1 h-1 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "1.5s" }} />
-          <div className="absolute bottom-32 left-16 w-0.5 h-0.5 rounded-full bg-purple-200 animate-pulse" style={{ animationDelay: "0.8s" }} />
-        </div>
-
-        <div className="relative z-10 px-5 pt-8 pb-5 flex items-center justify-between gap-3">
+      <div className="bg-background">
+        {booksLoading ? (
+          <div className="px-5 pt-8 pb-5 flex items-center justify-between gap-3">
+            <div className="flex-1">
+              <Skeleton className="h-3 w-24 mb-2" />
+              <Skeleton className="h-9 w-40" />
+            </div>
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-10 w-24 rounded-full" />
+              <Skeleton className="h-10 w-10 rounded-full" />
+            </div>
+          </div>
+        ) : (
+        <div className="px-5 pt-8 pb-5 flex items-center justify-between gap-3">
           <div className="flex-1">
-            <p className="text-xs font-medium text-purple-200/70 uppercase tracking-wider mb-1">{greeting()}</p>
-            <h1 className="text-2xl font-bold font-serif text-white tracking-tight" data-testid="text-welcome">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{greeting()}</p>
+            <h1 className="text-[32px] font-bold text-[#111827] dark:text-foreground tracking-tight leading-tight" data-testid="text-welcome">
               {user?.firstName ?? "Explorer"}
             </h1>
           </div>
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2.5 rounded-full border border-white/15" data-testid="badge-streak">
+            <div className="flex items-center gap-2 bg-orange-50 dark:bg-orange-950/30 px-4 py-2.5 rounded-full border border-orange-300 dark:border-orange-700" data-testid="badge-streak">
               <motion.div
                 animate={(streak?.currentStreak ?? 0) > 0 ? {
                   scale: [1, 1.2, 1],
@@ -307,28 +311,29 @@ export default function Dashboard() {
                 } : {}}
                 transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
               >
-                <Flame className="w-4 h-4 text-orange-400" />
+                <Flame className="w-4 h-4 text-[#F97316]" />
               </motion.div>
-              <span className="text-sm font-bold text-white">{streak?.currentStreak ?? 0} day{(streak?.currentStreak ?? 0) !== 1 ? "s" : ""}</span>
+              <span className="text-sm font-bold text-orange-500 dark:text-orange-400">{streak?.currentStreak ?? 0} day{(streak?.currentStreak ?? 0) !== 1 ? "s" : ""}</span>
             </div>
             <Link href="/vault">
-              <Avatar className="h-10 w-10 cursor-pointer ring-2 ring-white/20">
+              <Avatar className="h-10 w-10 cursor-pointer ring-2 ring-border">
                 <AvatarImage src={user?.profileImageUrl ?? undefined} />
-                <AvatarFallback className="text-xs bg-white/15 text-white font-semibold">{initials}</AvatarFallback>
+                <AvatarFallback className="text-xs bg-muted text-muted-foreground font-semibold">{initials}</AvatarFallback>
               </Avatar>
             </Link>
           </div>
         </div>
+        )}
 
-        <div className="relative z-10 px-5 mb-4">
+        <div className="px-5 mb-4">
           <div className="flex items-center justify-center">
-            <div className="inline-flex bg-white/10 backdrop-blur-sm rounded-full p-1 border border-white/10" data-testid="mode-toggle">
+            <div className="inline-flex bg-muted dark:bg-muted rounded-full p-1 border border-border" data-testid="mode-toggle">
               <button
                 onClick={() => setDashboardMode("chakra")}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-all duration-200 ${
                   dashboardMode === "chakra"
-                    ? "bg-white text-[#341539] shadow-lg"
-                    : "text-white/70 hover:text-white"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground"
                 }`}
                 data-testid="button-mode-chakra"
                 aria-label="Switch to Chakra view"
@@ -341,8 +346,8 @@ export default function Dashboard() {
                 onClick={() => setDashboardMode("shorts")}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-all duration-200 ${
                   dashboardMode === "shorts"
-                    ? "bg-white text-[#341539] shadow-lg"
-                    : "text-white/70 hover:text-white"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground"
                 }`}
                 data-testid="button-mode-shorts"
                 aria-label="Switch to Shorts view"
@@ -356,7 +361,7 @@ export default function Dashboard() {
         </div>
 
         {dashboardMode === "chakra" ? (
-          <div className="relative z-10 px-5 pb-6" data-testid="section-energy-map">
+          <div className="px-5 pb-6" data-testid="section-energy-map">
             <div className="flex justify-center">
               <ChakraAvatar
                 activeChakra={activeChakra}
@@ -367,7 +372,7 @@ export default function Dashboard() {
             </div>
           </div>
         ) : (
-          <div className="relative z-10 px-5 pb-6" data-testid="section-reels-feed">
+          <div className="px-5 pb-6" data-testid="section-reels-feed">
             {publishedShorts && publishedShorts.length > 0 ? (
               <div className="grid grid-cols-3 gap-2">
                 {publishedShorts.slice(0, 6).map((short, i) => (
@@ -384,7 +389,7 @@ export default function Dashboard() {
                     <div
                       className="absolute inset-0"
                       style={{
-                        background: short.backgroundGradient || "linear-gradient(135deg, #341539 0%, #6B3A6E 100%)"
+                        background: short.backgroundGradient || "linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%)"
                       }}
                     />
                     <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
@@ -399,14 +404,14 @@ export default function Dashboard() {
               </div>
             ) : (
               <div className="py-8 text-center">
-                <Film className="w-8 h-8 text-white/30 mx-auto mb-2" />
-                <p className="text-sm text-white/50">No reels yet — check back soon</p>
+                <Film className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground/50">No reels yet — check back soon</p>
               </div>
             )}
             {publishedShorts && publishedShorts.length > 6 && (
               <button
                 onClick={() => navigate("/shorts")}
-                className="mt-3 w-full py-2.5 rounded-full bg-white/10 text-white text-xs font-semibold hover:bg-white/15 transition-colors"
+                className="mt-3 w-full py-2.5 rounded-full bg-primary/10 text-primary text-xs font-semibold transition-colors"
                 data-testid="button-see-all-shorts"
               >
                 See All Shorts
@@ -509,17 +514,36 @@ export default function Dashboard() {
         )}
       </AnimatePresence>
 
+      {insightLoading && !dailyInsight && (
+        <div className="px-5 mb-8">
+          <div className="p-5 rounded-md border border-border">
+            <div className="flex items-start gap-4">
+              <Skeleton className="w-1 self-stretch rounded-full flex-shrink-0" style={{ minHeight: 80 }} />
+              <Skeleton className="w-10 h-10 rounded-md flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-5 w-3/4" />
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-5/6" />
+                <Skeleton className="h-2.5 w-28 mt-1" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {dailyInsight && (
         <div className="px-5 mb-8">
           <Link href={`/book/${dailyInsight.bookId}`}>
-            <Card className="p-5 bg-gradient-to-br from-purple-700/8 via-transparent to-primary/5 border-violet-500/15 cursor-pointer" data-testid="card-daily-insight">
+            <Card className="p-5 bg-card shadow-sm cursor-pointer overflow-visible" data-testid="card-daily-insight">
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-md bg-purple-700/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Lightbulb className="w-5 h-5 text-purple-700" />
+                <div className="w-1 self-stretch rounded-full bg-[#3B82F6] flex-shrink-0" />
+                <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Lightbulb className="w-5 h-5 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-[10px] font-semibold text-purple-700 uppercase tracking-widest mb-1.5">Daily Insight</p>
-                  <p className="text-base font-bold font-serif mb-1.5" data-testid="text-insight-title">{dailyInsight.title}</p>
+                  <p className="text-[10px] font-semibold text-primary uppercase tracking-widest mb-1.5">Daily Insight</p>
+                  <p className="text-base font-bold mb-1.5" data-testid="text-insight-title">{dailyInsight.title}</p>
                   <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3" data-testid="text-insight-content">{dailyInsight.content}</p>
                   <p className="text-[10px] text-muted-foreground/60 mt-2">From: {dailyInsight.bookTitle}</p>
                 </div>
@@ -550,7 +574,7 @@ export default function Dashboard() {
             <Skeleton className="h-6 w-32" />
           </div>
           <div className="flex gap-4 px-5">
-            {Array.from({ length: 4 }).map((_, i) => (
+            {Array.from({ length: 3 }).map((_, i) => (
               <Skeleton key={i} className="flex-shrink-0 w-[120px] h-[180px] rounded-xl" />
             ))}
           </div>
@@ -670,7 +694,7 @@ export default function Dashboard() {
             <Skeleton className="h-6 w-28" />
           </div>
           <div className="flex gap-4 px-5">
-            {Array.from({ length: 4 }).map((_, i) => (
+            {Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="flex-shrink-0 w-[180px] space-y-2">
                 <Skeleton className="aspect-[3/4] rounded-md" />
                 <Skeleton className="h-3 w-3/4" />

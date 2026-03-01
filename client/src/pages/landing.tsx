@@ -137,7 +137,7 @@ export default function LandingPage() {
         >
           <div className="flex flex-col items-center">
             <img src={mindprismLogo} alt="MindPrism" className="h-32 object-contain" style={{ aspectRatio: '1.618' }} />
-            <span className="text-lg font-bold tracking-[0.12em] text-[#341539] mt-1.5 font-serif">mindprism</span>
+            <span className="text-lg font-bold tracking-[0.12em] text-[#111827] mt-1.5">mindprism</span>
           </div>
         </motion.div>
       </nav>

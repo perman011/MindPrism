@@ -21,7 +21,7 @@ import {
   books, principles, stories, exercises, userProgress, journalEntries, categories,
   userInterests, userStreaks, savedHighlights,
   chapterSummaries, mentalModels, commonMistakes, actionItems, infographics, comments,
-  chakraProgress, shorts, shortViews,
+  chakraProgress, shorts, shortViews, userActivityLog,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, desc, asc, inArray } from "drizzle-orm";
@@ -492,19 +492,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteBookCascade(id: string): Promise<void> {
-    await db.delete(comments).where(eq(comments.bookId, id));
-    await db.delete(savedHighlights).where(eq(savedHighlights.bookId, id));
-    await db.delete(userProgress).where(eq(userProgress.bookId, id));
-    await db.delete(journalEntries).where(eq(journalEntries.exerciseId, id));
-    await db.delete(actionItems).where(eq(actionItems.bookId, id));
-    await db.delete(infographics).where(eq(infographics.bookId, id));
-    await db.delete(commonMistakes).where(eq(commonMistakes.bookId, id));
-    await db.delete(mentalModels).where(eq(mentalModels.bookId, id));
-    await db.delete(chapterSummaries).where(eq(chapterSummaries.bookId, id));
-    await db.delete(exercises).where(eq(exercises.bookId, id));
-    await db.delete(stories).where(eq(stories.bookId, id));
-    await db.delete(principles).where(eq(principles.bookId, id));
-    await db.delete(books).where(eq(books.id, id));
+    await db.transaction(async (tx) => {
+      await tx.delete(shorts).where(eq(shorts.bookId, id));
+      await tx.delete(userActivityLog).where(eq(userActivityLog.bookId, id));
+      await tx.delete(comments).where(eq(comments.bookId, id));
+      await tx.delete(savedHighlights).where(eq(savedHighlights.bookId, id));
+      await tx.delete(userProgress).where(eq(userProgress.bookId, id));
+      const bookExercises = await tx.select({ id: exercises.id }).from(exercises).where(eq(exercises.bookId, id));
+      for (const ex of bookExercises) {
+        await tx.delete(journalEntries).where(eq(journalEntries.exerciseId, ex.id));
+      }
+      await tx.delete(actionItems).where(eq(actionItems.bookId, id));
+      await tx.delete(infographics).where(eq(infographics.bookId, id));
+      await tx.delete(commonMistakes).where(eq(commonMistakes.bookId, id));
+      await tx.delete(mentalModels).where(eq(mentalModels.bookId, id));
+      await tx.delete(chapterSummaries).where(eq(chapterSummaries.bookId, id));
+      await tx.delete(exercises).where(eq(exercises.bookId, id));
+      await tx.delete(stories).where(eq(stories.bookId, id));
+      await tx.delete(principles).where(eq(principles.bookId, id));
+      await tx.delete(books).where(eq(books.id, id));
+    });
   }
 
   async updatePrinciple(id: string, data: Partial<InsertPrinciple>): Promise<Principle> {

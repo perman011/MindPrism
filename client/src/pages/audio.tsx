@@ -27,7 +27,7 @@ export default function AudioPage() {
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
-  const audioBooks = books?.filter(b => b.audioUrl) ?? [];
+  const audioBooks = books?.filter(b => b.audioUrl && b.audioUrl !== 'placeholder' && !b.audioUrl.includes('placeholder')) ?? [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -36,23 +36,24 @@ export default function AudioPage() {
         description="Listen to psychology book summaries on the go. Bite-sized audio insights for personal growth."
         noIndex
       />
-      <div className="relative bg-gradient-to-b from-[#341539] via-[#2A1130] via-80% to-background overflow-hidden">
-        <div className="absolute inset-0 opacity-15 pointer-events-none">
-          <div className="absolute top-6 left-8 w-1 h-1 rounded-full bg-purple-400 animate-pulse" />
-          <div className="absolute top-16 right-12 w-0.5 h-0.5 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "0.5s" }} />
-          <div className="absolute top-10 left-[60%] w-0.5 h-0.5 rounded-full bg-purple-400 animate-pulse" style={{ animationDelay: "1s" }} />
-        </div>
-        <div className="relative z-10 px-5 pt-6 pb-6">
-          <h1 className="text-2xl font-bold text-white mb-1 font-serif" data-testid="text-audio-title">Audio Summaries</h1>
-          <p className="text-sm text-purple-200/70" data-testid="text-audio-subtitle">Listen and learn on the go</p>
-        </div>
+      <div className="px-5 pt-6 pb-4">
+        <h1 className="text-[32px] font-bold text-[#111827]" data-testid="text-audio-title">Audio Summaries</h1>
+        <p className="text-sm text-[#6B7280] mt-1" data-testid="text-audio-subtitle">Listen and learn on the go</p>
       </div>
 
       <div className="px-5 pb-8">
         {isLoading ? (
           <div className="space-y-3">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-20 rounded-xl" />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 p-3 rounded-xl border border-border">
+                <Skeleton className="w-14 h-14 rounded-lg flex-shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                  <Skeleton className="h-2.5 w-1/3" />
+                </div>
+                <Skeleton className="w-10 h-10 rounded-full flex-shrink-0" />
+              </div>
             ))}
           </div>
         ) : audioBooks.length === 0 ? (

@@ -12,25 +12,6 @@ import { BottomNav } from "@/components/bottom-nav";
 import { MiniPlayer } from "@/components/mini-player";
 import { FullScreenPlayer } from "@/components/full-screen-player";
 import { PageTransition } from "@/components/page-transition";
-import LandingPage from "@/pages/landing";
-import Onboarding from "@/pages/onboarding";
-import Dashboard from "@/pages/dashboard";
-import Discover from "@/pages/discover";
-import AudioPage from "@/pages/audio";
-import Vault from "@/pages/vault";
-import BookDetail from "@/pages/book-detail";
-import StoryEngine from "@/pages/story-engine";
-import NotFound from "@/pages/not-found";
-import AdminBooks from "@/pages/admin/admin-books";
-import AdminBookEditor from "@/pages/admin/admin-book-editor";
-import AdminUsers from "@/pages/admin/admin-users";
-import AdminLogin from "@/pages/admin/admin-login";
-import AdminAccessDenied from "@/pages/admin/admin-access-denied";
-import AnalyticsDashboard from "@/pages/admin/analytics-dashboard";
-import AdminShorts from "@/pages/admin/admin-shorts";
-import AdminShortEditor from "@/pages/admin/admin-short-editor";
-import AdminMediaLibrary from "@/pages/admin/admin-media-library";
-import ShortsPage from "@/pages/shorts-page";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { getQueryFn } from "@/lib/queryClient";
 import type { UserInterest } from "@shared/schema";
@@ -38,8 +19,39 @@ import { hasMinRole } from "@shared/models/auth";
 import { NotificationPrompt } from "@/components/notification-prompt";
 import { OfflineBanner } from "@/components/offline-banner";
 import { InstallPrompt } from "@/components/install-prompt";
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { registerServiceWorker } from "@/lib/notifications";
+
+const LandingPage = lazy(() => import("@/pages/landing"));
+const Onboarding = lazy(() => import("@/pages/onboarding"));
+const Dashboard = lazy(() => import("@/pages/dashboard"));
+const Discover = lazy(() => import("@/pages/discover"));
+const AudioPage = lazy(() => import("@/pages/audio"));
+const Vault = lazy(() => import("@/pages/vault"));
+const BookDetail = lazy(() => import("@/pages/book-detail"));
+const StoryEngine = lazy(() => import("@/pages/story-engine"));
+const NotFound = lazy(() => import("@/pages/not-found"));
+const AdminBooks = lazy(() => import("@/pages/admin/admin-books"));
+const AdminBookEditor = lazy(() => import("@/pages/admin/admin-book-editor"));
+const AdminUsers = lazy(() => import("@/pages/admin/admin-users"));
+const AdminLogin = lazy(() => import("@/pages/admin/admin-login"));
+const AdminAccessDenied = lazy(() => import("@/pages/admin/admin-access-denied"));
+const AnalyticsDashboard = lazy(() => import("@/pages/admin/analytics-dashboard"));
+const AdminShorts = lazy(() => import("@/pages/admin/admin-shorts"));
+const AdminShortEditor = lazy(() => import("@/pages/admin/admin-short-editor"));
+const AdminMediaLibrary = lazy(() => import("@/pages/admin/admin-media-library"));
+const ShortsPage = lazy(() => import("@/pages/shorts-page"));
+
+function LazyFallback() {
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-10 h-10 rounded-md bg-primary animate-pulse" />
+        <p className="text-sm text-muted-foreground">Loading...</p>
+      </div>
+    </div>
+  );
+}
 
 function AuthenticatedApp() {
   const [location] = useLocation();
@@ -60,36 +72,44 @@ function AuthenticatedApp() {
   }
 
   if (!interests || !interests.onboardingCompleted) {
-    return <Onboarding />;
+    return (
+      <Suspense fallback={<LazyFallback />}>
+        <Onboarding />
+      </Suspense>
+    );
   }
 
   if (location === "/shorts" || location.startsWith("/shorts/book/")) {
     return (
-      <AudioProvider>
-        <Switch>
-          <Route path="/shorts" component={ShortsPage} />
-          <Route path="/shorts/book/:bookId" component={ShortsPage} />
-        </Switch>
-      </AudioProvider>
+      <Suspense fallback={<LazyFallback />}>
+        <AudioProvider>
+          <Switch>
+            <Route path="/shorts" component={ShortsPage} />
+            <Route path="/shorts/book/:bookId" component={ShortsPage} />
+          </Switch>
+        </AudioProvider>
+      </Suspense>
     );
   }
 
   return (
     <AudioProvider>
-      <div className="max-w-2xl mx-auto pb-20">
-        <PageTransition key={location}>
-          <Switch>
-            <Route path="/" component={Dashboard} />
-            <Route path="/discover" component={Discover} />
-            <Route path="/audio" component={AudioPage} />
-            <Route path="/vault" component={Vault} />
-            <Route path="/book/:id" component={BookDetail} />
-            <Route path="/book/:id/journey/:section" component={StoryEngine} />
-            <Route path="/book/:id/journey" component={StoryEngine} />
-            <Route component={NotFound} />
-          </Switch>
-        </PageTransition>
-      </div>
+      <Suspense fallback={<LazyFallback />}>
+        <div className="max-w-2xl mx-auto pb-20">
+          <PageTransition key={location}>
+            <Switch>
+              <Route path="/" component={Dashboard} />
+              <Route path="/discover" component={Discover} />
+              <Route path="/audio" component={AudioPage} />
+              <Route path="/vault" component={Vault} />
+              <Route path="/book/:id" component={BookDetail} />
+              <Route path="/book/:id/journey/:section" component={StoryEngine} />
+              <Route path="/book/:id/journey" component={StoryEngine} />
+              <Route component={NotFound} />
+            </Switch>
+          </PageTransition>
+        </div>
+      </Suspense>
       <MiniPlayer />
       <FullScreenPlayer />
       <BottomNav />
@@ -123,28 +143,30 @@ function AppRouter() {
 
   if (!user) {
     if (location.startsWith("/admin")) {
-      return <AdminLogin />;
+      return <Suspense fallback={<LazyFallback />}><AdminLogin /></Suspense>;
     }
-    return <LandingPage />;
+    return <Suspense fallback={<LazyFallback />}><LandingPage /></Suspense>;
   }
 
   if (location.startsWith("/admin")) {
     if (!hasMinRole(user.role, "writer")) {
-      return <AdminAccessDenied />;
+      return <Suspense fallback={<LazyFallback />}><AdminAccessDenied /></Suspense>;
     }
     return (
       <AdminLayout>
-        <Switch>
-          <Route path="/admin" component={AdminBooks} />
-          <Route path="/admin/books/:id" component={AdminBookEditor} />
-          <Route path="/admin/shorts" component={AdminShorts} />
-          <Route path="/admin/shorts/new" component={AdminShortEditor} />
-          <Route path="/admin/shorts/:id/edit" component={AdminShortEditor} />
-          <Route path="/admin/users" component={AdminUsers} />
-          <Route path="/admin/analytics" component={AnalyticsDashboard} />
-          <Route path="/admin/media" component={AdminMediaLibrary} />
-          <Route component={NotFound} />
-        </Switch>
+        <Suspense fallback={<LazyFallback />}>
+          <Switch>
+            <Route path="/admin" component={AdminBooks} />
+            <Route path="/admin/books/:id" component={AdminBookEditor} />
+            <Route path="/admin/shorts" component={AdminShorts} />
+            <Route path="/admin/shorts/new" component={AdminShortEditor} />
+            <Route path="/admin/shorts/:id/edit" component={AdminShortEditor} />
+            <Route path="/admin/users" component={AdminUsers} />
+            <Route path="/admin/analytics" component={AnalyticsDashboard} />
+            <Route path="/admin/media" component={AdminMediaLibrary} />
+            <Route component={NotFound} />
+          </Switch>
+        </Suspense>
       </AdminLayout>
     );
   }

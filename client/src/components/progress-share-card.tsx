@@ -87,10 +87,10 @@ export function ProgressShareCard({ trigger }: { trigger?: ShareTrigger }) {
     canvas.height = h;
 
     const grad = ctx.createLinearGradient(0, 0, w, h);
-    grad.addColorStop(0, "#341539");
-    grad.addColorStop(0.4, "#4A1D50");
-    grad.addColorStop(0.7, "#2D1233");
-    grad.addColorStop(1, "#1A0A1E");
+    grad.addColorStop(0, "#1E40AF");
+    grad.addColorStop(0.4, "#2563EB");
+    grad.addColorStop(0.7, "#1D4ED8");
+    grad.addColorStop(1, "#1E3A5F");
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
 

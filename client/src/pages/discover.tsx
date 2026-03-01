@@ -2,13 +2,21 @@ import { SEOHead } from "@/components/SEOHead";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
 import type { Book, Category } from "@shared/schema";
+import { CHAKRA_MAP, type ChakraType } from "@shared/schema";
 import { BookCard } from "@/components/book-card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { BookOpen, Search, Film, Clock, X, Lightbulb } from "lucide-react";
 import { useSearch, useLocation } from "wouter";
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
-import { CategoryIcon } from "@/components/category-icon";
 import type { Short } from "@shared/schema";
 import { ShortsPlayer, ShortCard } from "@/components/shorts-player";
 
@@ -68,12 +76,18 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
+const chakraOptions = Object.entries(CHAKRA_MAP).map(([key, val]) => ({
+  value: key as ChakraType,
+  label: val.name,
+  color: val.color,
+}));
+
 export default function Discover() {
   const searchParams = new URLSearchParams(useSearch());
-  const categorySlug = searchParams.get("category");
   const initialTab = searchParams.get("tab") === "shorts" ? "shorts" : "books";
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState<string | null>(categorySlug);
+  const [activeChakra, setActiveChakra] = useState<string>("all");
+  const [activeCategory, setActiveCategory] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<"books" | "shorts">(initialTab);
   const [shortsBookFilter, setShortsBookFilter] = useState<string | null>(null);
   const [shortsPlayerOpen, setShortsPlayerOpen] = useState(false);
@@ -144,26 +158,41 @@ export default function Discover() {
     setRecentSearches(getRecentSearches());
   }, []);
 
+  const availableCategories = useMemo(() => {
+    if (!categories || !books) return categories ?? [];
+    if (activeChakra === "all") return categories;
+    const booksMatchingChakra = books.filter(
+      b => b.primaryChakra === activeChakra || b.secondaryChakra === activeChakra
+    );
+    const categoryIds = new Set(booksMatchingChakra.map(b => b.categoryId).filter(Boolean));
+    return categories.filter(c => categoryIds.has(c.id));
+  }, [categories, books, activeChakra]);
+
   const filteredBooks = useMemo(() => {
+    let result: Book[];
+
     if (isSearchActive && searchResults) {
-      let result = searchResults.books.map(sr => {
+      result = searchResults.books.map(sr => {
         const fullBook = books?.find(b => b.id === sr.id);
         return fullBook || sr as any;
       });
-      if (activeCategory) {
-        const cat = categories?.find((c) => c.slug === activeCategory);
-        if (cat) result = result.filter((b: any) => b.categoryId === cat.id);
-      }
-      return result;
+    } else {
+      result = books ?? [];
     }
 
-    let result = books ?? [];
-    if (activeCategory) {
-      const cat = categories?.find((c) => c.slug === activeCategory);
-      if (cat) result = result.filter((b) => b.categoryId === cat.id);
+    if (activeChakra !== "all") {
+      result = result.filter(
+        b => b.primaryChakra === activeChakra || b.secondaryChakra === activeChakra
+      );
     }
+
+    if (activeCategory !== "all") {
+      const cat = categories?.find(c => c.slug === activeCategory || c.id === activeCategory);
+      if (cat) result = result.filter(b => b.categoryId === cat.id);
+    }
+
     return result;
-  }, [books, categories, activeCategory, isSearchActive, searchResults]);
+  }, [books, categories, activeCategory, activeChakra, isSearchActive, searchResults]);
 
   const filteredShorts = useMemo(() => {
     let result = publishedShorts ?? [];
@@ -196,6 +225,13 @@ export default function Discover() {
   const showRecentSearches = showSuggestions && searchQuery.length < 2 && recentSearches.length > 0;
   const showSearchSuggestions = showSuggestions && debouncedQuery.length >= 2 && (topSuggestions.length > 0 || (searchResults?.principles?.length ?? 0) > 0);
 
+  const hasActiveFilters = activeChakra !== "all" || activeCategory !== "all";
+
+  const clearFilters = () => {
+    setActiveChakra("all");
+    setActiveCategory("all");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
@@ -203,201 +239,192 @@ export default function Discover() {
         description="Browse psychology and self-help book summaries. Find insights on habits, mindset, relationships, and personal growth."
         noIndex
       />
-      <div className="relative bg-gradient-to-b from-[#341539] via-[#2A1130] via-70% to-background overflow-hidden">
-        <div className="absolute inset-0 opacity-15 pointer-events-none">
-          <div className="absolute top-6 left-8 w-1 h-1 rounded-full bg-purple-400 animate-pulse" />
-          <div className="absolute top-16 right-12 w-0.5 h-0.5 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "0.5s" }} />
-          <div className="absolute top-28 left-20 w-0.5 h-0.5 rounded-full bg-purple-400 animate-pulse" style={{ animationDelay: "1s" }} />
-          <div className="absolute bottom-20 right-8 w-1 h-1 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "1.5s" }} />
-          <div className="absolute bottom-32 left-16 w-0.5 h-0.5 rounded-full bg-purple-200 animate-pulse" style={{ animationDelay: "0.8s" }} />
+
+      <div className="px-5 pt-6 pb-2">
+        <h1 className="text-[32px] font-bold text-foreground mb-1" data-testid="text-discover-title">Discover</h1>
+        <p className="text-sm text-muted-foreground mb-5">Find your next great read</p>
+
+        <div className="relative mb-4">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+          <Input
+            ref={searchInputRef}
+            type="search"
+            placeholder={activeTab === "books" ? "Search books, authors, principles..." : "Search shorts, topics..."}
+            className="w-full pl-10 pr-10 bg-card border-[#E5E7EB] dark:border-border focus:border-primary rounded-xl text-sm h-12"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setShowSuggestions(true);
+            }}
+            onFocus={() => setShowSuggestions(true)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSearchSubmit(searchQuery);
+              }
+              if (e.key === "Escape") {
+                setShowSuggestions(false);
+              }
+            }}
+            data-testid="input-search"
+          />
+          {searchQuery.length > 0 && (
+            <button
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => {
+                setSearchQuery("");
+                setShowSuggestions(false);
+                searchInputRef.current?.focus();
+              }}
+              aria-label="Clear search"
+              data-testid="button-clear-search"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+
+          {showRecentSearches && (
+            <div
+              ref={suggestionsRef}
+              className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-md shadow-lg z-50 overflow-hidden"
+              data-testid="recent-searches"
+            >
+              <div className="px-4 py-2 flex items-center justify-between gap-2">
+                <span className="text-xs font-medium text-muted-foreground">Recent Searches</span>
+                <button
+                  className="text-xs text-primary/70 hover:text-primary transition-colors"
+                  onClick={() => {
+                    localStorage.removeItem(RECENT_SEARCHES_KEY);
+                    setRecentSearches([]);
+                    setShowSuggestions(false);
+                  }}
+                  data-testid="button-clear-recent-searches"
+                >
+                  Clear All
+                </button>
+              </div>
+              {recentSearches.map((query) => (
+                <button
+                  key={query}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 hover-elevate transition-colors text-left"
+                  onClick={() => handleRecentSearchClick(query)}
+                  data-testid={`recent-search-${query}`}
+                >
+                  <Clock className="w-3.5 h-3.5 text-muted-foreground/60 flex-shrink-0" />
+                  <span className="text-sm flex-1 truncate">{query}</span>
+                  <button
+                    className="p-1 rounded-full text-muted-foreground/40 hover-elevate"
+                    onClick={(e) => handleRemoveRecent(e, query)}
+                    aria-label={`Remove ${query} from recent searches`}
+                    data-testid={`remove-recent-${query}`}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {showSearchSuggestions && (
+            <div
+              ref={suggestionsRef}
+              className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-md shadow-lg z-50 overflow-hidden max-h-80 overflow-y-auto"
+              data-testid="search-suggestions"
+            >
+              {topSuggestions.length > 0 && (
+                <>
+                  <div className="px-4 py-2">
+                    <span className="text-xs font-medium text-muted-foreground">Books</span>
+                  </div>
+                  {topSuggestions.map((book) => (
+                    <a
+                      key={book.id}
+                      href={`/book/${book.id}`}
+                      className="flex items-center gap-3 px-4 py-2.5 hover-elevate transition-colors"
+                      onClick={() => handleSearchSubmit(searchQuery)}
+                      data-testid={`suggestion-${book.id}`}
+                    >
+                      <div className="w-8 h-11 rounded-md overflow-hidden flex-shrink-0">
+                        {book.coverImage ? (
+                          <img src={book.coverImage} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                            <span className="text-[10px] font-bold text-primary/40">{book.title[0]}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate" dangerouslySetInnerHTML={{ __html: book.highlightedTitle }} />
+                        <p className="text-xs text-muted-foreground" dangerouslySetInnerHTML={{ __html: book.highlightedAuthor }} />
+                      </div>
+                    </a>
+                  ))}
+                </>
+              )}
+
+              {(searchResults?.principles?.length ?? 0) > 0 && (
+                <>
+                  <div className="px-4 py-2 border-t border-border">
+                    <span className="text-xs font-medium text-muted-foreground">Principles</span>
+                  </div>
+                  {searchResults!.principles.slice(0, 5).map((principle) => (
+                    <a
+                      key={principle.id}
+                      href={`/book/${principle.bookId}`}
+                      className="flex items-center gap-3 px-4 py-2.5 hover-elevate transition-colors"
+                      onClick={() => handleSearchSubmit(searchQuery)}
+                      data-testid={`suggestion-principle-${principle.id}`}
+                    >
+                      <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Lightbulb className="w-4 h-4 text-primary/60" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate" dangerouslySetInnerHTML={{ __html: principle.highlightedTitle }} />
+                        <p className="text-xs text-muted-foreground truncate">{principle.bookTitle}</p>
+                      </div>
+                    </a>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
         </div>
 
-        <div className="relative z-10 px-5 pt-6 pb-4">
-          <h1 className="text-2xl font-bold text-white mb-1" data-testid="text-discover-title">Discover</h1>
-          <p className="text-sm text-purple-200/70 mb-5">Find your next great read</p>
-
-          <div className="relative mb-4">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-            <Input
-              ref={searchInputRef}
-              type="search"
-              placeholder={activeTab === "books" ? "Search books, authors, principles..." : "Search shorts, topics..."}
-              className="w-full pl-10 pr-10 bg-white/10 border-white/15 focus:border-white/30 rounded-full text-sm text-white placeholder:text-white/40"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setShowSuggestions(true);
-              }}
-              onFocus={() => setShowSuggestions(true)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleSearchSubmit(searchQuery);
-                }
-                if (e.key === "Escape") {
-                  setShowSuggestions(false);
-                }
-              }}
-              data-testid="input-search"
-            />
-            {searchQuery.length > 0 && (
-              <button
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-white/40 hover:text-white transition-colors"
-                onClick={() => {
-                  setSearchQuery("");
-                  setShowSuggestions(false);
-                  searchInputRef.current?.focus();
-                }}
-                aria-label="Clear search"
-                data-testid="button-clear-search"
-              >
-                <X className="w-4 h-4" />
-              </button>
+        <div className="flex rounded-xl bg-card border border-border p-1 mb-4" data-testid="discover-tabs" role="tablist" aria-label="Content type">
+          <button
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+              activeTab === "books"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground"
+            }`}
+            onClick={() => { setActiveTab("books"); }}
+            data-testid="tab-books"
+            role="tab"
+            aria-selected={activeTab === "books"}
+          >
+            <BookOpen className="w-4 h-4" aria-hidden="true" />
+            Books
+          </button>
+          <button
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+              activeTab === "shorts"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground"
+            }`}
+            onClick={() => { setActiveTab("shorts"); }}
+            data-testid="tab-shorts"
+            role="tab"
+            aria-selected={activeTab === "shorts"}
+          >
+            <Film className="w-4 h-4" aria-hidden="true" />
+            Shorts
+            {shortsCount > 0 && (
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                activeTab === "shorts" ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"
+              }`}>
+                {shortsCount}
+              </span>
             )}
-
-            {showRecentSearches && (
-              <div
-                ref={suggestionsRef}
-                className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-md shadow-lg z-50 overflow-hidden"
-                data-testid="recent-searches"
-              >
-                <div className="px-4 py-2 flex items-center justify-between gap-2">
-                  <span className="text-xs font-medium text-muted-foreground">Recent Searches</span>
-                  <button
-                    className="text-xs text-primary/70 hover:text-primary transition-colors"
-                    onClick={() => {
-                      localStorage.removeItem(RECENT_SEARCHES_KEY);
-                      setRecentSearches([]);
-                      setShowSuggestions(false);
-                    }}
-                    data-testid="button-clear-recent-searches"
-                  >
-                    Clear All
-                  </button>
-                </div>
-                {recentSearches.map((query) => (
-                  <button
-                    key={query}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 hover-elevate transition-colors text-left"
-                    onClick={() => handleRecentSearchClick(query)}
-                    data-testid={`recent-search-${query}`}
-                  >
-                    <Clock className="w-3.5 h-3.5 text-muted-foreground/60 flex-shrink-0" />
-                    <span className="text-sm flex-1 truncate">{query}</span>
-                    <button
-                      className="p-1 rounded-full text-muted-foreground/40 hover-elevate"
-                      onClick={(e) => handleRemoveRecent(e, query)}
-                      aria-label={`Remove ${query} from recent searches`}
-                      data-testid={`remove-recent-${query}`}
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {showSearchSuggestions && (
-              <div
-                ref={suggestionsRef}
-                className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-md shadow-lg z-50 overflow-hidden max-h-80 overflow-y-auto"
-                data-testid="search-suggestions"
-              >
-                {topSuggestions.length > 0 && (
-                  <>
-                    <div className="px-4 py-2">
-                      <span className="text-xs font-medium text-muted-foreground">Books</span>
-                    </div>
-                    {topSuggestions.map((book) => (
-                      <a
-                        key={book.id}
-                        href={`/book/${book.id}`}
-                        className="flex items-center gap-3 px-4 py-2.5 hover-elevate transition-colors"
-                        onClick={() => handleSearchSubmit(searchQuery)}
-                        data-testid={`suggestion-${book.id}`}
-                      >
-                        <div className="w-8 h-11 rounded-md overflow-hidden flex-shrink-0">
-                          {book.coverImage ? (
-                            <img src={book.coverImage} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                              <span className="text-[10px] font-bold text-primary/40">{book.title[0]}</span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate" dangerouslySetInnerHTML={{ __html: book.highlightedTitle }} />
-                          <p className="text-xs text-muted-foreground" dangerouslySetInnerHTML={{ __html: book.highlightedAuthor }} />
-                        </div>
-                      </a>
-                    ))}
-                  </>
-                )}
-
-                {(searchResults?.principles?.length ?? 0) > 0 && (
-                  <>
-                    <div className="px-4 py-2 border-t border-border">
-                      <span className="text-xs font-medium text-muted-foreground">Principles</span>
-                    </div>
-                    {searchResults!.principles.slice(0, 5).map((principle) => (
-                      <a
-                        key={principle.id}
-                        href={`/book/${principle.bookId}`}
-                        className="flex items-center gap-3 px-4 py-2.5 hover-elevate transition-colors"
-                        onClick={() => handleSearchSubmit(searchQuery)}
-                        data-testid={`suggestion-principle-${principle.id}`}
-                      >
-                        <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Lightbulb className="w-4 h-4 text-primary/60" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate" dangerouslySetInnerHTML={{ __html: principle.highlightedTitle }} />
-                          <p className="text-xs text-muted-foreground truncate">{principle.bookTitle}</p>
-                        </div>
-                      </a>
-                    ))}
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="flex rounded-xl bg-white/10 backdrop-blur-sm p-1 mb-4" data-testid="discover-tabs" role="tablist" aria-label="Content type">
-            <button
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                activeTab === "books"
-                  ? "bg-white text-[#341539] shadow-sm"
-                  : "text-white/70"
-              }`}
-              onClick={() => { setActiveTab("books"); }}
-              data-testid="tab-books"
-              role="tab"
-              aria-selected={activeTab === "books"}
-            >
-              <BookOpen className="w-4 h-4" aria-hidden="true" />
-              Books
-            </button>
-            <button
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                activeTab === "shorts"
-                  ? "bg-white text-[#341539] shadow-sm"
-                  : "text-white/70"
-              }`}
-              onClick={() => { setActiveTab("shorts"); }}
-              data-testid="tab-shorts"
-              role="tab"
-              aria-selected={activeTab === "shorts"}
-            >
-              <Film className="w-4 h-4" aria-hidden="true" />
-              Shorts
-              {shortsCount > 0 && (
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                  activeTab === "shorts" ? "bg-[#341539]/20 text-[#341539]" : "bg-white/20 text-white"
-                }`}>
-                  {shortsCount}
-                </span>
-              )}
-            </button>
-          </div>
+          </button>
         </div>
       </div>
 
@@ -413,42 +440,71 @@ export default function Discover() {
             </div>
           )}
 
-          {categories && categories.length > 0 && (
-            <div className="flex items-center gap-2.5 px-5 mb-6 overflow-x-auto pb-2 scrollbar-hide" data-testid="category-pills">
-              <button
-                className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all ${
-                  activeCategory === null
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "bg-card text-foreground border border-border"
-                }`}
-                onClick={() => setActiveCategory(null)}
-                data-testid="filter-all"
-              >
-                All
-              </button>
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-2 transition-all ${
-                    activeCategory === cat.slug
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "bg-card text-foreground border border-border"
-                  }`}
-                  onClick={() => setActiveCategory(activeCategory === cat.slug ? null : cat.slug)}
-                  data-testid={`filter-${cat.slug}`}
+          <div className="flex items-center gap-3 px-5 mb-5" data-testid="discover-filters">
+            <div className="flex-1">
+              <Select value={activeChakra} onValueChange={(val) => {
+                setActiveChakra(val);
+                if (val !== "all" && activeCategory !== "all") {
+                  const cat = categories?.find(c => c.slug === activeCategory || c.id === activeCategory);
+                  if (cat) {
+                    const booksForChakra = (books ?? []).filter(
+                      b => b.primaryChakra === val || b.secondaryChakra === val
+                    );
+                    const catIds = new Set(booksForChakra.map(b => b.categoryId).filter(Boolean));
+                    if (!catIds.has(cat.id)) {
+                      setActiveCategory("all");
+                    }
+                  }
+                }
+              }}>
+                <SelectTrigger
+                  className="h-11 bg-card border-[#E5E7EB] dark:border-border rounded-xl text-sm"
+                  data-testid="select-chakra"
                 >
-                  <CategoryIcon name={cat.icon} className="w-3.5 h-3.5" />
-                  {cat.name}
-                </button>
-              ))}
+                  <SelectValue placeholder="Chakra" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" data-testid="chakra-option-all">All Chakras</SelectItem>
+                  {chakraOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value} data-testid={`chakra-option-${opt.value}`}>
+                      <span className="flex items-center gap-2">
+                        <span
+                          className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: opt.color }}
+                        />
+                        {opt.label}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          )}
+            <div className="flex-1">
+              <Select value={activeCategory} onValueChange={setActiveCategory}>
+                <SelectTrigger
+                  className="h-11 bg-card border-[#E5E7EB] dark:border-border rounded-xl text-sm"
+                  data-testid="select-category"
+                >
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" data-testid="category-option-all">All Categories</SelectItem>
+                  {availableCategories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.slug} data-testid={`category-option-${cat.slug}`}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
           <div className="px-5 pb-8">
-            {activeCategory && (
+            {hasActiveFilters && (
               <p className="text-xs text-muted-foreground mb-3" data-testid="text-filter-label">
                 Showing {filteredBooks.length} {filteredBooks.length === 1 ? "book" : "books"}
-                {categories?.find(c => c.slug === activeCategory)
+                {activeChakra !== "all" && ` for ${CHAKRA_MAP[activeChakra as ChakraType]?.name ?? activeChakra} chakra`}
+                {activeCategory !== "all" && categories?.find(c => c.slug === activeCategory)
                   ? ` in ${categories.find(c => c.slug === activeCategory)!.name}`
                   : ""}
               </p>
@@ -464,10 +520,20 @@ export default function Discover() {
                 ))}
               </div>
             ) : filteredBooks.length === 0 ? (
-              <div className="text-center py-20">
+              <div className="text-center py-20" data-testid="empty-state-books">
                 <BookOpen className="w-12 h-12 text-muted-foreground/15 mx-auto mb-4" />
-                <p className="text-muted-foreground text-sm font-medium">No books found</p>
-                <p className="text-muted-foreground/60 text-xs mt-1">Try a different search or category</p>
+                <p className="text-foreground text-sm font-medium mb-1">No books found</p>
+                <p className="text-muted-foreground/60 text-xs mb-4">Try adjusting your filters or search terms</p>
+                {hasActiveFilters && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={clearFilters}
+                    data-testid="button-clear-filters"
+                  >
+                    Clear filters
+                  </Button>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-4" data-testid="book-grid">

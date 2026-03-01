@@ -17,8 +17,8 @@ export function BottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/98 backdrop-blur-xl border-t border-border/40 safe-area-bottom" data-testid="bottom-nav" aria-label="Main navigation">
-      <div className="flex items-center justify-around h-[4.25rem] max-w-2xl mx-auto px-4" role="tablist">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-[#E5E7EB] safe-area-bottom" data-testid="bottom-nav" aria-label="Main navigation">
+      <div className="flex items-center justify-around h-14 max-w-2xl mx-auto px-4" role="tablist">
         {navItems.map((item) => {
           const active = isActive(item.path);
           return (
@@ -30,12 +30,12 @@ export function BottomNav() {
               role="tab"
               aria-selected={active}
               className={`flex flex-col items-center justify-center gap-1 flex-1 py-2 min-h-[2.75rem] rounded-md transition-all duration-150 active:scale-95 touch-manipulation ${
-                active ? "text-primary" : "text-muted-foreground"
+                active ? "text-[#3B82F6]" : "text-[#9CA3AF]"
               }`}
               data-testid={item.testId}
             >
-              <item.icon className={`w-[22px] h-[22px] transition-all ${active ? "stroke-[2.5]" : "stroke-[1.75]"}`} aria-hidden="true" />
-              <span className={`text-[11px] leading-tight transition-all ${active ? "font-bold text-primary" : "font-medium"}`}>{item.label}</span>
+              <item.icon className={`w-6 h-6 transition-all ${active ? "stroke-[2.5]" : "stroke-[1.75]"}`} aria-hidden="true" />
+              <span className={`text-[10px] leading-tight transition-all ${active ? "font-semibold" : "font-medium"}`}>{item.label}</span>
             </button>
           );
         })}

@@ -8,17 +8,17 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 
 const interestTiles = [
-  { id: "anxiety", label: "Overcome Anxiety", icon: Brain, iconGradient: "from-purple-400 to-purple-600", color: "from-purple-700/20 to-purple-800/10 border-purple-700/30" },
-  { id: "productivity", label: "Ultimate Productivity", icon: Clock, iconGradient: "from-blue-400 to-teal-600", color: "from-purple-700/20 to-purple-800/10 border-purple-700/30" },
+  { id: "anxiety", label: "Overcome Anxiety", icon: Brain, iconGradient: "from-blue-400 to-blue-600", color: "from-blue-500/20 to-blue-600/10 border-blue-500/30" },
+  { id: "productivity", label: "Ultimate Productivity", icon: Clock, iconGradient: "from-blue-400 to-teal-600", color: "from-blue-500/20 to-blue-600/10 border-blue-500/30" },
   { id: "body-language", label: "Read Body Language", icon: Users, iconGradient: "from-rose-400 to-rose-600", color: "from-rose-500/20 to-rose-600/10 border-rose-500/30" },
   { id: "leadership", label: "Leadership", icon: Crown, iconGradient: "from-indigo-400 to-indigo-600", color: "from-indigo-500/20 to-indigo-600/10 border-indigo-500/30" },
   { id: "mindfulness", label: "Mindfulness & Calm", icon: Flower2, iconGradient: "from-teal-400 to-teal-600", color: "from-teal-500/20 to-teal-600/10 border-teal-500/30" },
   { id: "habits", label: "Build Better Habits", icon: Target, iconGradient: "from-green-400 to-green-600", color: "from-green-500/20 to-green-600/10 border-green-500/30" },
   { id: "relationships", label: "Better Relationships", icon: Heart, iconGradient: "from-pink-400 to-pink-600", color: "from-pink-500/20 to-pink-600/10 border-pink-500/30" },
-  { id: "decision-making", label: "Smarter Decisions", icon: Scale, iconGradient: "from-purple-400 to-purple-600", color: "from-purple-500/20 to-purple-600/10 border-purple-500/30" },
+  { id: "decision-making", label: "Smarter Decisions", icon: Scale, iconGradient: "from-indigo-400 to-indigo-600", color: "from-indigo-500/20 to-indigo-600/10 border-indigo-500/30" },
   { id: "confidence", label: "Build Confidence", icon: Zap, iconGradient: "from-orange-400 to-orange-600", color: "from-orange-500/20 to-orange-600/10 border-orange-500/30" },
   { id: "stoicism", label: "Stoic Philosophy", icon: Columns, iconGradient: "from-slate-400 to-slate-600", color: "from-slate-500/20 to-slate-600/10 border-slate-500/30" },
-  { id: "creativity", label: "Unlock Creativity", icon: Palette, iconGradient: "from-violet-400 to-violet-600", color: "from-purple-700/20 to-purple-800/10 border-purple-700/30" },
+  { id: "creativity", label: "Unlock Creativity", icon: Palette, iconGradient: "from-violet-400 to-violet-600", color: "from-violet-500/20 to-violet-600/10 border-violet-500/30" },
   { id: "emotional-iq", label: "Emotional Intelligence", icon: HeartHandshake, iconGradient: "from-red-400 to-red-600", color: "from-red-500/20 to-red-600/10 border-red-500/30" },
 ];
 
@@ -49,32 +49,24 @@ export default function Onboarding() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <SEOHead title="Personalize Your Experience" description="Choose your interests to build a personalized psychology learning library." noIndex />
-      <div className="relative bg-gradient-to-b from-[#341539] via-[#2A1130] via-70% to-background overflow-hidden">
-        <div className="absolute inset-0 opacity-15 pointer-events-none">
-          <div className="absolute top-6 left-8 w-1 h-1 rounded-full bg-purple-400 animate-pulse" />
-          <div className="absolute top-16 right-12 w-0.5 h-0.5 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "0.5s" }} />
-          <div className="absolute top-10 left-[60%] w-0.5 h-0.5 rounded-full bg-purple-400 animate-pulse" style={{ animationDelay: "1s" }} />
-          <div className="absolute bottom-20 left-16 w-0.5 h-0.5 rounded-full bg-purple-200 animate-pulse" style={{ animationDelay: "0.8s" }} />
-        </div>
-        <div className="relative z-10 px-6 pt-8 pb-4">
-          <div className="flex items-center mb-6">
-            <div className="flex flex-col items-center">
-              <img src={mindprismLogo} alt="MindPrism" className="h-16 object-contain" style={{ aspectRatio: '1.618' }} />
-              <span className="text-[10px] font-semibold tracking-[0.15em] text-white/80 mt-0.5 font-serif">Mind Prism</span>
-            </div>
+      <div className="px-6 pt-8 pb-4">
+        <div className="flex items-center mb-6">
+          <div className="flex flex-col items-center">
+            <img src={mindprismLogo} alt="MindPrism" className="h-16 object-contain" style={{ aspectRatio: '1.618' }} />
+            <span className="text-[10px] font-semibold tracking-[0.15em] text-[#111827] mt-0.5">mindprism</span>
           </div>
-
-          <div className="w-full bg-white/10 rounded-full h-1.5 mb-8">
-            <div className="bg-white h-1.5 rounded-full w-full transition-all" />
-          </div>
-
-          <h1 className="text-2xl sm:text-3xl font-bold mb-2 text-white font-serif" data-testid="text-onboarding-title">
-            What areas of your mind do you want to master?
-          </h1>
-          <p className="text-purple-200/70 mb-6">
-            Select the topics that interest you most. We'll personalize your experience.
-          </p>
         </div>
+
+        <div className="w-full bg-[#E5E7EB] rounded-full h-1.5 mb-8">
+          <div className="bg-[#3B82F6] h-1.5 rounded-full w-full transition-all" />
+        </div>
+
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2 text-[#111827]" data-testid="text-onboarding-title">
+          What areas of your mind do you want to master?
+        </h1>
+        <p className="text-[#6B7280] mb-6">
+          Select the topics that interest you most. We'll personalize your experience.
+        </p>
       </div>
 
       <div className="flex-1 px-6 pb-4 overflow-y-auto">
