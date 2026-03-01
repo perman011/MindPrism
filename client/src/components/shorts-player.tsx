@@ -197,23 +197,6 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
     playIconTimerRef.current = setTimeout(() => setShowPlayIcon(false), 800);
   }, []);
 
-  const handleProgressScrub = useCallback((e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
-    if (!progressBarRef.current) return;
-    const rect = progressBarRef.current.getBoundingClientRect();
-    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
-    const fraction = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    const idx = Math.floor(fraction * allShorts.length);
-    if (idx !== currentIndex && idx >= 0 && idx < allShorts.length) {
-      setDirection(idx > currentIndex ? 1 : -1);
-      setCurrentIndex(idx);
-    }
-    const video = document.querySelector("[data-video-element]") as any;
-    if (video?._seekTo && idx === currentIndex) {
-      const withinSegment = (fraction * allShorts.length) - idx;
-      video._seekTo(withinSegment);
-    }
-  }, [allShorts.length, currentIndex]);
-
   const DEFAULT_GRADIENTS = [
     "linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 50%, #4a90d9 100%)",
     "linear-gradient(135deg, #1a4731 0%, #2d8659 50%, #4ade80 100%)",
@@ -237,6 +220,23 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
   });
 
   const allShorts = propShorts ?? fetchedShorts ?? [];
+
+  const handleProgressScrub = useCallback((e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+    if (!progressBarRef.current) return;
+    const rect = progressBarRef.current.getBoundingClientRect();
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const fraction = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const idx = Math.floor(fraction * allShorts.length);
+    if (idx !== currentIndex && idx >= 0 && idx < allShorts.length) {
+      setDirection(idx > currentIndex ? 1 : -1);
+      setCurrentIndex(idx);
+    }
+    const video = document.querySelector("[data-video-element]") as any;
+    if (video?._seekTo && idx === currentIndex) {
+      const withinSegment = (fraction * allShorts.length) - idx;
+      video._seekTo(withinSegment);
+    }
+  }, [allShorts.length, currentIndex]);
   const currentShort = allShorts[currentIndex];
 
   useEffect(() => {
