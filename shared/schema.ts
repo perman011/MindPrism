@@ -74,6 +74,11 @@ export const chapterSummaries = pgTable("chapter_summaries", {
   chapterNumber: integer("chapter_number").notNull(),
   chapterTitle: text("chapter_title").notNull(),
   cards: jsonb("cards").notNull(),
+  content: text("content"),
+  audioUrl: text("audio_url"),
+  audioDuration: integer("audio_duration"),
+  subtitle: text("subtitle"),
+  estimatedReadTime: integer("estimated_read_time"),
 });
 
 export const mentalModels = pgTable("mental_models", {
