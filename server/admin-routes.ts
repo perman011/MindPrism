@@ -187,25 +187,28 @@ export function registerAdminRoutes(app: Express) {
       const bucket = objectStorageClient.bucket(bucketName);
       const [files] = await bucket.getFiles({ prefix: objectPrefix });
 
-      const mediaFiles = files.map((f) => {
-        const relativePath = f.name.slice(objectPrefix.length);
-        const pathParts = relativePath.split("/");
-        const type = pathParts.length > 1 ? pathParts[0] : "general";
-        const filename = pathParts[pathParts.length - 1];
-        return {
-          url: `/objects/uploads/${relativePath}`,
-          filename,
-          type,
-          size: Number(f.metadata?.size || 0),
-          createdAt: f.metadata?.timeCreated || new Date().toISOString(),
-        };
-      }).filter(f => f.filename);
+      const mediaFiles = files
+        .map((f: any) => {
+          const relativePath = f.name.slice(objectPrefix.length);
+          const pathParts = relativePath.split("/");
+          const type = pathParts.length > 1 ? pathParts[0] : "general";
+          const filename = pathParts[pathParts.length - 1];
+          const meta = f.metadata || {};
+          return {
+            url: `/objects/uploads/${relativePath}`,
+            filename,
+            type,
+            size: Number(meta.size || 0),
+            createdAt: meta.timeCreated || meta.updated || new Date().toISOString(),
+          };
+        })
+        .filter((f: any) => f.filename && !f.filename.startsWith("."));
 
-      mediaFiles.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      mediaFiles.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       res.json(mediaFiles);
-    } catch (error) {
-      console.error("Error listing media:", error);
-      res.status(500).json({ error: "Failed to list media" });
+    } catch (error: any) {
+      console.error("Error listing media:", error?.message || error);
+      res.json([]);
     }
   });
 

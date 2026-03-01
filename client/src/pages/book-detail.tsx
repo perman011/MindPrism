@@ -64,6 +64,12 @@ export default function BookDetail() {
     enabled: !!id,
   });
 
+  const { data: mentalModels } = useQuery<any[]>({
+    queryKey: ["/api/books", id, "mental-models"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: !!id,
+  });
+
   const bookmarkMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", `/api/progress/${id}/bookmark`);
@@ -277,18 +283,38 @@ export default function BookDetail() {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Link href={`/book/${id}/journey?section=mental-models`}>
-              <Button variant="outline" className="w-full gap-2" data-testid="button-mental-models">
-                <Brain className="w-4 h-4" />
-                Mental Models
-              </Button>
-            </Link>
-            <Link href={`/book/${id}/journey?section=shorts`}>
-              <Button variant="outline" className="w-full gap-2" data-testid="button-shorts">
-                <Film className="w-4 h-4" />
-                Shorts
-              </Button>
-            </Link>
+            <div className="relative">
+              {mentalModels && mentalModels.length > 0 ? (
+                <Link href={`/book/${id}/journey?section=mental-models`}>
+                  <Button variant="outline" className="w-full gap-2" data-testid="button-mental-models">
+                    <Brain className="w-4 h-4" />
+                    Mental Models
+                  </Button>
+                </Link>
+              ) : (
+                <Button variant="outline" className="w-full gap-2 opacity-50 cursor-not-allowed" disabled data-testid="button-mental-models">
+                  <Brain className="w-4 h-4" />
+                  Mental Models
+                  <Badge variant="secondary" className="absolute -top-2 -right-2 text-[9px] font-semibold">Soon</Badge>
+                </Button>
+              )}
+            </div>
+            <div className="relative">
+              {bookShorts && bookShorts.length > 0 ? (
+                <Link href={`/book/${id}/journey?section=shorts`}>
+                  <Button variant="outline" className="w-full gap-2" data-testid="button-shorts">
+                    <Film className="w-4 h-4" />
+                    Shorts
+                  </Button>
+                </Link>
+              ) : (
+                <Button variant="outline" className="w-full gap-2 opacity-50 cursor-not-allowed" disabled data-testid="button-shorts">
+                  <Film className="w-4 h-4" />
+                  Shorts
+                  <Badge variant="secondary" className="absolute -top-2 -right-2 text-[9px] font-semibold">Soon</Badge>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>

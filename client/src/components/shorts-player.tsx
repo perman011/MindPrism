@@ -5,6 +5,24 @@ import type { Short } from "@shared/schema";
 import { X, Play, Pause, Volume2, VolumeX, Image, Headphones, Video, Share2 } from "lucide-react";
 import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function renderMarkdown(text: string): string {
+  return escapeHtml(text)
+    .replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/__(.*?)__/g, '<strong>$1</strong>')
+    .replace(/_(.*?)_/g, '<em>$1</em>')
+    .replace(/\n/g, '<br />');
+}
+
 function AudioShort({ short, isActive, isPaused }: { short: Short; isActive: boolean; isPaused: boolean }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
@@ -198,19 +216,25 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
   }, []);
 
   const DEFAULT_GRADIENTS = [
-    "linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 50%, #4a90d9 100%)",
-    "linear-gradient(135deg, #1a4731 0%, #2d8659 50%, #4ade80 100%)",
+    "linear-gradient(135deg, #341539 0%, #5B2C6F 50%, #8E44AD 100%)",
     "linear-gradient(135deg, #1e40AF 0%, #3B82F6 50%, #60A5FA 100%)",
     "linear-gradient(135deg, #7c2d12 0%, #c2410c 50%, #f97316 100%)",
-    "linear-gradient(135deg, #134e4a 0%, #0d9488 50%, #5eead4 100%)",
+    "linear-gradient(135deg, #0F4C3A 0%, #1B7A5A 50%, #4CAF7D 100%)",
     "linear-gradient(135deg, #1e3a5f 0%, #2563EB 50%, #93C5FD 100%)",
+    "linear-gradient(135deg, #4A1942 0%, #6B2FA0 50%, #9B59B6 100%)",
     "linear-gradient(135deg, #0c4a6e 0%, #0284c7 50%, #38bdf8 100%)",
-    "linear-gradient(135deg, #164e63 0%, #0891b2 50%, #67e8f9 100%)",
+    "linear-gradient(135deg, #1A1225 0%, #341539 50%, #6B3FA0 100%)",
   ];
 
   const getDefaultGradient = useCallback((short: Short) => {
-    const seed = (short.bookId || short.id || 0);
-    return DEFAULT_GRADIENTS[Number(seed) % DEFAULT_GRADIENTS.length];
+    const seed = short.bookId || short.id || "0";
+    let hash = 0;
+    const s = String(seed);
+    for (let i = 0; i < s.length; i++) {
+      hash = ((hash << 5) - hash) + s.charCodeAt(i);
+      hash |= 0;
+    }
+    return DEFAULT_GRADIENTS[Math.abs(hash) % DEFAULT_GRADIENTS.length];
   }, []);
 
   const { data: fetchedShorts } = useQuery<Short[]>({
@@ -444,13 +468,12 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
             >
               {currentShort.title}
             </h2>
-            <p
+            <div
               className="text-white leading-relaxed"
               style={{ fontSize: "15px", opacity: 0.9 }}
               data-testid="text-short-content"
-            >
-              {currentShort.content}
-            </p>
+              dangerouslySetInnerHTML={{ __html: renderMarkdown(currentShort.content || "") }}
+            />
           </div>
         </motion.div>
       </AnimatePresence>
@@ -473,7 +496,7 @@ export function ShortCard({ short, onClick, fluid }: { short: Short & { bookTitl
         ) : short.backgroundGradient ? (
           <div className="w-full h-full" style={{ background: short.backgroundGradient }} />
         ) : (
-          <div className="w-full h-full" style={{ background: `linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 50%, #4a90d9 100%)` }} />
+          <div className="w-full h-full" style={{ background: `linear-gradient(135deg, #341539 0%, #5B2C6F 50%, #8E44AD 100%)` }} />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
         <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/30 flex items-center justify-center">

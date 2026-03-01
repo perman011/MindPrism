@@ -16,10 +16,16 @@ import { useTheme } from "@/components/theme-provider";
 import { useState, useEffect } from "react";
 
 const MEDIA_ICONS: Record<string, any> = {
+  text: Film,
   image: Image,
   audio: Headphones,
   video: Video,
 };
+
+function getDisplayMediaType(short: { mediaType: string; mediaUrl?: string | null }): string {
+  if (!short.mediaUrl) return "text";
+  return short.mediaType;
+}
 
 export default function AdminShorts() {
   const [, navigate] = useLocation();
@@ -157,7 +163,7 @@ export default function AdminShorts() {
         ) : (
           <div className="space-y-3">
             {filtered.map((short) => {
-              const MediaIcon = MEDIA_ICONS[short.mediaType] || Film;
+              const MediaIcon = MEDIA_ICONS[getDisplayMediaType(short)] || Film;
               return (
                 <Card key={short.id} className="p-4 hover:shadow-lg transition-shadow" data-testid={`card-short-${short.id}`}>
                   <div className="flex items-center gap-4">
@@ -176,10 +182,16 @@ export default function AdminShorts() {
                       <p className="text-sm text-muted-foreground truncate">{getBookTitle(short.bookId)}</p>
                     </div>
 
-                    <Badge variant="outline" className="capitalize flex-shrink-0" data-testid={`badge-media-${short.id}`}>
-                      <MediaIcon className="w-3 h-3 mr-1" />
-                      {short.mediaType}
-                    </Badge>
+                    {(() => {
+                      const displayType = getDisplayMediaType(short);
+                      const TypeIcon = MEDIA_ICONS[displayType] || Film;
+                      return (
+                        <Badge variant="outline" className="capitalize flex-shrink-0" data-testid={`badge-media-${short.id}`}>
+                          <TypeIcon className="w-3 h-3 mr-1" />
+                          {displayType}
+                        </Badge>
+                      );
+                    })()}
 
                     <Badge
                       variant={short.status === "published" ? "default" : "secondary"}

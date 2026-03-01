@@ -140,7 +140,7 @@ export default function Vault() {
           </div>
         )}
         {!selectedChakra && (
-          <p className="text-[11px] text-[#9CA3AF] text-center pb-4">
+          <p className="text-xs text-[#6B7280] text-center pb-4">
             Tap a chakra to see your progress
           </p>
         )}
@@ -153,7 +153,7 @@ export default function Vault() {
         className="px-5 pt-6 pb-8"
       >
         <div className="mb-2">
-          <p className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-2">Your Progress</p>
+          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-2">Your Progress</p>
         </div>
         {statsLoading ? (
           <>
@@ -185,7 +185,7 @@ export default function Vault() {
         )}
 
         <div className="mb-6" data-testid="card-streak-milestones">
-          <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Streak Milestones</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Streak Milestones</h3>
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             {STREAK_MILESTONES.map((ms) => {
               const achieved = (streak?.currentStreak ?? 0) >= ms.days;
@@ -194,7 +194,7 @@ export default function Vault() {
                 <div
                   key={ms.days}
                   className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-full border transition-all ${
-                    achieved ? "border-transparent" : "border-border opacity-40"
+                    achieved ? "border-transparent" : "border-border opacity-60"
                   }`}
                   style={achieved ? { background: `linear-gradient(135deg, ${ms.color}15, ${ms.color}05)`, borderColor: `${ms.color}30` } : {}}
                   data-testid={`vault-milestone-${ms.days}`}
@@ -259,7 +259,7 @@ export default function Vault() {
             data-testid="journal-list"
           >
             <h2 className="text-lg font-bold mb-1">Journal Entries</h2>
-            <p className="text-[11px] text-muted-foreground mb-4">Your reflections and exercise responses</p>
+            <p className="text-xs text-muted-foreground mb-4">Your reflections and exercise responses</p>
             <div className="space-y-3">
               {journalLoading ? (
                 Array.from({ length: 3 }).map((_, i) => (
@@ -303,7 +303,7 @@ export default function Vault() {
             data-testid="highlights-list"
           >
             <h2 className="text-lg font-bold mb-1">Saved Highlights</h2>
-            <p className="text-[11px] text-muted-foreground mb-4">Bookmarked insights and key passages</p>
+            <p className="text-xs text-muted-foreground mb-4">Bookmarked insights and key passages</p>
             <div className="space-y-3">
               {highlightsLoading ? (
                 Array.from({ length: 3 }).map((_, i) => (
@@ -355,7 +355,7 @@ export default function Vault() {
             data-testid="settings-section"
           >
             <h2 className="text-lg font-bold mb-1">Settings</h2>
-            <p className="text-[11px] text-muted-foreground mb-4">Manage your account and preferences</p>
+            <p className="text-xs text-muted-foreground mb-4">Manage your account and preferences</p>
             <div className="space-y-4">
               <Card className="p-5" data-testid="theme-settings">
                 <h3 className="font-semibold text-sm mb-4">Appearance</h3>

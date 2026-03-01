@@ -537,7 +537,7 @@ export default function Dashboard() {
         </section>
       )}
 
-      {allBooks.filter(b => b.audioUrl).length > 0 && (
+      {allBooks.filter(b => b.audioUrl && b.audioUrl !== "placeholder" && !b.audioUrl.includes("placeholder")).length > 0 && (
         <section className="mb-10" data-testid="section-continue-listening">
           <div className="flex items-center justify-between gap-2 px-5 mb-4">
             <div>
@@ -552,7 +552,7 @@ export default function Dashboard() {
             </Link>
           </div>
           <div className="px-5 space-y-2">
-            {allBooks.filter(b => b.audioUrl).slice(0, 3).map((book) => (
+            {allBooks.filter(b => b.audioUrl && b.audioUrl !== "placeholder" && !b.audioUrl.includes("placeholder")).slice(0, 3).map((book) => (
               <button
                 key={book.id}
                 onClick={() => play(book)}
