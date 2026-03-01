@@ -407,7 +407,7 @@ export default function ChapterReader() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.2 }}
-            className="max-w-2xl mx-auto px-5 py-8"
+            className="max-w-2xl mx-auto px-5 pt-4 pb-8"
           >
             {currentChapter?.subtitle && (
               <p className="text-sm mb-6 italic" style={{ color: "rgba(245,240,235,0.5)" }}>
@@ -416,7 +416,7 @@ export default function ChapterReader() {
             )}
 
             {currentChapter?.estimatedReadTime && (
-              <div className="flex items-center gap-2 mb-8">
+              <div className="flex items-center gap-2 mb-4">
                 <Badge
                   className="text-[10px] gap-1 border-0"
                   style={{ background: "rgba(245,240,235,0.08)", color: "rgba(245,240,235,0.5)" }}

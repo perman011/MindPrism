@@ -430,51 +430,81 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
             />
           )}
 
-          {!currentShort.mediaUrl && (currentShort.backgroundGradient || true) && (
+          {!currentShort.mediaUrl && (
             <div
               className="absolute inset-0"
               style={{ background: currentShort.backgroundGradient || getDefaultGradient(currentShort) }}
             />
           )}
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
+          {currentShort.mediaUrl && (
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
+          )}
+          {!currentShort.mediaUrl && (
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20" />
+          )}
 
           <div
-            className="absolute inset-0 z-10 flex items-center justify-center"
+            className="absolute inset-0 z-10"
             onClick={togglePause}
             data-testid="button-pause-toggle"
           >
             {showPlayIcon && (
-              <div className="w-20 h-20 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center animate-in fade-in zoom-in duration-200">
-                {isPaused ? (
-                  <Play className="w-10 h-10 text-white ml-1" aria-hidden="true" />
-                ) : (
-                  <Pause className="w-10 h-10 text-white" aria-hidden="true" />
-                )}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-20 h-20 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center animate-in fade-in zoom-in duration-200">
+                  {isPaused ? (
+                    <Play className="w-10 h-10 text-white ml-1" aria-hidden="true" />
+                  ) : (
+                    <Pause className="w-10 h-10 text-white" aria-hidden="true" />
+                  )}
+                </div>
               </div>
             )}
           </div>
 
-          <div className="absolute bottom-0 left-0 right-0 p-6 pb-10 z-10">
-            {currentShort.mediaType === "audio" ? (
-              <div className="mb-6">
-                <AudioShort short={currentShort} isActive isPaused={isPaused} />
-              </div>
-            ) : null}
-            <h2
-              className="text-white font-bold mb-2"
-              style={{ fontSize: "20px" }}
-              data-testid="text-short-title"
-            >
-              {currentShort.title}
-            </h2>
-            <div
-              className="text-white leading-relaxed"
-              style={{ fontSize: "15px", opacity: 0.9 }}
-              data-testid="text-short-content"
-              dangerouslySetInnerHTML={{ __html: renderMarkdown(currentShort.content || "") }}
-            />
-          </div>
+          {!currentShort.mediaUrl ? (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center px-8 pointer-events-none">
+              {currentShort.mediaType === "audio" ? (
+                <div className="mb-6 w-full pointer-events-auto">
+                  <AudioShort short={currentShort} isActive isPaused={isPaused} />
+                </div>
+              ) : null}
+              <h2
+                className="text-white font-bold mb-4 text-center"
+                style={{ fontSize: "22px", textShadow: "0 2px 8px rgba(0,0,0,0.3)" }}
+                data-testid="text-short-title"
+              >
+                {currentShort.title}
+              </h2>
+              <div
+                className="text-white leading-relaxed text-center"
+                style={{ fontSize: "16px", opacity: 0.95, textShadow: "0 1px 4px rgba(0,0,0,0.2)" }}
+                data-testid="text-short-content"
+                dangerouslySetInnerHTML={{ __html: renderMarkdown(currentShort.content || "") }}
+              />
+            </div>
+          ) : (
+            <div className="absolute bottom-0 left-0 right-0 p-6 pb-10 z-10">
+              {currentShort.mediaType === "audio" ? (
+                <div className="mb-6">
+                  <AudioShort short={currentShort} isActive isPaused={isPaused} />
+                </div>
+              ) : null}
+              <h2
+                className="text-white font-bold mb-2"
+                style={{ fontSize: "20px" }}
+                data-testid="text-short-title"
+              >
+                {currentShort.title}
+              </h2>
+              <div
+                className="text-white leading-relaxed"
+                style={{ fontSize: "15px", opacity: 0.9 }}
+                data-testid="text-short-content"
+                dangerouslySetInnerHTML={{ __html: renderMarkdown(currentShort.content || "") }}
+              />
+            </div>
+          )}
         </motion.div>
       </AnimatePresence>
     </div>

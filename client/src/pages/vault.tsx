@@ -109,12 +109,12 @@ export default function Vault() {
             <AvatarFallback className="text-sm font-bold bg-[#DBEAFE] text-[#3B82F6]">{initials}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold text-[#111827] tracking-tight" data-testid="text-vault-name">
+            <h1 className="text-xl font-bold text-foreground tracking-tight" data-testid="text-vault-name">
               {user?.firstName} {user?.lastName}
             </h1>
-            <p className="text-xs text-[#6B7280] mt-0.5">{user?.email}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{user?.email}</p>
           </div>
-          <div className="flex items-center gap-2 bg-orange-50 px-3 py-2 rounded-full border border-orange-300" data-testid="badge-vault-streak">
+          <div className="flex items-center gap-2 bg-orange-50 dark:bg-orange-950/40 px-3 py-2 rounded-full border border-orange-300 dark:border-orange-800" data-testid="badge-vault-streak">
             <Flame className="w-4 h-4 text-[#F97316]" />
             <span className="text-sm font-bold text-[#F97316]">{streak?.currentStreak ?? 0}</span>
           </div>
