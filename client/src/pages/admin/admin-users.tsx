@@ -6,12 +6,44 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Crown, Shield, ArrowLeft, Search, Star, StarOff, Copy, Check, Link2, ExternalLink } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Users, Crown, Shield, ArrowLeft, Search, Star, StarOff, Copy, Check, Link2, ExternalLink, Eye, EyeOff, BookOpen, Clock, TrendingUp, Sun, Moon } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useTheme } from "@/components/theme-provider";
+import { useState, useEffect } from "react";
+
+type EnrichedUser = User & {
+  booksStarted: number;
+  avgProgress: number;
+  lastLogin: string | null;
+};
+
+function formatRelativeTime(dateStr: string | null): string {
+  if (!dateStr) return "Never";
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 30) return `${diffDays}d ago`;
+  const diffMonths = Math.floor(diffDays / 30);
+  return `${diffMonths}mo ago`;
+}
+
+function maskEmail(email: string): string {
+  const [local, domain] = email.split("@");
+  if (!domain) return "***";
+  if (local.length <= 2) return `${local[0]}***@${domain}`;
+  return `${local[0]}${"*".repeat(Math.min(local.length - 2, 3))}${local[local.length - 1]}@${domain}`;
+}
 
 const ROLE_BADGES: Record<string, { label: string; className: string }> = {
   super_admin: { label: "Super Admin", className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
@@ -29,15 +61,68 @@ const ROLE_DESCRIPTIONS: Record<string, string> = {
   user: "Consumer. Can browse, read, and use exercises.",
 };
 
+function UserActivityDetails({ user }: { user: EnrichedUser }) {
+  return (
+    <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap" data-testid={`activity-details-${user.id}`}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5" />
+            <span data-testid={`text-last-login-${user.id}`}>{formatRelativeTime(user.lastLogin)}</span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>Last login</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="flex items-center gap-1">
+            <BookOpen className="w-3.5 h-3.5" />
+            <span data-testid={`text-books-started-${user.id}`}>{user.booksStarted}</span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>Books started</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="flex items-center gap-1.5 min-w-[80px]">
+            <TrendingUp className="w-3.5 h-3.5" />
+            <Progress value={user.avgProgress} className="h-1.5 w-12" />
+            <span data-testid={`text-progress-${user.id}`}>{user.avgProgress}%</span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>Average progress</TooltipContent>
+      </Tooltip>
+    </div>
+  );
+}
+
 export default function AdminUsers() {
   const { toast } = useToast();
+  const { resolvedTheme, setTheme } = useTheme();
   const [search, setSearch] = useState("");
   const [copied, setCopied] = useState(false);
   const [inviteRole, setInviteRole] = useState("writer");
+  const [revealedEmails, setRevealedEmails] = useState<Set<string>>(new Set());
+
+  const toggleEmailVisibility = (userId: string) => {
+    setRevealedEmails((prev) => {
+      const next = new Set(prev);
+      if (next.has(userId)) {
+        next.delete(userId);
+      } else {
+        next.add(userId);
+      }
+      return next;
+    });
+  };
 
   const appUrl = typeof window !== "undefined" ? window.location.origin : "";
 
-  const { data: allUsers, isLoading } = useQuery<User[]>({
+  useEffect(() => {
+    document.title = "Users | MindPrism Admin";
+  }, []);
+
+  const { data: allUsers, isLoading } = useQuery<EnrichedUser[]>({
     queryKey: ["/api/admin/users"],
     queryFn: getQueryFn({ on401: "throw" }),
   });
@@ -117,6 +202,14 @@ export default function AdminUsers() {
           <h1 className="text-2xl font-bold">Team & Users</h1>
           <Badge variant="secondary" className="ml-2">{allUsers?.length || 0} users</Badge>
           <div className="flex-1" />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+            data-testid="button-theme-toggle"
+          >
+            {resolvedTheme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </Button>
           <Link href="/">
             <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground" data-testid="button-view-app-users">
               <ExternalLink className="w-3.5 h-3.5" />
@@ -208,8 +301,29 @@ export default function AdminUsers() {
                             </Badge>
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground">{u.email || "No email"}</p>
+                        <div className="flex items-center gap-1">
+                          <p className="text-xs text-muted-foreground" data-testid={`text-email-${u.id}`}>
+                            {u.email ? (revealedEmails.has(u.id) ? u.email : maskEmail(u.email)) : "No email"}
+                          </p>
+                          {u.email && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-5 w-5"
+                              onClick={() => toggleEmailVisibility(u.id)}
+                              data-testid={`button-toggle-email-${u.id}`}
+                            >
+                              {revealedEmails.has(u.id) ? (
+                                <EyeOff className="w-3 h-3 text-muted-foreground" />
+                              ) : (
+                                <Eye className="w-3 h-3 text-muted-foreground" />
+                              )}
+                            </Button>
+                          )}
+                        </div>
                       </div>
+
+                      <UserActivityDetails user={u} />
 
                       <Badge className={`text-[10px] ${roleBadge.className}`}>
                         {roleBadge.label}
@@ -280,8 +394,29 @@ export default function AdminUsers() {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground">{u.email || "No email"}</p>
+                      <div className="flex items-center gap-1">
+                        <p className="text-xs text-muted-foreground" data-testid={`text-email-${u.id}`}>
+                          {u.email ? (revealedEmails.has(u.id) ? u.email : maskEmail(u.email)) : "No email"}
+                        </p>
+                        {u.email && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-5 w-5"
+                            onClick={() => toggleEmailVisibility(u.id)}
+                            data-testid={`button-toggle-email-${u.id}`}
+                          >
+                            {revealedEmails.has(u.id) ? (
+                              <EyeOff className="w-3 h-3 text-muted-foreground" />
+                            ) : (
+                              <Eye className="w-3 h-3 text-muted-foreground" />
+                            )}
+                          </Button>
+                        )}
+                      </div>
                     </div>
+
+                    <UserActivityDetails user={u} />
 
                     <Badge className={`text-[10px] ${roleBadge.className}`}>
                       {roleBadge.label}

@@ -1,3 +1,4 @@
+import { useEffect, useState, useMemo } from "react";
 import { SEOHead } from "@/components/SEOHead";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
@@ -9,9 +10,15 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
-import { Plus, BookOpen, Edit, Trash2, Globe, FileText, Users, ExternalLink, Rocket, ArrowDownCircle, BarChart3, Film, Activity, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Plus, BookOpen, Edit, Trash2, Globe, FileText, Users, ExternalLink, Rocket, ArrowDownCircle, BarChart3, Film, Activity, CheckCircle2, AlertTriangle, Search, ArrowUpDown, X, Info, Sun, Moon } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/components/theme-provider";
 
 interface ContentHealthSection {
   label: string;
@@ -57,10 +64,21 @@ export default function AdminBooks() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { resolvedTheme, setTheme } = useTheme();
   const userRole = user?.role || "user";
   const canDelete = hasMinRole(userRole, "admin");
   const canPublish = hasMinRole(userRole, "editor");
   const isSuperAdmin = hasMinRole(userRole, "super_admin");
+
+  useEffect(() => {
+    document.title = "Admin Dashboard | MindPrism";
+  }, []);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "published" | "draft">("all");
+  const [sortBy, setSortBy] = useState<"name-asc" | "name-desc" | "completeness-desc" | "completeness-asc">("name-asc");
+  const [selectedBookIds, setSelectedBookIds] = useState<Set<string>>(new Set());
+  const [bulkConfirmAction, setBulkConfirmAction] = useState<"published" | "draft" | null>(null);
 
   const { data: books, isLoading } = useQuery<Book[]>({
     queryKey: ["/api/admin/books"],
@@ -71,6 +89,37 @@ export default function AdminBooks() {
     queryKey: ["/api/admin/content-health"],
     queryFn: getQueryFn({ on401: "throw" }),
   });
+
+  const filteredBooks = useMemo(() => {
+    if (!books) return [];
+    let result = [...books];
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (b) =>
+          b.title.toLowerCase().includes(q) ||
+          b.author.toLowerCase().includes(q)
+      );
+    }
+
+    if (statusFilter !== "all") {
+      result = result.filter((b) => {
+        const isPublished = b.status === "published" || b.status === "published_with_changes";
+        return statusFilter === "published" ? isPublished : !isPublished;
+      });
+    }
+
+    result.sort((a, b) => {
+      if (sortBy === "name-asc") return a.title.localeCompare(b.title);
+      if (sortBy === "name-desc") return b.title.localeCompare(a.title);
+      const scoreA = contentHealth?.books.find((s) => s.bookId === a.id)?.percentage ?? 0;
+      const scoreB = contentHealth?.books.find((s) => s.bookId === b.id)?.percentage ?? 0;
+      return sortBy === "completeness-desc" ? scoreB - scoreA : scoreA - scoreB;
+    });
+
+    return result;
+  }, [books, searchQuery, statusFilter, sortBy, contentHealth]);
 
   const createBookMutation = useMutation({
     mutationFn: async () => {
@@ -133,6 +182,39 @@ export default function AdminBooks() {
     onError: () => toast({ title: "Error", description: "Failed to unpublish book", variant: "destructive" }),
   });
 
+  const bulkStatusMutation = useMutation({
+    mutationFn: async ({ bookIds, status }: { bookIds: string[]; status: "published" | "draft" }) => {
+      const res = await apiRequest("POST", "/api/admin/books/bulk-status", { bookIds, status });
+      return res.json();
+    },
+    onSuccess: (data: { updated: number; total: number }, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/books"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/content-health"] });
+      setSelectedBookIds(new Set());
+      const action = variables.status === "published" ? "published" : "unpublished";
+      toast({ title: "Bulk Update Complete", description: `${data.updated} of ${data.total} books ${action}` });
+    },
+    onError: () => toast({ title: "Error", description: "Failed to update books", variant: "destructive" }),
+  });
+
+  const toggleBookSelection = (bookId: string) => {
+    setSelectedBookIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(bookId)) next.delete(bookId);
+      else next.add(bookId);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedBookIds.size === filteredBooks.length) {
+      setSelectedBookIds(new Set());
+    } else {
+      setSelectedBookIds(new Set(filteredBooks.map((b) => b.id)));
+    }
+  };
+
   const getBookScore = (bookId: string): BookContentScore | undefined => {
     return contentHealth?.books.find((b) => b.bookId === bookId);
   };
@@ -162,6 +244,14 @@ export default function AdminBooks() {
             <p className="text-muted-foreground mt-1">Manage book breakdowns</p>
           </div>
           <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+              data-testid="button-theme-toggle"
+            >
+              {resolvedTheme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </Button>
             <Link href="/">
               <Button variant="ghost" className="gap-2 text-muted-foreground" data-testid="button-view-app">
                 <ExternalLink className="w-4 h-4" />
@@ -207,6 +297,14 @@ export default function AdminBooks() {
             <div className="flex items-center gap-2 mb-4">
               <Activity className="w-5 h-5 text-muted-foreground" />
               <h2 className="text-lg font-semibold" data-testid="text-content-health-title">Content Health</h2>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="w-4 h-4 text-muted-foreground cursor-help" data-testid="icon-content-health-info" />
+                </TooltipTrigger>
+                <TooltipContent side="right" className="max-w-xs text-xs" data-testid="tooltip-content-health">
+                  <p>Score is based on: Title &amp; Author (10%), Description (10%), Cover Image (10%), Core Thesis (15%), Chapters (20%), Mental Models (15%), Principles (10%), Exercises (10%)</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card className="p-4" data-testid="stat-total-books">
@@ -241,6 +339,129 @@ export default function AdminBooks() {
           </div>
         )}
 
+        {books && books.length > 0 && (
+          <div className="mb-6 flex flex-wrap items-center gap-3" data-testid="book-filters">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by title or author..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+                data-testid="input-search-books"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as "all" | "published" | "draft")}>
+              <SelectTrigger className="w-[140px]" data-testid="select-status-filter">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="published">Published</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+              <SelectTrigger className="w-[180px]" data-testid="select-sort-by">
+                <ArrowUpDown className="w-3.5 h-3.5 mr-1.5" />
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name-asc">Name A-Z</SelectItem>
+                <SelectItem value="name-desc">Name Z-A</SelectItem>
+                <SelectItem value="completeness-desc">Completeness High-Low</SelectItem>
+                <SelectItem value="completeness-asc">Completeness Low-High</SelectItem>
+              </SelectContent>
+            </Select>
+            {(searchQuery || statusFilter !== "all") && (
+              <Badge variant="secondary" className="gap-1" data-testid="badge-filter-count">
+                {filteredBooks.length} of {books.length} books
+              </Badge>
+            )}
+          </div>
+        )}
+
+        {canPublish && books && books.length > 0 && (
+          <div className="mb-4 flex flex-wrap items-center gap-3" data-testid="bulk-actions-bar">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={filteredBooks.length > 0 && selectedBookIds.size === filteredBooks.length}
+                onCheckedChange={toggleSelectAll}
+                data-testid="checkbox-select-all"
+              />
+              <span className="text-sm text-muted-foreground">
+                {selectedBookIds.size > 0
+                  ? `${selectedBookIds.size} selected`
+                  : "Select all"}
+              </span>
+            </div>
+            {selectedBookIds.size > 0 && (
+              <>
+                <Button
+                  size="sm"
+                  className="gap-1.5 bg-emerald-600"
+                  onClick={() => setBulkConfirmAction("published")}
+                  disabled={bulkStatusMutation.isPending}
+                  data-testid="button-bulk-publish"
+                >
+                  <Rocket className="w-3.5 h-3.5" />
+                  Publish ({selectedBookIds.size})
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => setBulkConfirmAction("draft")}
+                  disabled={bulkStatusMutation.isPending}
+                  data-testid="button-bulk-unpublish"
+                >
+                  <ArrowDownCircle className="w-3.5 h-3.5" />
+                  Unpublish ({selectedBookIds.size})
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1 text-muted-foreground"
+                  onClick={() => setSelectedBookIds(new Set())}
+                  data-testid="button-clear-selection"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  Clear
+                </Button>
+              </>
+            )}
+          </div>
+        )}
+
+        <AlertDialog open={bulkConfirmAction !== null} onOpenChange={(open) => { if (!open) setBulkConfirmAction(null); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle data-testid="text-bulk-confirm-title">
+                {bulkConfirmAction === "published" ? "Publish" : "Unpublish"} {selectedBookIds.size} {selectedBookIds.size === 1 ? "book" : "books"}?
+              </AlertDialogTitle>
+              <AlertDialogDescription data-testid="text-bulk-confirm-description">
+                {bulkConfirmAction === "published"
+                  ? `This will make ${selectedBookIds.size} ${selectedBookIds.size === 1 ? "book" : "books"} live in the app.`
+                  : `This will move ${selectedBookIds.size} ${selectedBookIds.size === 1 ? "book" : "books"} back to draft status.`}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel data-testid="button-bulk-cancel">Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  if (bulkConfirmAction) {
+                    bulkStatusMutation.mutate({ bookIds: Array.from(selectedBookIds), status: bulkConfirmAction });
+                    setBulkConfirmAction(null);
+                  }
+                }}
+                data-testid="button-bulk-confirm"
+              >
+                {bulkConfirmAction === "published" ? "Publish All" : "Unpublish All"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         {(!books || books.length === 0) ? (
           <div className="text-center py-20">
             <BookOpen className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
@@ -251,20 +472,40 @@ export default function AdminBooks() {
               Create New Book Breakdown
             </Button>
           </div>
+        ) : filteredBooks.length === 0 ? (
+          <div className="text-center py-16">
+            <Search className="w-12 h-12 text-muted-foreground/20 mx-auto mb-3" />
+            <h3 className="text-lg font-semibold mb-1" data-testid="text-no-results">No matching books</h3>
+            <p className="text-sm text-muted-foreground mb-4">Try adjusting your search or filters</p>
+            <Button variant="outline" size="sm" onClick={() => { setSearchQuery(""); setStatusFilter("all"); }} data-testid="button-clear-filters">
+              Clear filters
+            </Button>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {books.map((book) => {
+            {filteredBooks.map((book) => {
               const isPublished = book.status === "published" || book.status === "published_with_changes";
               const score = getBookScore(book.id);
+              const isSelected = selectedBookIds.has(book.id);
               return (
                 <Card
                   key={book.id}
-                  className="overflow-hidden hover:shadow-lg transition-shadow"
+                  className={`overflow-hidden hover:shadow-lg transition-shadow ${isSelected ? "ring-2 ring-primary" : ""}`}
                   data-testid={`card-book-${book.id}`}
                 >
                   <div className="h-32 bg-gradient-to-br from-primary/20 to-primary/5 relative">
                     {book.coverImage && (
                       <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
+                    )}
+                    {canPublish && (
+                      <div className="absolute top-2 left-2 z-10">
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => toggleBookSelection(book.id)}
+                          className="bg-background/80 backdrop-blur-sm"
+                          data-testid={`checkbox-book-${book.id}`}
+                        />
+                      </div>
                     )}
                   </div>
                   <div className="p-4">

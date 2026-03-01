@@ -9,10 +9,11 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Film, Edit, Trash2, Eye, EyeOff, ExternalLink, BookOpen, Users, BarChart3, ArrowLeft, Image, Headphones, Video } from "lucide-react";
+import { Plus, Film, Edit, Trash2, Eye, EyeOff, ExternalLink, BookOpen, Users, BarChart3, ArrowLeft, Image, Headphones, Video, Sun, Moon } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useTheme } from "@/components/theme-provider";
+import { useState, useEffect } from "react";
 
 const MEDIA_ICONS: Record<string, any> = {
   image: Image,
@@ -24,12 +25,17 @@ export default function AdminShorts() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { resolvedTheme, setTheme } = useTheme();
   const userRole = user?.role || "user";
   const canDelete = hasMinRole(userRole, "admin");
   const isSuperAdmin = hasMinRole(userRole, "super_admin");
 
   const [filterBook, setFilterBook] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+
+  useEffect(() => {
+    document.title = "Shorts | MindPrism Admin";
+  }, []);
 
   const { data: allShorts, isLoading } = useQuery<Short[]>({
     queryKey: ["/api/admin/shorts"],
@@ -110,6 +116,14 @@ export default function AdminShorts() {
             <p className="text-muted-foreground mt-1">Manage bite-sized content shorts</p>
           </div>
           <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+              data-testid="button-theme-toggle"
+            >
+              {resolvedTheme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </Button>
             <Link href="/">
               <Button variant="ghost" className="gap-2 text-muted-foreground" data-testid="button-view-app">
                 <ExternalLink className="w-4 h-4" />

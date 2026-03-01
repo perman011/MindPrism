@@ -20,7 +20,13 @@ export async function seedDatabase() {
 
   const existingBooks = await db.select().from(books).limit(1);
   if (existingBooks.length > 0) {
-    console.log("Database already seeded, skipping...");
+    const existingShorts = await db.select().from(shorts).limit(1);
+    if (existingShorts.length === 0) {
+      console.log("Books exist but shorts missing, seeding shorts...");
+      await seedShortsForExistingBooks();
+    } else {
+      console.log("Database already seeded, skipping...");
+    }
     return;
   }
 
@@ -497,4 +503,41 @@ export async function seedDatabase() {
   });
 
   console.log("Database seeded successfully with new taxonomy!");
+}
+
+async function seedShortsForExistingBooks() {
+  const allBooks = await db.select().from(books);
+  const bookByTitle = (title: string) => allBooks.find(b => b.title === title);
+
+  const book1 = bookByTitle("Atomic Habits");
+  const book2 = bookByTitle("Thinking, Fast and Slow");
+  const book3 = bookByTitle("The Power of Now");
+  const book4 = bookByTitle("Emotional Intelligence");
+  const book5 = bookByTitle("Man's Search for Meaning");
+
+  if (!book1 || !book2 || !book3 || !book4 || !book5) {
+    console.log("Not all books found, skipping shorts seeding");
+    return;
+  }
+
+  const shortsData = [
+    { bookId: book1.id, title: "The 1% Rule That Changes Everything", content: "If you get just 1% better each day, you'll be 37 times better in one year. The secret isn't massive action — it's tiny, consistent improvements that compound over time. Your habits are the compound interest of self-improvement.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #6B21A8, #9333EA, #A855F7)", duration: 15, orderIndex: 1, status: "published" },
+    { bookId: book1.id, title: "You Don't Rise to Your Goals", content: "You don't rise to the level of your goals. You fall to the level of your systems. Every Olympic athlete wants to win gold — the difference is in the daily systems they build. Stop obsessing over outcomes. Build better systems instead.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #7C3AED, #8B5CF6, #C084FC)", duration: 15, orderIndex: 2, status: "published" },
+    { bookId: book2.id, title: "Your Brain Has Two Pilots", content: "System 1 is your autopilot — fast, intuitive, and often wrong. System 2 is your co-pilot — slow, deliberate, and lazy. Most of your 'decisions' are actually System 1 reflexes that System 2 never bothered to check. The key? Know which system is flying.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #1E3A5F, #2563EB, #60A5FA)", duration: 15, orderIndex: 3, status: "published" },
+    { bookId: book2.id, title: "The Anchoring Trap", content: "The first number you hear in any negotiation becomes your anchor — and it silently controls the entire outcome. Even random numbers influence your estimates. Next time someone throws out a number first, pause. Ask yourself: is this anchor real, or is it manipulating me?", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #0F766E, #14B8A6, #5EEAD4)", duration: 15, orderIndex: 4, status: "published" },
+    { bookId: book3.id, title: "The Only Moment That Exists", content: "Nothing has ever happened in the past. It happened in the Now. Nothing will ever happen in the future. It will happen in the Now. The present moment is literally all you ever have. Yet most people spend their entire lives lost in memories and projections.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #581C87, #7E22CE, #D8B4FE)", duration: 15, orderIndex: 5, status: "published" },
+    { bookId: book3.id, title: "You Are Not Your Thoughts", content: "The moment you realize you are not present, you ARE present. You can't observe the thinker if you ARE the thinker. This gap — between the thought and the awareness of the thought — is where freedom lives. Watch your mind like you'd watch clouds passing.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #4C1D95, #6D28D9, #A78BFA)", duration: 15, orderIndex: 6, status: "published" },
+    { bookId: book4.id, title: "The 6-Second Rule", content: "Your amygdala can hijack your brain in milliseconds — triggering anger, fear, or panic before your rational mind even wakes up. The antidote? Six seconds. One full breath cycle. That's all it takes to let your prefrontal cortex catch up and choose a better response.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #9F1239, #E11D48, #FB7185)", duration: 15, orderIndex: 7, status: "published" },
+    { bookId: book4.id, title: "Name It to Tame It", content: "When you name an emotion — 'I notice I'm feeling anxious right now' — brain scans show the amygdala's activity drops by up to 50%. Labeling emotions engages your prefrontal cortex, which calms the emotional brain. Awareness is not weakness. It's your superpower.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #B91C1C, #DC2626, #F87171)", duration: 15, orderIndex: 8, status: "published" },
+    { bookId: book5.id, title: "The Last Human Freedom", content: "Everything can be taken from a person except one thing: the freedom to choose your attitude in any circumstance. Viktor Frankl discovered this in Auschwitz. The guards could control his body, but never his mind. Between stimulus and response, there is a space. In that space is your power.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #1E40AF, #3B82F6, #93C5FD)", duration: 15, orderIndex: 9, status: "published" },
+    { bookId: book5.id, title: "Why Happiness Can't Be Chased", content: "Happiness cannot be pursued — it must ensue. The more you chase happiness directly, the more it eludes you. It comes as a side effect of dedicating yourself to a cause greater than yourself, or loving another person deeply. Stop chasing. Start meaning.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #312E81, #4338CA, #818CF8)", duration: 15, orderIndex: 10, status: "published" },
+    { bookId: book1.id, title: "Identity Beats Motivation", content: "Don't say 'I want to read more.' Say 'I am a reader.' Every action you take is a vote for the type of person you wish to become. No single vote is decisive, but as the votes build up, the evidence of your new identity builds up too. Become the person, then the habits follow.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #92400E, #D97706, #FCD34D)", duration: 15, orderIndex: 11, status: "published" },
+    { bookId: book2.id, title: "Losses Hit Twice as Hard", content: "Losing $100 feels about twice as painful as gaining $100 feels good. This asymmetry — loss aversion — shapes almost every decision you make. It's why you hold losing stocks too long, stay in bad relationships, and fear change even when the odds favor it.", mediaType: "text", backgroundGradient: "linear-gradient(135deg, #065F46, #059669, #6EE7B7)", duration: 15, orderIndex: 12, status: "published" },
+  ];
+
+  for (const shortData of shortsData) {
+    await storage.createShort(shortData as any);
+  }
+
+  console.log(`Seeded ${shortsData.length} shorts successfully!`);
 }

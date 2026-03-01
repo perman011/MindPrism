@@ -1,5 +1,5 @@
 import { SEOHead } from "@/components/SEOHead";
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import { useRoute, Link } from "wouter";
@@ -26,8 +26,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Save, Loader2, CheckCircle2, AlertCircle, GitBranch, Plus, Trash2, Edit2, Film, Check, X } from "lucide-react";
+import { ArrowLeft, Save, Loader2, CheckCircle2, AlertCircle, GitBranch, Plus, Trash2, Edit2, Film, Check, X, Sun, Moon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/components/theme-provider";
 
 const DREAM_CURTAIN_GRADIENTS = [
   { name: "Midnight Amethyst", value: "linear-gradient(135deg, #341539 0%, #0F0F1A 100%)" },
@@ -276,16 +277,21 @@ export default function AdminBookEditor() {
   const [, params] = useRoute("/admin/books/:id");
   const bookId = params?.id || "";
   const { toast } = useToast();
+  const { resolvedTheme, setTheme } = useTheme();
   const [activeSection, setActiveSection] = useState("setup");
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const centerRef = useRef<HTMLDivElement>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { data: book, isLoading: bookLoading } = useQuery<Book>({
-    queryKey: ["/api/books", bookId],
+    queryKey: ["/api/admin/books", bookId],
     queryFn: getQueryFn({ on401: "throw" }),
     enabled: !!bookId,
   });
+
+  useEffect(() => {
+    document.title = book?.title ? `Edit: ${book.title} | MindPrism Admin` : "Edit Book | MindPrism Admin";
+  }, [book?.title]);
 
   const { data: contentCounts } = useQuery<any>({
     queryKey: ["/api/books", bookId, "content-counts"],
@@ -377,6 +383,8 @@ export default function AdminBookEditor() {
       return res.json();
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/books", bookId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
       queryClient.invalidateQueries({ queryKey: ["/api/books", bookId] });
       queryClient.invalidateQueries({ queryKey: ["/api/books"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/books", bookId, "draft"] });
@@ -392,7 +400,7 @@ export default function AdminBookEditor() {
       try {
         await updateBookMutation.mutateAsync({ [field]: value });
         setSaveStatus("saved");
-        setTimeout(() => setSaveStatus("idle"), 2000);
+        setTimeout(() => setSaveStatus("idle"), 4000);
       } catch {
         setSaveStatus("error");
       }
@@ -467,23 +475,31 @@ export default function AdminBookEditor() {
           <p className="text-[10px] text-muted-foreground">by {book.author}</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+            data-testid="button-theme-toggle"
+          >
+            {resolvedTheme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </Button>
           {saveStatus === "saving" && (
-            <Badge variant="secondary" className="gap-1 text-[10px]">
-              <Loader2 className="w-3 h-3 animate-spin" />
-              Saving...
-            </Badge>
+            <div className="flex items-center gap-1.5 text-muted-foreground" data-testid="status-saving">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span className="text-xs">Saving...</span>
+            </div>
           )}
           {saveStatus === "saved" && (
-            <Badge variant="secondary" className="gap-1 text-[10px] text-emerald-600">
-              <CheckCircle2 className="w-3 h-3" />
-              Saved
-            </Badge>
+            <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400" data-testid="status-saved">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span className="text-xs">All changes saved</span>
+            </div>
           )}
           {saveStatus === "error" && (
-            <Badge variant="destructive" className="gap-1 text-[10px]">
-              <AlertCircle className="w-3 h-3" />
-              Error
-            </Badge>
+            <div className="flex items-center gap-1.5 text-destructive" data-testid="status-error">
+              <AlertCircle className="w-3.5 h-3.5" />
+              <span className="text-xs">Save failed</span>
+            </div>
           )}
           {book.status === "published_with_changes" ? (
             <Badge className="text-[10px] bg-primary/20 text-primary border-primary/30">

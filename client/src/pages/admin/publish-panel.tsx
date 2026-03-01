@@ -37,9 +37,12 @@ export function PublishPanel({ book, contentCounts }: PublishPanelProps) {
   const checks = [
     { label: "Book title", pass: !!book.title && book.title !== "Untitled Book" },
     { label: "Author name", pass: !!book.author && book.author !== "Unknown Author" },
-    { label: "Core thesis", pass: !!book.coreThesis && book.coreThesis.length > 10 },
-    { label: "At least 1 chapter", pass: (contentCounts?.chapterSummaries || 0) > 0 },
-    { label: "At least 1 principle", pass: (contentCounts?.principles || 0) > 0 },
+    { label: "Core thesis (min 50 characters)", pass: !!book.coreThesis && book.coreThesis.length >= 50 },
+    { label: "At least 3 chapter summaries", pass: (contentCounts?.chapterSummaries || 0) >= 3 },
+    { label: "At least 1 mental model", pass: (contentCounts?.mentalModels || 0) >= 1 },
+    { label: "Book description", pass: !!book.description && book.description.trim().length > 0 },
+    { label: "Cover image", pass: !!book.coverImage && book.coverImage.trim().length > 0 },
+    { label: "Category assigned", pass: !!book.categoryId && book.categoryId.trim().length > 0 },
     { label: "No unresolved comments", pass: unresolvedCount === 0 },
   ];
 
@@ -55,7 +58,21 @@ export function PublishPanel({ book, contentCounts }: PublishPanelProps) {
       queryClient.invalidateQueries({ queryKey: ["/api/books", book.id] });
       toast({ title: "Published", description: `"${book.title}" is now live in the app` });
     },
-    onError: () => toast({ title: "Error", description: "Failed to publish", variant: "destructive" }),
+    onError: (error: any) => {
+      let description = "Failed to publish";
+      try {
+        if (error?.message) {
+          const jsonStr = error.message.replace(/^\d+:\s*/, "");
+          const parsed = JSON.parse(jsonStr);
+          if (parsed.validationErrors) {
+            description = parsed.validationErrors.join(", ");
+          } else if (parsed.message) {
+            description = parsed.message;
+          }
+        }
+      } catch {}
+      toast({ title: "Publishing Failed", description, variant: "destructive" });
+    },
   });
 
   const unpublishMutation = useMutation({
@@ -83,7 +100,21 @@ export function PublishPanel({ book, contentCounts }: PublishPanelProps) {
       setShowPublishConfirm(false);
       toast({ title: "Changes Published", description: "Draft changes are now live for customers" });
     },
-    onError: () => toast({ title: "Error", description: "Failed to publish changes", variant: "destructive" }),
+    onError: (error: any) => {
+      let description = "Failed to publish changes";
+      try {
+        if (error?.message) {
+          const jsonStr = error.message.replace(/^\d+:\s*/, "");
+          const parsed = JSON.parse(jsonStr);
+          if (parsed.validationErrors) {
+            description = parsed.validationErrors.join(", ");
+          } else if (parsed.message) {
+            description = parsed.message;
+          }
+        }
+      } catch {}
+      toast({ title: "Publishing Failed", description, variant: "destructive" });
+    },
   });
 
   const discardDraftMutation = useMutation({

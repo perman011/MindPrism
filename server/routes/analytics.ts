@@ -211,20 +211,36 @@ router.get("/overview", isAuthenticated, requireAdmin, async (req: Request, res:
 router.get("/admin-events", isAuthenticated, requireAdmin, async (req: Request, res: Response) => {
   try {
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
     const offset = (page - 1) * limit;
+    const eventType = (req.query.type as string) || "";
 
-    const [totalResult] = await db.select({ count: count() }).from(analyticsEvents);
+    const whereClause = eventType
+      ? eq(analyticsEvents.eventType, eventType)
+      : undefined;
+
+    const [totalResult] = await db
+      .select({ count: count() })
+      .from(analyticsEvents)
+      .where(whereClause);
 
     const events = await db
       .select()
       .from(analyticsEvents)
+      .where(whereClause)
       .orderBy(desc(analyticsEvents.createdAt))
       .limit(limit)
       .offset(offset);
 
+    const eventTypes = await db
+      .select({ eventType: analyticsEvents.eventType })
+      .from(analyticsEvents)
+      .groupBy(analyticsEvents.eventType)
+      .orderBy(analyticsEvents.eventType);
+
     res.json({
       events,
+      eventTypes: eventTypes.map((e) => e.eventType),
       pagination: {
         page,
         limit,
@@ -235,6 +251,45 @@ router.get("/admin-events", isAuthenticated, requireAdmin, async (req: Request, 
   } catch (error: any) {
     console.error("[analytics] Events list error:", error.message);
     res.status(500).json({ message: "Failed to fetch events" });
+  }
+});
+
+router.get("/admin-events/export", isAuthenticated, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const eventType = (req.query.type as string) || "";
+    const whereClause = eventType
+      ? eq(analyticsEvents.eventType, eventType)
+      : undefined;
+
+    const allEvents = await db
+      .select()
+      .from(analyticsEvents)
+      .where(whereClause)
+      .orderBy(desc(analyticsEvents.createdAt));
+
+    const headers = ["ID", "User ID", "Event Type", "Page URL", "Session ID", "Created At"];
+    const rows = allEvents.map((e) => [
+      e.id,
+      e.userId || "",
+      e.eventType,
+      e.pageUrl || "",
+      e.sessionId || "",
+      e.createdAt ? new Date(e.createdAt).toISOString() : "",
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) =>
+        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+      ),
+    ].join("\n");
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", `attachment; filename=analytics-events-${new Date().toISOString().split("T")[0]}.csv`);
+    res.send(csvContent);
+  } catch (error: any) {
+    console.error("[analytics] Export error:", error.message);
+    res.status(500).json({ message: "Failed to export events" });
   }
 });
 

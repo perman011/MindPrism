@@ -15,6 +15,8 @@ import {
   insertCommentSchema,
   bookVersions,
   books,
+  userProgress,
+  analyticsEvents,
 } from "@shared/schema";
 import { hasMinRole } from "@shared/models/auth";
 import { users } from "@shared/models/auth";
@@ -69,6 +71,17 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
+  app.get("/api/admin/books/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const book = await storage.getBook(req.params.id);
+      if (!book) return res.status(404).json({ message: "Book not found" });
+      res.json(book);
+    } catch (error) {
+      console.error("Error fetching admin book:", error);
+      res.status(500).json({ message: "Failed to fetch book" });
+    }
+  });
+
   app.post("/api/admin/books", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const parsed = insertBookSchema.safeParse(req.body);
@@ -109,8 +122,41 @@ export function registerAdminRoutes(app: Express) {
 
   app.post("/api/admin/books/:id/publish", isAuthenticated, isAdmin, requireRole("editor"), async (req: any, res) => {
     try {
-      const book = await storage.updateBook(req.params.id, { status: "published" });
-      res.json(book);
+      const bookId = req.params.id;
+      const book = await storage.getBook(bookId);
+      if (!book) return res.status(404).json({ message: "Book not found" });
+
+      const [chapters, models] = await Promise.all([
+        storage.getChapterSummariesByBook(bookId),
+        storage.getMentalModelsByBook(bookId),
+      ]);
+
+      const validationErrors: string[] = [];
+      if (!book.coreThesis || book.coreThesis.length < 50) {
+        validationErrors.push("Core thesis must be at least 50 characters");
+      }
+      if (chapters.length < 3) {
+        validationErrors.push("At least 3 chapter summaries required");
+      }
+      if (models.length < 1) {
+        validationErrors.push("At least 1 mental model required");
+      }
+      if (!book.description || book.description.trim().length === 0) {
+        validationErrors.push("Book description must not be empty");
+      }
+      if (!book.coverImage || book.coverImage.trim().length === 0) {
+        validationErrors.push("Cover image must exist");
+      }
+      if (!book.categoryId || book.categoryId.trim().length === 0) {
+        validationErrors.push("Category must be assigned");
+      }
+
+      if (validationErrors.length > 0) {
+        return res.status(400).json({ message: "Publishing validation failed", validationErrors });
+      }
+
+      const updatedBook = await storage.updateBook(bookId, { status: "published" });
+      res.json(updatedBook);
     } catch (error) {
       console.error("Error publishing book:", error);
       res.status(500).json({ message: "Failed to publish book" });
@@ -221,6 +267,36 @@ export function registerAdminRoutes(app: Express) {
         if (field in draftContent) {
           updateData[field] = draftContent[field];
         }
+      }
+
+      const mergedBook = { ...book, ...updateData };
+      const [chapters, models] = await Promise.all([
+        storage.getChapterSummariesByBook(bookId),
+        storage.getMentalModelsByBook(bookId),
+      ]);
+
+      const validationErrors: string[] = [];
+      if (!mergedBook.coreThesis || mergedBook.coreThesis.length < 50) {
+        validationErrors.push("Core thesis must be at least 50 characters");
+      }
+      if (chapters.length < 3) {
+        validationErrors.push("At least 3 chapter summaries required");
+      }
+      if (models.length < 1) {
+        validationErrors.push("At least 1 mental model required");
+      }
+      if (!mergedBook.description || mergedBook.description.trim().length === 0) {
+        validationErrors.push("Book description must not be empty");
+      }
+      if (!mergedBook.coverImage || mergedBook.coverImage.trim().length === 0) {
+        validationErrors.push("Cover image must exist");
+      }
+      if (!mergedBook.categoryId || mergedBook.categoryId.trim().length === 0) {
+        validationErrors.push("Category must be assigned");
+      }
+
+      if (validationErrors.length > 0) {
+        return res.status(400).json({ message: "Publishing validation failed", validationErrors });
       }
 
       await storage.updateBook(bookId, { ...updateData, status: "published" });
@@ -593,6 +669,49 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
+  app.post("/api/admin/books/bulk-status", isAuthenticated, isAdmin, requireRole("editor"), async (req: any, res) => {
+    try {
+      const schema = z.object({
+        bookIds: z.array(z.string()).min(1),
+        status: z.enum(["published", "draft"]),
+      });
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
+
+      const results = await Promise.all(
+        parsed.data.bookIds.map(async (bookId) => {
+          try {
+            if (parsed.data.status === "published") {
+              const book = await storage.getBook(bookId);
+              if (!book) return { bookId, success: false, error: "Book not found" };
+              const chapters = await storage.getChapterSummariesByBook(bookId);
+              const models = await storage.getMentalModelsByBook(bookId);
+              const errors: string[] = [];
+              if (!book.coreThesis || book.coreThesis.length < 50) errors.push("Core thesis must be at least 50 characters");
+              if (chapters.length < 3) errors.push("At least 3 chapter summaries required");
+              if (models.length < 1) errors.push("At least 1 mental model required");
+              if (!book.description) errors.push("Book description is required");
+              if (!book.coverImage) errors.push("Cover image is required");
+              if (!book.categoryId) errors.push("Category must be assigned");
+              if (errors.length > 0) {
+                return { bookId, success: false, title: book.title, error: errors.join("; ") };
+              }
+            }
+            const book = await storage.updateBook(bookId, { status: parsed.data.status });
+            return { bookId, success: true, book };
+          } catch (err) {
+            return { bookId, success: false, error: "Failed to update" };
+          }
+        })
+      );
+
+      res.json({ results, updated: results.filter(r => r.success).length, total: results.length });
+    } catch (error) {
+      console.error("Error bulk updating book status:", error);
+      res.status(500).json({ message: "Failed to bulk update book status" });
+    }
+  });
+
   app.put("/api/admin/reorder", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const schema = z.object({
@@ -792,7 +911,36 @@ export function registerAdminRoutes(app: Express) {
   app.get("/api/admin/users", isAuthenticated, isSuperAdmin, async (_req: any, res) => {
     try {
       const allUsers = await db.select().from(users);
-      res.json(allUsers);
+
+      const progressRows = await db.select({
+        userId: userProgress.userId,
+        booksStarted: count(userProgress.bookId),
+        avgProgress: sql<number>`COALESCE(AVG(
+          CASE WHEN ${userProgress.totalCards} > 0
+            THEN (${userProgress.currentCardIndex}::float / ${userProgress.totalCards}::float) * 100
+            ELSE 0
+          END
+        ), 0)`,
+      }).from(userProgress).groupBy(userProgress.userId);
+
+      const lastLoginRows = await db.select({
+        userId: analyticsEvents.userId,
+        lastLogin: sql<string>`MAX(${analyticsEvents.createdAt})`,
+      }).from(analyticsEvents).where(
+        eq(analyticsEvents.eventType, "page_view")
+      ).groupBy(analyticsEvents.userId);
+
+      const progressMap = new Map(progressRows.map(r => [r.userId, { booksStarted: Number(r.booksStarted), avgProgress: Math.round(Number(r.avgProgress)) }]));
+      const lastLoginMap = new Map(lastLoginRows.map(r => [r.userId, r.lastLogin]));
+
+      const enrichedUsers = allUsers.map(u => ({
+        ...u,
+        booksStarted: progressMap.get(u.id)?.booksStarted ?? 0,
+        avgProgress: progressMap.get(u.id)?.avgProgress ?? 0,
+        lastLogin: lastLoginMap.get(u.id) ?? null,
+      }));
+
+      res.json(enrichedUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
       res.status(500).json({ message: "Failed to fetch users" });

@@ -55,10 +55,16 @@ The content is organized into a hierarchical "Psychological Taxonomy." The appli
 ### Admin Portal
 - Draft workflow for content editing with publish cycle
 - 3-panel editor with Mind Tree navigator, Block Builder, mobile preview
-- Content Quality Scoring with completeness % per book
-- User management with role assignment
-- Analytics dashboard (Overview + Revenue tabs)
-- Shorts management with gradient picker and rich text editing (standalone page + inline ShortsEditor in book editor workspace)
+- Admin-specific book API (`/api/admin/books/:id`) that loads books regardless of status (draft/published)
+- Publishing validation checklist: core thesis 50+ chars, 3+ chapters, 1+ mental model, description, cover image, category required
+- Content Quality Scoring with completeness % per book and tooltip formula breakdown
+- Auto-save indicator showing "Saving...", "All changes saved" status
+- Book list with search, status filter (All/Published/Draft), sort (Name/Completeness), and bulk publish/unpublish with validation
+- User management with role assignment, email privacy masking (show/hide toggle), and user activity details (last login, books started, progress)
+- Analytics dashboard (Overview/Engagement/Content/Revenue tabs) with events pagination, type filtering, and CSV export
+- Shorts management with gradient picker, rich text editing, 12 seed shorts across all 5 books
+- Admin dark mode toggle in all admin pages (sun/moon icon in header)
+- Consistent admin access control middleware (isAdmin/requireAdminRole) across all admin API endpoints
 
 ## External Dependencies
 - **Authentication:** Replit Auth (OpenID Connect)

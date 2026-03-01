@@ -6,9 +6,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Users, BookOpen, Activity, BarChart3, TrendingUp, Eye, CreditCard, Percent, CalendarDays, Heart, Target } from "lucide-react";
+import { ArrowLeft, Users, BookOpen, Activity, BarChart3, TrendingUp, Eye, CreditCard, Percent, CalendarDays, Heart, Target, Download, ChevronLeft, ChevronRight, Filter, Sun, Moon } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "wouter";
-import { useState } from "react";
+import { useTheme } from "@/components/theme-provider";
+import { useState, useEffect } from "react";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, AreaChart, Area } from "recharts";
 
 const CHART_COLORS = [
@@ -46,6 +48,7 @@ interface AnalyticsEventsResponse {
     sessionId: string | null;
     createdAt: string;
   }[];
+  eventTypes: string[];
   pagination: { page: number; limit: number; total: number; totalPages: number };
 }
 
@@ -252,7 +255,12 @@ function ContentTab() {
     );
   }
 
-  if (!healthData) return null;
+  if (!healthData) return (
+    <div className="text-center py-12">
+      <BookOpen className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+      <p className="text-sm text-muted-foreground">No content health data available</p>
+    </div>
+  );
 
   const sortedBooks = [...healthData.books].sort((a, b) => b.percentage - a.percentage);
 
@@ -341,7 +349,12 @@ function RevenueTab() {
     );
   }
 
-  if (!stats) return null;
+  if (!stats) return (
+    <div className="text-center py-12">
+      <CreditCard className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+      <p className="text-sm text-muted-foreground">No subscription data available</p>
+    </div>
+  );
 
   const planData = [
     { name: "Monthly", value: stats.monthlyCount },
@@ -448,7 +461,12 @@ function RevenueTab() {
 }
 
 export default function AnalyticsDashboard() {
+  const { resolvedTheme, setTheme } = useTheme();
   const [dateRange, setDateRange] = useState<DateRange>("30");
+
+  useEffect(() => {
+    document.title = "Analytics | MindPrism Admin";
+  }, []);
 
   const { data: overview, isLoading: overviewLoading } = useQuery<AnalyticsOverview>({
     queryKey: ["/api/analytics/overview", dateRange],
@@ -460,9 +478,21 @@ export default function AnalyticsDashboard() {
     refetchInterval: 30000,
   });
 
+  const [eventsPage, setEventsPage] = useState(1);
+  const [eventsTypeFilter, setEventsTypeFilter] = useState("");
+
+  const eventsQueryParams = new URLSearchParams();
+  eventsQueryParams.set("page", String(eventsPage));
+  eventsQueryParams.set("limit", "20");
+  if (eventsTypeFilter) eventsQueryParams.set("type", eventsTypeFilter);
+
   const { data: eventsData, isLoading: eventsLoading } = useQuery<AnalyticsEventsResponse>({
-    queryKey: ["/api/analytics/admin-events"],
-    queryFn: getQueryFn({ on401: "throw" }),
+    queryKey: ["/api/analytics/admin-events", eventsPage, eventsTypeFilter],
+    queryFn: async () => {
+      const res = await fetch(`/api/analytics/admin-events?${eventsQueryParams.toString()}`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch");
+      return res.json();
+    },
     refetchInterval: 30000,
   });
 
@@ -479,6 +509,14 @@ export default function AnalyticsDashboard() {
           </Link>
           <BarChart3 className="w-5 h-5 text-primary" />
           <h1 className="text-lg font-semibold text-foreground flex-1">Analytics Dashboard</h1>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+            data-testid="button-theme-toggle"
+          >
+            {resolvedTheme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </Button>
           <DateRangeSelector value={dateRange} onChange={setDateRange} />
         </div>
       </div>
@@ -557,10 +595,58 @@ export default function AnalyticsDashboard() {
             ) : null}
 
             <Card className="p-4">
-              <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
-                <Activity className="w-4 h-4" />
-                Recent Events
-              </h3>
+              <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+                <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <Activity className="w-4 h-4" />
+                  Recent Events
+                  {eventsData?.pagination && (
+                    <span className="text-xs text-muted-foreground" data-testid="text-events-total">
+                      ({eventsData.pagination.total} total)
+                    </span>
+                  )}
+                </h3>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Select
+                    value={eventsTypeFilter || "__all__"}
+                    onValueChange={(val) => {
+                      setEventsTypeFilter(val === "__all__" ? "" : val);
+                      setEventsPage(1);
+                    }}
+                  >
+                    <SelectTrigger className="w-[180px]" data-testid="select-event-type-filter">
+                      <Filter className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
+                      <SelectValue placeholder="All event types" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__all__">All event types</SelectItem>
+                      {(eventsData?.eventTypes || []).map((type) => (
+                        <SelectItem key={type} value={type} data-testid={`option-event-type-${type}`}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {eventsData?.events.length ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      data-testid="button-export-csv"
+                      onClick={() => {
+                        const typeParam = eventsTypeFilter ? `?type=${encodeURIComponent(eventsTypeFilter)}` : "";
+                        const link = document.createElement("a");
+                        link.href = `/api/analytics/admin-events/export${typeParam}`;
+                        link.download = `analytics-events-${new Date().toISOString().slice(0, 10)}.csv`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      }}
+                    >
+                      <Download className="w-4 h-4" />
+                      Export CSV
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
               {eventsLoading ? (
                 <div className="space-y-2">
                   {Array.from({ length: 5 }).map((_, i) => (
@@ -568,21 +654,50 @@ export default function AnalyticsDashboard() {
                   ))}
                 </div>
               ) : eventsData?.events.length ? (
-                <div className="space-y-1 max-h-96 overflow-y-auto">
-                  {eventsData.events.map((event) => (
-                    <div key={event.id} className="flex items-center gap-3 py-2 px-3 rounded-lg hover-elevate text-sm" data-testid={`event-row-${event.id}`}>
-                      <Badge variant="outline" className="text-xs font-mono shrink-0">
-                        {event.eventType}
-                      </Badge>
-                      <span className="text-muted-foreground truncate flex-1">
-                        {event.pageUrl || "\u2014"}
+                <>
+                  <div className="space-y-1 max-h-96 overflow-y-auto">
+                    {eventsData.events.map((event) => (
+                      <div key={event.id} className="flex items-center gap-3 py-2 px-3 rounded-lg hover-elevate text-sm" data-testid={`event-row-${event.id}`}>
+                        <Badge variant="outline" className="text-xs font-mono shrink-0">
+                          {event.eventType}
+                        </Badge>
+                        <span className="text-muted-foreground truncate flex-1">
+                          {event.pageUrl || "\u2014"}
+                        </span>
+                        <span className="text-muted-foreground text-xs shrink-0">
+                          {new Date(event.createdAt).toLocaleString()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  {eventsData.pagination.totalPages > 1 && (
+                    <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t" data-testid="events-pagination">
+                      <span className="text-xs text-muted-foreground" data-testid="text-events-page-info">
+                        Page {eventsData.pagination.page} of {eventsData.pagination.totalPages}
                       </span>
-                      <span className="text-muted-foreground text-xs shrink-0">
-                        {new Date(event.createdAt).toLocaleString()}
-                      </span>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          disabled={eventsPage <= 1}
+                          onClick={() => setEventsPage((p) => Math.max(1, p - 1))}
+                          data-testid="button-events-prev"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          disabled={eventsPage >= eventsData.pagination.totalPages}
+                          onClick={() => setEventsPage((p) => p + 1)}
+                          data-testid="button-events-next"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-                  ))}
-                </div>
+                  )}
+                </>
               ) : (
                 <p className="text-xs text-muted-foreground text-center py-8">No events recorded yet</p>
               )}
