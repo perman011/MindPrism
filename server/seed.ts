@@ -41,7 +41,8 @@ export async function seedDatabase() {
     coreThesis: "You do not rise to the level of your goals. You fall to the level of your systems. Small habits compound into extraordinary results when you focus on becoming 1% better every day.",
     categoryId: catHabits.id,
     readTime: 12, listenTime: 10, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", audioDuration: 600, featured: true,
-    principleCount: 5, storyCount: 2, exerciseCount: 3,
+    principleCount: 7, storyCount: 5, exerciseCount: 4,
+    primaryChakra: "solar_plexus", secondaryChakra: "sacral",
   });
 
   // Chapter Summaries
@@ -129,10 +130,11 @@ export async function seedDatabase() {
     author: "Daniel Kahneman",
     coverImage: "/images/book-thinking-fast-slow.png",
     description: "A groundbreaking tour of the mind that explains the two systems that drive the way we think and make choices.",
-    coreThesis: "Human judgment is driven by two mental systems: fast, intuitive System 1 and slow, deliberate System 2. Most errors in thinking happen when System 1 hijacks decisions that require System 2's careful analysis.",
+    coreThesis: "Our minds operate through two systems: fast intuitive thinking and slow deliberate reasoning. Understanding both helps us make better decisions.",
     categoryId: catMindset.id,
     readTime: 15, listenTime: 12, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", audioDuration: 720, featured: true,
-    principleCount: 4, storyCount: 2, exerciseCount: 2,
+    principleCount: 8, storyCount: 4, exerciseCount: 3,
+    primaryChakra: "third_eye", secondaryChakra: "crown",
   });
 
   await storage.createChapterSummary({ bookId: book2.id, chapterNumber: 1, chapterTitle: "The Characters of the Story", cards: [
@@ -189,11 +191,13 @@ export async function seedDatabase() {
     title: "The Power of Now",
     author: "Eckhart Tolle",
     coverImage: "/images/book-power-of-now.png",
-    description: "A guide to spiritual enlightenment that teaches you to live in the present moment and find inner peace.",
-    coreThesis: "The present moment is all you ever have. Suffering is created by the mind's attachment to past and future. True peace comes when you stop identifying with your thoughts and become the awareness behind them.",
+    description: "A guide to spiritual enlightenment. Tolle takes readers on an inspiring spiritual journey to find their true and deepest self and reach the ultimate in personal growth and spirituality.",
+    coreThesis: "True freedom and enlightenment come from living fully in the present moment, free from the dominance of the thinking mind and ego.",
     categoryId: catMindfulness.id,
-    readTime: 10, listenTime: 8, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", audioDuration: 480, featured: true,
-    principleCount: 3, storyCount: 1, exerciseCount: 2,
+    readTime: 10, listenTime: 8, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", audioDuration: 480, featured: false,
+    principleCount: 5, storyCount: 3, exerciseCount: 2,
+    primaryChakra: "third_eye", secondaryChakra: "crown",
+    premiumOnly: false, freePreviewCards: 5,
   });
 
   await storage.createChapterSummary({ bookId: book3.id, chapterNumber: 1, chapterTitle: "You Are Not Your Mind", cards: [
@@ -246,10 +250,11 @@ export async function seedDatabase() {
     author: "Daniel Goleman",
     coverImage: "/images/book-emotional-intelligence.png",
     description: "Why emotional intelligence can matter more than IQ. A revolutionary framework for understanding human behavior.",
-    coreThesis: "IQ accounts for only 20% of life success. The remaining 80% is determined by emotional intelligence — your ability to recognize, understand, and manage your own emotions and those of others.",
+    coreThesis: "Emotional intelligence — the ability to recognize, understand, and manage emotions — is as important as IQ for success in life.",
     categoryId: catEmotions.id,
     readTime: 14, listenTime: 11, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", audioDuration: 660, featured: false,
-    principleCount: 3, storyCount: 1, exerciseCount: 2,
+    principleCount: 6, storyCount: 4, exerciseCount: 3,
+    primaryChakra: "heart", secondaryChakra: "throat",
   });
 
   await storage.createChapterSummary({ bookId: book4.id, chapterNumber: 1, chapterTitle: "What Are Emotions For?", cards: [
@@ -304,10 +309,11 @@ export async function seedDatabase() {
     author: "Viktor E. Frankl",
     coverImage: "/images/book-mans-search.png",
     description: "A psychiatrist's experience in Nazi death camps and its lessons for spiritual survival. Finding meaning in suffering.",
-    coreThesis: "Everything can be taken from a person except the last human freedom — to choose one's attitude in any given set of circumstances. Those who find meaning in their suffering can endure almost anything.",
+    coreThesis: "Those who have a 'why' to live can bear with almost any 'how.' Meaning can be found even in the worst suffering.",
     categoryId: catMeaning.id,
     readTime: 8, listenTime: 7, audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", audioDuration: 420, featured: false,
-    principleCount: 3, storyCount: 1, exerciseCount: 1,
+    principleCount: 5, storyCount: 5, exerciseCount: 2,
+    primaryChakra: "crown", secondaryChakra: "heart",
   });
 
   await storage.createChapterSummary({ bookId: book5.id, chapterNumber: 1, chapterTitle: "Experiences in a Concentration Camp", cards: [
