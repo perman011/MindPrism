@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Upload, X, Image, Music, Video, FileIcon, Loader2, Link2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,8 +43,9 @@ function isImageUrl(url: string): boolean {
   const lower = url.toLowerCase();
   return lower.match(/\.(png|jpg|jpeg|webp|gif|svg)(\?.*)?$/) !== null ||
     lower.startsWith("/images/") ||
+    lower.startsWith("/objects/") ||
     lower.includes("/uploads/images/") ||
-    lower.includes("/objects/uploads/images/");
+    lower.includes("/objects/uploads/");
 }
 
 export function FileUpload({
@@ -56,6 +57,7 @@ export function FileUpload({
   required,
   placeholder,
 }: FileUploadProps) {
+  const [displayUrl, setDisplayUrl] = useState(value || "");
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -63,6 +65,10 @@ export function FileUpload({
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [urlInputValue, setUrlInputValue] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setDisplayUrl(value || "");
+  }, [value]);
 
   const Icon = getFileIcon(accept);
 
@@ -108,6 +114,7 @@ export function FileUpload({
       const data = await response.json();
       setUploadProgress(100);
       setTimeout(() => {
+        setDisplayUrl(data.url);
         onChange(data.url);
         setIsUploading(false);
         setUploadProgress(0);
@@ -144,39 +151,50 @@ export function FileUpload({
 
   const handleUrlSubmit = useCallback(() => {
     if (urlInputValue.trim()) {
-      onChange(urlInputValue.trim());
+      const url = urlInputValue.trim();
+      setDisplayUrl(url);
+      onChange(url);
       setUrlInputValue("");
       setShowUrlInput(false);
     }
   }, [urlInputValue, onChange]);
 
   const handleRemove = useCallback(() => {
-    onChange("");
+    setDisplayUrl("");
     setError(null);
+    onChange("");
   }, [onChange]);
 
-  const hasValue = !!value;
-  const showImagePreview = hasValue && (accept === "image" || accept === "any") && isImageUrl(value);
+  const hasValue = !!displayUrl && !isUploading;
+  const showImagePreview = hasValue && (accept === "image" || accept === "any") && isImageUrl(displayUrl);
 
-  if (hasValue && !isUploading) {
-    return (
-      <div className="space-y-2" data-testid={`file-upload-${accept}`}>
-        {label && (
-          <label className="text-xs font-semibold flex items-center gap-1">
-            {label}
-            {required && <span className="text-destructive">*</span>}
-          </label>
-        )}
+  return (
+    <div className="space-y-2" data-testid={`file-upload-${accept}`}>
+      {label && (
+        <label className="text-xs font-semibold flex items-center gap-1">
+          {label}
+          {required && <span className="text-destructive">*</span>}
+        </label>
+      )}
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={ACCEPT_MAP[accept]}
+        onChange={handleInputChange}
+        className="hidden"
+      />
+
+      {hasValue ? (
         <div className="border rounded-lg p-3 bg-card dark:bg-[#1A1225] dark:border-[#2A1E35]">
           <div className="flex items-center gap-3">
             {showImagePreview ? (
               <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
                 <img
-                  src={value}
+                  src={displayUrl}
                   alt="Preview"
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = "";
                     (e.target as HTMLImageElement).style.display = "none";
                   }}
                 />
@@ -187,8 +205,8 @@ export function FileUpload({
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate dark:text-gray-200">{value.split("/").pop()}</p>
-              <p className="text-xs text-muted-foreground truncate">{value}</p>
+              <p className="text-sm font-medium truncate dark:text-gray-200">{displayUrl.split("/").pop()}</p>
+              <p className="text-xs text-muted-foreground truncate">{displayUrl}</p>
             </div>
             <div className="flex gap-1 flex-shrink-0">
               <Button
@@ -213,121 +231,103 @@ export function FileUpload({
               </Button>
             </div>
           </div>
-        </div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept={ACCEPT_MAP[accept]}
-          onChange={handleInputChange}
-          className="hidden"
-        />
-      </div>
-    );
-  }
 
-  return (
-    <div className="space-y-2" data-testid={`file-upload-${accept}`}>
-      {label && (
-        <label className="text-xs font-semibold flex items-center gap-1">
-          {label}
-          {required && <span className="text-destructive">*</span>}
-        </label>
-      )}
-
-      <div
-        className={cn(
-          "border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer",
-          "hover:border-primary/50 hover:bg-primary/5",
-          "dark:hover:border-primary-lighter/50 dark:hover:bg-primary-lighter/5",
-          isDragging && "border-primary bg-primary/10 dark:border-primary-lighter dark:bg-primary-lighter/10",
-          error && "border-destructive/50",
-          !isDragging && !error && "border-muted-foreground/25 dark:border-[#2A1E35]"
-        )}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={() => !isUploading && fileInputRef.current?.click()}
-        data-testid="dropzone"
-      >
-        {isUploading ? (
-          <div className="space-y-3">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary dark:text-primary-lighter" />
-            <p className="text-sm text-muted-foreground">Uploading...</p>
-            <Progress value={uploadProgress} className="h-2 max-w-[200px] mx-auto" />
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <div className="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary-lighter/10 flex items-center justify-center mx-auto">
-              <Upload className="w-5 h-5 text-primary dark:text-primary-lighter" />
+          {accept === "audio" && displayUrl && (
+            <div className="mt-2 pt-2 border-t dark:border-[#2A1E35]">
+              <audio controls src={displayUrl} className="w-full h-8" preload="metadata" />
             </div>
-            <p className="text-sm font-medium dark:text-gray-200">
-              {placeholder || "Drop your file here or click to browse"}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {FORMAT_LABELS[accept]} — Max {maxSize}MB
-            </p>
-          </div>
-        )}
-      </div>
-
-      {error && (
-        <p className="text-xs text-destructive flex items-center gap-1" data-testid="upload-error">
-          <X className="w-3 h-3" /> {error}
-        </p>
-      )}
-
-      {!isUploading && (
-        <div>
-          {showUrlInput ? (
-            <div className="flex gap-2 items-center">
-              <Input
-                value={urlInputValue}
-                onChange={(e) => setUrlInputValue(e.target.value)}
-                placeholder="https://example.com/file.png"
-                className="text-sm h-8"
-                onKeyDown={(e) => e.key === "Enter" && handleUrlSubmit()}
-                data-testid="input-url-fallback"
-              />
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleUrlSubmit}
-                disabled={!urlInputValue.trim()}
-                className="h-8 px-3"
-                data-testid="button-submit-url"
-              >
-                <Check className="w-3 h-3" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowUrlInput(false)}
-                className="h-8 px-2"
-              >
-                <X className="w-3 h-3" />
-              </Button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              className="text-xs text-muted-foreground hover:text-primary dark:hover:text-primary-lighter flex items-center gap-1 transition-colors"
-              onClick={(e) => { e.stopPropagation(); setShowUrlInput(true); }}
-              data-testid="button-paste-url"
-            >
-              <Link2 className="w-3 h-3" /> Or paste a URL instead
-            </button>
           )}
         </div>
-      )}
+      ) : (
+        <>
+          <div
+            className={cn(
+              "border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer",
+              "hover:border-primary/50 hover:bg-primary/5",
+              "dark:hover:border-primary-lighter/50 dark:hover:bg-primary-lighter/5",
+              isDragging && "border-primary bg-primary/10 dark:border-primary-lighter dark:bg-primary-lighter/10",
+              error && "border-destructive/50",
+              !isDragging && !error && "border-muted-foreground/25 dark:border-[#2A1E35]"
+            )}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={() => !isUploading && fileInputRef.current?.click()}
+            data-testid="dropzone"
+          >
+            {isUploading ? (
+              <div className="space-y-3">
+                <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary dark:text-primary-lighter" />
+                <p className="text-sm text-muted-foreground">Uploading...</p>
+                <Progress value={uploadProgress} className="h-2 max-w-[200px] mx-auto" />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary-lighter/10 flex items-center justify-center mx-auto">
+                  <Upload className="w-5 h-5 text-primary dark:text-primary-lighter" />
+                </div>
+                <p className="text-sm font-medium dark:text-gray-200">
+                  {placeholder || "Drop your file here or click to browse"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {FORMAT_LABELS[accept]} — Max {maxSize}MB
+                </p>
+              </div>
+            )}
+          </div>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept={ACCEPT_MAP[accept]}
-        onChange={handleInputChange}
-        className="hidden"
-      />
+          {error && (
+            <p className="text-xs text-destructive flex items-center gap-1" data-testid="upload-error">
+              <X className="w-3 h-3" /> {error}
+            </p>
+          )}
+
+          {!isUploading && (
+            <div>
+              {showUrlInput ? (
+                <div className="flex gap-2 items-center">
+                  <Input
+                    value={urlInputValue}
+                    onChange={(e) => setUrlInputValue(e.target.value)}
+                    placeholder="https://example.com/file.png"
+                    className="text-sm h-8"
+                    onKeyDown={(e) => e.key === "Enter" && handleUrlSubmit()}
+                    data-testid="input-url-fallback"
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleUrlSubmit}
+                    disabled={!urlInputValue.trim()}
+                    className="h-8 px-3"
+                    data-testid="button-submit-url"
+                  >
+                    <Check className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowUrlInput(false)}
+                    className="h-8 px-2"
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="text-xs text-muted-foreground hover:text-primary dark:hover:text-primary-lighter flex items-center gap-1 transition-colors"
+                  onClick={(e) => { e.stopPropagation(); setShowUrlInput(true); }}
+                  data-testid="button-paste-url"
+                >
+                  <Link2 className="w-3 h-3" /> Or paste a URL instead
+                </button>
+              )}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
