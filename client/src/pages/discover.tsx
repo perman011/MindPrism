@@ -203,191 +203,201 @@ export default function Discover() {
         description="Browse psychology and self-help book summaries. Find insights on habits, mindset, relationships, and personal growth."
         noIndex
       />
-      <div className="px-5 pt-6 pb-4">
-        <h1 className="text-2xl font-bold text-foreground mb-1" data-testid="text-discover-title">Discover</h1>
-        <p className="text-sm text-muted-foreground mb-5">Find your next great read</p>
-
-        <div className="relative mb-4">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
-          <Input
-            ref={searchInputRef}
-            type="search"
-            placeholder={activeTab === "books" ? "Search books, authors, principles..." : "Search shorts, topics..."}
-            className="w-full pl-10 pr-10 bg-muted/50 border-transparent focus:border-border rounded-full text-sm"
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setShowSuggestions(true);
-            }}
-            onFocus={() => setShowSuggestions(true)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleSearchSubmit(searchQuery);
-              }
-              if (e.key === "Escape") {
-                setShowSuggestions(false);
-              }
-            }}
-            data-testid="input-search"
-          />
-          {searchQuery.length > 0 && (
-            <button
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground/60 hover:text-foreground transition-colors"
-              onClick={() => {
-                setSearchQuery("");
-                setShowSuggestions(false);
-                searchInputRef.current?.focus();
-              }}
-              aria-label="Clear search"
-              data-testid="button-clear-search"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-
-          {showRecentSearches && (
-            <div
-              ref={suggestionsRef}
-              className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-md shadow-lg z-10 overflow-hidden"
-              data-testid="recent-searches"
-            >
-              <div className="px-4 py-2 flex items-center justify-between gap-2">
-                <span className="text-xs font-medium text-muted-foreground">Recent Searches</span>
-                <button
-                  className="text-xs text-primary/70 hover:text-primary transition-colors"
-                  onClick={() => {
-                    localStorage.removeItem(RECENT_SEARCHES_KEY);
-                    setRecentSearches([]);
-                    setShowSuggestions(false);
-                  }}
-                  data-testid="button-clear-recent-searches"
-                >
-                  Clear All
-                </button>
-              </div>
-              {recentSearches.map((query) => (
-                <button
-                  key={query}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 hover-elevate transition-colors text-left"
-                  onClick={() => handleRecentSearchClick(query)}
-                  data-testid={`recent-search-${query}`}
-                >
-                  <Clock className="w-3.5 h-3.5 text-muted-foreground/60 flex-shrink-0" />
-                  <span className="text-sm flex-1 truncate">{query}</span>
-                  <button
-                    className="p-1 rounded-full text-muted-foreground/40 hover-elevate"
-                    onClick={(e) => handleRemoveRecent(e, query)}
-                    aria-label={`Remove ${query} from recent searches`}
-                    data-testid={`remove-recent-${query}`}
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {showSearchSuggestions && (
-            <div
-              ref={suggestionsRef}
-              className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-md shadow-lg z-10 overflow-hidden max-h-80 overflow-y-auto"
-              data-testid="search-suggestions"
-            >
-              {topSuggestions.length > 0 && (
-                <>
-                  <div className="px-4 py-2">
-                    <span className="text-xs font-medium text-muted-foreground">Books</span>
-                  </div>
-                  {topSuggestions.map((book) => (
-                    <a
-                      key={book.id}
-                      href={`/book/${book.id}`}
-                      className="flex items-center gap-3 px-4 py-2.5 hover-elevate transition-colors"
-                      onClick={() => handleSearchSubmit(searchQuery)}
-                      data-testid={`suggestion-${book.id}`}
-                    >
-                      <div className="w-8 h-11 rounded-md overflow-hidden flex-shrink-0">
-                        {book.coverImage ? (
-                          <img src={book.coverImage} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                            <span className="text-[10px] font-bold text-primary/40">{book.title[0]}</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium truncate" dangerouslySetInnerHTML={{ __html: book.highlightedTitle }} />
-                        <p className="text-xs text-muted-foreground" dangerouslySetInnerHTML={{ __html: book.highlightedAuthor }} />
-                      </div>
-                    </a>
-                  ))}
-                </>
-              )}
-
-              {(searchResults?.principles?.length ?? 0) > 0 && (
-                <>
-                  <div className="px-4 py-2 border-t border-border">
-                    <span className="text-xs font-medium text-muted-foreground">Principles</span>
-                  </div>
-                  {searchResults!.principles.slice(0, 5).map((principle) => (
-                    <a
-                      key={principle.id}
-                      href={`/book/${principle.bookId}`}
-                      className="flex items-center gap-3 px-4 py-2.5 hover-elevate transition-colors"
-                      onClick={() => handleSearchSubmit(searchQuery)}
-                      data-testid={`suggestion-principle-${principle.id}`}
-                    >
-                      <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <Lightbulb className="w-4 h-4 text-primary/60" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium truncate" dangerouslySetInnerHTML={{ __html: principle.highlightedTitle }} />
-                        <p className="text-xs text-muted-foreground truncate">{principle.bookTitle}</p>
-                      </div>
-                    </a>
-                  ))}
-                </>
-              )}
-            </div>
-          )}
+      <div className="relative bg-gradient-to-b from-[#341539] via-[#2A1130] via-70% to-background overflow-hidden">
+        <div className="absolute inset-0 opacity-15 pointer-events-none">
+          <div className="absolute top-6 left-8 w-1 h-1 rounded-full bg-purple-400 animate-pulse" />
+          <div className="absolute top-16 right-12 w-0.5 h-0.5 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "0.5s" }} />
+          <div className="absolute top-28 left-20 w-0.5 h-0.5 rounded-full bg-purple-400 animate-pulse" style={{ animationDelay: "1s" }} />
+          <div className="absolute bottom-20 right-8 w-1 h-1 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "1.5s" }} />
+          <div className="absolute bottom-32 left-16 w-0.5 h-0.5 rounded-full bg-purple-200 animate-pulse" style={{ animationDelay: "0.8s" }} />
         </div>
 
-        <div className="flex rounded-xl bg-card p-1 mb-4" data-testid="discover-tabs" role="tablist" aria-label="Content type">
-          <button
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-              activeTab === "books"
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground"
-            }`}
-            onClick={() => { setActiveTab("books"); setSearchQuery(""); }}
-            data-testid="tab-books"
-            role="tab"
-            aria-selected={activeTab === "books"}
-          >
-            <BookOpen className="w-4 h-4" aria-hidden="true" />
-            Books
-          </button>
-          <button
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-              activeTab === "shorts"
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground"
-            }`}
-            onClick={() => { setActiveTab("shorts"); setSearchQuery(""); }}
-            data-testid="tab-shorts"
-            role="tab"
-            aria-selected={activeTab === "shorts"}
-          >
-            <Film className="w-4 h-4" aria-hidden="true" />
-            Shorts
-            {shortsCount > 0 && (
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                activeTab === "shorts" ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary/20 text-primary"
-              }`}>
-                {shortsCount}
-              </span>
+        <div className="relative z-10 px-5 pt-6 pb-4">
+          <h1 className="text-2xl font-bold text-white mb-1" data-testid="text-discover-title">Discover</h1>
+          <p className="text-sm text-purple-200/70 mb-5">Find your next great read</p>
+
+          <div className="relative mb-4">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+            <Input
+              ref={searchInputRef}
+              type="search"
+              placeholder={activeTab === "books" ? "Search books, authors, principles..." : "Search shorts, topics..."}
+              className="w-full pl-10 pr-10 bg-white/10 border-white/15 focus:border-white/30 rounded-full text-sm text-white placeholder:text-white/40"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleSearchSubmit(searchQuery);
+                }
+                if (e.key === "Escape") {
+                  setShowSuggestions(false);
+                }
+              }}
+              data-testid="input-search"
+            />
+            {searchQuery.length > 0 && (
+              <button
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-white/40 hover:text-white transition-colors"
+                onClick={() => {
+                  setSearchQuery("");
+                  setShowSuggestions(false);
+                  searchInputRef.current?.focus();
+                }}
+                aria-label="Clear search"
+                data-testid="button-clear-search"
+              >
+                <X className="w-4 h-4" />
+              </button>
             )}
-          </button>
+
+            {showRecentSearches && (
+              <div
+                ref={suggestionsRef}
+                className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-md shadow-lg z-10 overflow-hidden"
+                data-testid="recent-searches"
+              >
+                <div className="px-4 py-2 flex items-center justify-between gap-2">
+                  <span className="text-xs font-medium text-muted-foreground">Recent Searches</span>
+                  <button
+                    className="text-xs text-primary/70 hover:text-primary transition-colors"
+                    onClick={() => {
+                      localStorage.removeItem(RECENT_SEARCHES_KEY);
+                      setRecentSearches([]);
+                      setShowSuggestions(false);
+                    }}
+                    data-testid="button-clear-recent-searches"
+                  >
+                    Clear All
+                  </button>
+                </div>
+                {recentSearches.map((query) => (
+                  <button
+                    key={query}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 hover-elevate transition-colors text-left"
+                    onClick={() => handleRecentSearchClick(query)}
+                    data-testid={`recent-search-${query}`}
+                  >
+                    <Clock className="w-3.5 h-3.5 text-muted-foreground/60 flex-shrink-0" />
+                    <span className="text-sm flex-1 truncate">{query}</span>
+                    <button
+                      className="p-1 rounded-full text-muted-foreground/40 hover-elevate"
+                      onClick={(e) => handleRemoveRecent(e, query)}
+                      aria-label={`Remove ${query} from recent searches`}
+                      data-testid={`remove-recent-${query}`}
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {showSearchSuggestions && (
+              <div
+                ref={suggestionsRef}
+                className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-md shadow-lg z-10 overflow-hidden max-h-80 overflow-y-auto"
+                data-testid="search-suggestions"
+              >
+                {topSuggestions.length > 0 && (
+                  <>
+                    <div className="px-4 py-2">
+                      <span className="text-xs font-medium text-muted-foreground">Books</span>
+                    </div>
+                    {topSuggestions.map((book) => (
+                      <a
+                        key={book.id}
+                        href={`/book/${book.id}`}
+                        className="flex items-center gap-3 px-4 py-2.5 hover-elevate transition-colors"
+                        onClick={() => handleSearchSubmit(searchQuery)}
+                        data-testid={`suggestion-${book.id}`}
+                      >
+                        <div className="w-8 h-11 rounded-md overflow-hidden flex-shrink-0">
+                          {book.coverImage ? (
+                            <img src={book.coverImage} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                              <span className="text-[10px] font-bold text-primary/40">{book.title[0]}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate" dangerouslySetInnerHTML={{ __html: book.highlightedTitle }} />
+                          <p className="text-xs text-muted-foreground" dangerouslySetInnerHTML={{ __html: book.highlightedAuthor }} />
+                        </div>
+                      </a>
+                    ))}
+                  </>
+                )}
+
+                {(searchResults?.principles?.length ?? 0) > 0 && (
+                  <>
+                    <div className="px-4 py-2 border-t border-border">
+                      <span className="text-xs font-medium text-muted-foreground">Principles</span>
+                    </div>
+                    {searchResults!.principles.slice(0, 5).map((principle) => (
+                      <a
+                        key={principle.id}
+                        href={`/book/${principle.bookId}`}
+                        className="flex items-center gap-3 px-4 py-2.5 hover-elevate transition-colors"
+                        onClick={() => handleSearchSubmit(searchQuery)}
+                        data-testid={`suggestion-principle-${principle.id}`}
+                      >
+                        <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Lightbulb className="w-4 h-4 text-primary/60" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate" dangerouslySetInnerHTML={{ __html: principle.highlightedTitle }} />
+                          <p className="text-xs text-muted-foreground truncate">{principle.bookTitle}</p>
+                        </div>
+                      </a>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="flex rounded-xl bg-white/10 backdrop-blur-sm p-1 mb-4" data-testid="discover-tabs" role="tablist" aria-label="Content type">
+            <button
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                activeTab === "books"
+                  ? "bg-white text-[#341539] shadow-sm"
+                  : "text-white/70"
+              }`}
+              onClick={() => { setActiveTab("books"); setSearchQuery(""); }}
+              data-testid="tab-books"
+              role="tab"
+              aria-selected={activeTab === "books"}
+            >
+              <BookOpen className="w-4 h-4" aria-hidden="true" />
+              Books
+            </button>
+            <button
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                activeTab === "shorts"
+                  ? "bg-white text-[#341539] shadow-sm"
+                  : "text-white/70"
+              }`}
+              onClick={() => { setActiveTab("shorts"); setSearchQuery(""); }}
+              data-testid="tab-shorts"
+              role="tab"
+              aria-selected={activeTab === "shorts"}
+            >
+              <Film className="w-4 h-4" aria-hidden="true" />
+              Shorts
+              {shortsCount > 0 && (
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                  activeTab === "shorts" ? "bg-[#341539]/20 text-[#341539]" : "bg-white/20 text-white"
+                }`}>
+                  {shortsCount}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 

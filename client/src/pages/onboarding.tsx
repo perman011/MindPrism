@@ -49,24 +49,32 @@ export default function Onboarding() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <SEOHead title="Personalize Your Experience" description="Choose your interests to build a personalized psychology learning library." noIndex />
-      <div className="px-6 pt-8 pb-4">
-        <div className="flex items-center mb-6 mix-blend-screen">
-          <div className="flex flex-col items-center">
-            <img src={mindprismLogo} alt="MindPrism" className="h-16 object-contain" style={{ aspectRatio: '1.618' }} />
-            <span className="text-[10px] font-semibold tracking-[0.15em] text-foreground/80 mt-0.5 font-serif">Mind Prism</span>
+      <div className="relative bg-gradient-to-b from-[#341539] via-[#2A1130] via-70% to-background overflow-hidden">
+        <div className="absolute inset-0 opacity-15 pointer-events-none">
+          <div className="absolute top-6 left-8 w-1 h-1 rounded-full bg-purple-400 animate-pulse" />
+          <div className="absolute top-16 right-12 w-0.5 h-0.5 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "0.5s" }} />
+          <div className="absolute top-10 left-[60%] w-0.5 h-0.5 rounded-full bg-purple-400 animate-pulse" style={{ animationDelay: "1s" }} />
+          <div className="absolute bottom-20 left-16 w-0.5 h-0.5 rounded-full bg-purple-200 animate-pulse" style={{ animationDelay: "0.8s" }} />
+        </div>
+        <div className="relative z-10 px-6 pt-8 pb-4">
+          <div className="flex items-center mb-6">
+            <div className="flex flex-col items-center">
+              <img src={mindprismLogo} alt="MindPrism" className="h-16 object-contain" style={{ aspectRatio: '1.618' }} />
+              <span className="text-[10px] font-semibold tracking-[0.15em] text-white/80 mt-0.5 font-serif">Mind Prism</span>
+            </div>
           </div>
-        </div>
 
-        <div className="w-full bg-muted rounded-full h-1.5 mb-8">
-          <div className="bg-primary h-1.5 rounded-full w-full transition-all" />
-        </div>
+          <div className="w-full bg-white/10 rounded-full h-1.5 mb-8">
+            <div className="bg-white h-1.5 rounded-full w-full transition-all" />
+          </div>
 
-        <h1 className="text-2xl sm:text-3xl font-bold mb-2" data-testid="text-onboarding-title">
-          What areas of your mind do you want to master?
-        </h1>
-        <p className="text-muted-foreground mb-6">
-          Select the topics that interest you most. We'll personalize your experience.
-        </p>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2 text-white font-serif" data-testid="text-onboarding-title">
+            What areas of your mind do you want to master?
+          </h1>
+          <p className="text-purple-200/70 mb-6">
+            Select the topics that interest you most. We'll personalize your experience.
+          </p>
+        </div>
       </div>
 
       <div className="flex-1 px-6 pb-4 overflow-y-auto">

@@ -236,19 +236,27 @@ export default function BookDetail() {
           publisher: { "@type": "Organization", name: "MindPrism" },
         } : undefined}
       />
-      <div className="relative">
+      <div className="relative bg-gradient-to-b from-[#341539] via-[#2A1130] via-70% to-background overflow-hidden">
+        <div className="absolute inset-0 opacity-15 pointer-events-none">
+          <div className="absolute top-6 left-8 w-1 h-1 rounded-full bg-purple-400 animate-pulse" />
+          <div className="absolute top-16 right-12 w-0.5 h-0.5 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "0.5s" }} />
+          <div className="absolute top-28 left-20 w-0.5 h-0.5 rounded-full bg-purple-400 animate-pulse" style={{ animationDelay: "1s" }} />
+          <div className="absolute bottom-20 right-8 w-1 h-1 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "1.5s" }} />
+          <div className="absolute bottom-32 left-16 w-0.5 h-0.5 rounded-full bg-purple-200 animate-pulse" style={{ animationDelay: "0.8s" }} />
+        </div>
+
         <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2 z-20">
           <div className="flex items-center gap-2">
             <button
               onClick={() => window.history.length > 1 ? window.history.back() : navigate("/")}
-              className="w-9 h-9 rounded-full bg-primary/80 backdrop-blur-sm flex items-center justify-center"
+              className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/10"
               data-testid="button-back"
               aria-label="Go back"
             >
               <ArrowLeft className="w-5 h-5 text-white" />
             </button>
             <Link href="/">
-              <button className="w-9 h-9 rounded-full bg-primary/80 backdrop-blur-sm flex items-center justify-center" data-testid="button-home" aria-label="Go home">
+              <button className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/10" data-testid="button-home" aria-label="Go home">
                 <Home className="w-4 h-4 text-white" />
               </button>
             </Link>
@@ -256,7 +264,7 @@ export default function BookDetail() {
           <div className="flex items-center gap-2">
             <button
               onClick={handleShare}
-              className="w-9 h-9 rounded-full bg-primary/80 backdrop-blur-sm flex items-center justify-center"
+              className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/10"
               data-testid="button-share"
               aria-label="Share book"
             >
@@ -264,7 +272,7 @@ export default function BookDetail() {
             </button>
             <button
               onClick={() => bookmarkMutation.mutate()}
-              className="w-9 h-9 rounded-full bg-primary/80 backdrop-blur-sm flex items-center justify-center"
+              className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/10"
               data-testid="button-bookmark"
               aria-label={isBookmarked ? "Remove bookmark" : "Bookmark book"}
             >
@@ -276,8 +284,8 @@ export default function BookDetail() {
           </div>
         </div>
 
-        <div className="pt-20 pb-6 flex flex-col items-center bg-background">
-          <div className="w-40 h-56 rounded-md overflow-hidden shadow-lg shadow-black/20 mb-6" data-testid="img-book-cover">
+        <div className="relative z-10 pt-20 pb-6 flex flex-col items-center">
+          <div className="w-40 h-56 rounded-md overflow-hidden shadow-lg shadow-black/30 mb-6 ring-1 ring-white/10" data-testid="img-book-cover">
             {book.coverImage ? (
               <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
             ) : (
@@ -287,8 +295,8 @@ export default function BookDetail() {
             )}
           </div>
 
-          <p className="text-[10px] uppercase tracking-[0.2em] text-primary font-semibold mb-1.5" data-testid="text-summary-label">Summary</p>
-          <h1 className="text-2xl font-bold font-serif text-foreground mb-1 text-center px-6 leading-tight" data-testid="text-book-title">{book.title}</h1>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-purple-300/80 font-semibold mb-1.5" data-testid="text-summary-label">Summary</p>
+          <h1 className="text-2xl font-bold font-serif text-white mb-1 text-center px-6 leading-tight" data-testid="text-book-title">{book.title}</h1>
           {book.premiumOnly && (
             <Badge
               className="mt-1 mb-1 gap-1 text-[10px] font-semibold"
@@ -299,15 +307,15 @@ export default function BookDetail() {
               Premium
             </Badge>
           )}
-          <p className="text-sm text-muted-foreground mb-4" data-testid="text-book-author">by {book.author}</p>
+          <p className="text-sm text-purple-200/60 mb-4" data-testid="text-book-author">by {book.author}</p>
 
           <div className="flex items-center gap-1.5 mb-6 flex-wrap justify-center">
-            <span className="flex items-center gap-1 text-xs text-muted-foreground" data-testid="text-read-time">
+            <span className="flex items-center gap-1 text-xs text-purple-200/60" data-testid="text-read-time">
               <Clock className="w-3 h-3" />
               {book.readTime} min read
             </span>
-            <span className="text-muted-foreground/40 text-xs">·</span>
-            <span className="flex items-center gap-1 text-xs text-muted-foreground" data-testid="text-listen-time">
+            <span className="text-purple-200/30 text-xs">·</span>
+            <span className="flex items-center gap-1 text-xs text-purple-200/60" data-testid="text-listen-time">
               <Headphones className="w-3 h-3" />
               {book.listenTime} min listen
             </span>
@@ -322,7 +330,7 @@ export default function BookDetail() {
             </Link>
             <Button
               variant="outline"
-              className="col-span-1 gap-2"
+              className="col-span-1 gap-2 border-white/20 text-white"
               onClick={() => book.audioUrl ? play(book) : undefined}
               disabled={!book.audioUrl}
               data-testid="button-play-audio"
@@ -331,13 +339,13 @@ export default function BookDetail() {
               Listen
             </Button>
             <Link href={`/book/${id}/journey?section=mental-models`} className="col-span-1">
-              <Button variant="outline" className="w-full gap-2" data-testid="button-mental-models">
+              <Button variant="outline" className="w-full gap-2 border-white/20 text-white" data-testid="button-mental-models">
                 <Brain className="w-4 h-4" />
                 Mental Models
               </Button>
             </Link>
             <Link href={`/book/${id}/journey?section=shorts`} className="col-span-1">
-              <Button variant="outline" className="w-full gap-2" data-testid="button-shorts">
+              <Button variant="outline" className="w-full gap-2 border-white/20 text-white" data-testid="button-shorts">
                 <Film className="w-4 h-4" />
                 Shorts
               </Button>

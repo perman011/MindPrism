@@ -36,9 +36,16 @@ export default function AudioPage() {
         description="Listen to psychology book summaries on the go. Bite-sized audio insights for personal growth."
         noIndex
       />
-      <div className="px-5 pt-6 pb-3">
-        <h1 className="text-2xl font-bold text-foreground mb-1" data-testid="text-audio-title">Audio Summaries</h1>
-        <p className="text-sm text-muted-foreground mb-6" data-testid="text-audio-subtitle">Listen and learn on the go</p>
+      <div className="relative bg-gradient-to-b from-[#341539] via-[#2A1130] via-80% to-background overflow-hidden">
+        <div className="absolute inset-0 opacity-15 pointer-events-none">
+          <div className="absolute top-6 left-8 w-1 h-1 rounded-full bg-purple-400 animate-pulse" />
+          <div className="absolute top-16 right-12 w-0.5 h-0.5 rounded-full bg-purple-300 animate-pulse" style={{ animationDelay: "0.5s" }} />
+          <div className="absolute top-10 left-[60%] w-0.5 h-0.5 rounded-full bg-purple-400 animate-pulse" style={{ animationDelay: "1s" }} />
+        </div>
+        <div className="relative z-10 px-5 pt-6 pb-6">
+          <h1 className="text-2xl font-bold text-white mb-1 font-serif" data-testid="text-audio-title">Audio Summaries</h1>
+          <p className="text-sm text-purple-200/70" data-testid="text-audio-subtitle">Listen and learn on the go</p>
+        </div>
       </div>
 
       <div className="px-5 pb-8">
