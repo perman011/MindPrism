@@ -22,6 +22,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { randomUUID } from "crypto";
+import { ObjectStorageService, objectStorageClient, setObjectAclPolicy } from "./replit_integrations/object_storage";
 
 const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
   const user = req.user as any;
@@ -66,19 +67,6 @@ function getUploadFolder(mimetype: string): string {
   return "general";
 }
 
-const uploadStorage = multer.diskStorage({
-  destination: (_req, file, cb) => {
-    const folder = getUploadFolder(file.mimetype);
-    const dir = path.join(process.cwd(), "public", "uploads", folder);
-    fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `${randomUUID()}${ext}`);
-  },
-});
-
 const allowedMimeTypes: Record<string, boolean> = {
   "image/png": true, "image/jpeg": true, "image/jpg": true, "image/webp": true, "image/gif": true,
   "audio/mpeg": true, "audio/wav": true, "audio/ogg": true, "audio/mp4": true,
@@ -94,12 +82,31 @@ const uploadFileFilter = (_req: any, file: Express.Multer.File, cb: multer.FileF
 };
 
 const upload = multer({
-  storage: uploadStorage,
+  storage: multer.memoryStorage(),
   fileFilter: uploadFileFilter,
   limits: { fileSize: 50 * 1024 * 1024 },
 });
 
+const objectStorageService = new ObjectStorageService();
+
 export function registerAdminRoutes(app: Express) {
+  app.get("/objects/{*objectPath}", async (req, res) => {
+    try {
+      const objectPath = (req.params as any).objectPath;
+      if (!objectPath.startsWith("uploads/")) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      const objectFile = await objectStorageService.getObjectEntityFile(`/objects/${objectPath}`);
+      await objectStorageService.downloadObject(objectFile, res, 31536000);
+    } catch (error: any) {
+      if (error?.name === "ObjectNotFoundError") {
+        return res.status(404).json({ error: "File not found" });
+      }
+      console.error("Error serving object:", error);
+      return res.status(500).json({ error: "Failed to serve file" });
+    }
+  });
+
   app.use("/uploads", (_req, res, next) => {
     res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
     next();
@@ -118,52 +125,91 @@ export function registerAdminRoutes(app: Express) {
       }
       next();
     });
-  }, (req: any, res) => {
+  }, async (req: any, res) => {
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
-    const folder = getUploadFolder(req.file.mimetype);
-    const url = `/uploads/${folder}/${req.file.filename}`;
-    res.json({
-      success: true,
-      url,
-      filename: req.file.filename,
-      originalName: req.file.originalname,
-      size: req.file.size,
-      mimetype: req.file.mimetype,
-    });
+    try {
+      const folder = getUploadFolder(req.file.mimetype);
+      const ext = path.extname(req.file.originalname);
+      const objectId = `${randomUUID()}${ext}`;
+      const objectName = `${folder}/${objectId}`;
+
+      const privateDir = objectStorageService.getPrivateObjectDir();
+      const fullPath = `${privateDir}/uploads/${objectName}`;
+      const parts = fullPath.startsWith("/") ? fullPath.slice(1).split("/") : fullPath.split("/");
+      const bucketName = parts[0];
+      const objectPath = parts.slice(1).join("/");
+
+      const bucket = objectStorageClient.bucket(bucketName);
+      const file = bucket.file(objectPath);
+
+      await file.save(req.file.buffer, {
+        contentType: req.file.mimetype,
+        metadata: {
+          originalName: req.file.originalname,
+          uploadedAt: new Date().toISOString(),
+          folder,
+        },
+      });
+
+      const userId = (req.user as any)?.claims?.sub || "admin";
+      await setObjectAclPolicy(file, {
+        owner: userId,
+        visibility: "public",
+      });
+
+      const entityId = `uploads/${objectName}`;
+      const url = `/objects/${entityId}`;
+
+      res.json({
+        success: true,
+        url,
+        filename: objectId,
+        originalName: req.file.originalname,
+        size: req.file.size,
+        mimetype: req.file.mimetype,
+      });
+    } catch (error) {
+      console.error("Error uploading to object storage:", error);
+      res.status(500).json({ error: "Failed to upload file" });
+    }
   });
 
-  app.get("/api/admin/media", isAuthenticated, isAdmin, (_req, res) => {
+  app.get("/api/admin/media", isAuthenticated, isAdmin, async (_req, res) => {
     try {
-      const uploadsDir = path.join(process.cwd(), "public", "uploads");
-      const files: any[] = [];
-      const types = ["images", "audio", "video", "thumbnails", "general"];
-      for (const type of types) {
-        const dir = path.join(uploadsDir, type);
-        if (fs.existsSync(dir)) {
-          for (const filename of fs.readdirSync(dir)) {
-            const filepath = path.join(dir, filename);
-            const stat = fs.statSync(filepath);
-            files.push({
-              url: `/uploads/${type}/${filename}`,
-              filename,
-              type,
-              size: stat.size,
-              createdAt: stat.birthtime,
-            });
-          }
-        }
-      }
-      files.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      res.json(files);
+      const privateDir = objectStorageService.getPrivateObjectDir();
+      const prefix = privateDir.startsWith("/") ? privateDir.slice(1) : privateDir;
+      const parts = prefix.split("/");
+      const bucketName = parts[0];
+      const objectPrefix = parts.slice(1).join("/") + "/uploads/";
+
+      const bucket = objectStorageClient.bucket(bucketName);
+      const [files] = await bucket.getFiles({ prefix: objectPrefix });
+
+      const mediaFiles = files.map((f) => {
+        const relativePath = f.name.slice(objectPrefix.length);
+        const pathParts = relativePath.split("/");
+        const type = pathParts.length > 1 ? pathParts[0] : "general";
+        const filename = pathParts[pathParts.length - 1];
+        return {
+          url: `/objects/uploads/${relativePath}`,
+          filename,
+          type,
+          size: Number(f.metadata?.size || 0),
+          createdAt: f.metadata?.timeCreated || new Date().toISOString(),
+        };
+      }).filter(f => f.filename);
+
+      mediaFiles.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      res.json(mediaFiles);
     } catch (error) {
       console.error("Error listing media:", error);
       res.status(500).json({ error: "Failed to list media" });
     }
   });
 
-  app.delete("/api/admin/media/:type/:filename", isAuthenticated, isSuperAdmin, (req, res) => {
+  app.delete("/api/admin/media/:type/:filename", isAuthenticated, isSuperAdmin, async (req, res) => {
     try {
       const { type, filename } = req.params;
       const validTypes = ["images", "audio", "video", "thumbnails", "general"];
@@ -173,11 +219,20 @@ export function registerAdminRoutes(app: Express) {
       if (filename.includes("..") || filename.includes("/")) {
         return res.status(400).json({ error: "Invalid filename" });
       }
-      const filepath = path.join(process.cwd(), "public", "uploads", type, filename);
-      if (!fs.existsSync(filepath)) {
+
+      const privateDir = objectStorageService.getPrivateObjectDir();
+      const fullPath = `${privateDir}/uploads/${type}/${filename}`;
+      const parts = fullPath.startsWith("/") ? fullPath.slice(1).split("/") : fullPath.split("/");
+      const bucketName = parts[0];
+      const objectPath = parts.slice(1).join("/");
+
+      const bucket = objectStorageClient.bucket(bucketName);
+      const file = bucket.file(objectPath);
+      const [exists] = await file.exists();
+      if (!exists) {
         return res.status(404).json({ error: "File not found" });
       }
-      fs.unlinkSync(filepath);
+      await file.delete();
       res.json({ success: true });
     } catch (error) {
       console.error("Error deleting media:", error);

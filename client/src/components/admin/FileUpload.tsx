@@ -43,7 +43,8 @@ function isImageUrl(url: string): boolean {
   const lower = url.toLowerCase();
   return lower.match(/\.(png|jpg|jpeg|webp|gif|svg)(\?.*)?$/) !== null ||
     lower.startsWith("/images/") ||
-    lower.includes("/uploads/images/");
+    lower.includes("/uploads/images/") ||
+    lower.includes("/objects/uploads/images/");
 }
 
 export function FileUpload({
