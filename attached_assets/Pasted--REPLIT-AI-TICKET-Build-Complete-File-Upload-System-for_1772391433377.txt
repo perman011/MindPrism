@@ -1,0 +1,327 @@
+# REPLIT AI TICKET: Build Complete File Upload System for Admin Portal
+
+## Priority: HIGH
+## Scope: Backend + Frontend (Book Editor + Shorts Creator)
+
+---
+
+## PROBLEM
+
+The entire MindPrism admin portal has **ZERO file upload capability**. Every media field (cover images, audio files, video, thumbnails) only accepts URL text input (`https://...`). There is:
+- No `<input type="file">` anywhere in the app
+- No drag-and-drop upload zones
+- No FormData usage in the frontend
+- No multer or file upload middleware on the server
+- No `/api/upload` or any upload endpoint
+- No `/uploads/` directory for user-uploaded files
+
+Current cover images (`/images/book-*.png`) were manually placed as static files — they cannot be changed through the admin UI.
+
+The Audio URL for every book is literally the string `"placeholder"` — there are no real audio files and no way to upload them.
+
+---
+
+## SOLUTION: Build a complete file upload system
+
+### PART 1: Backend — Upload API Endpoint
+
+**Install multer for file handling:**
+```bash
+npm install multer
+```
+
+**Create upload route in `server/routes.ts`:**
+
+```typescript
+import multer from 'multer';
+import path from 'path';
+import { randomUUID } from 'crypto';
+
+// Configure storage
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const type = req.body.type || 'general'; // images, audio, video, thumbnails
+    const dir = path.join(process.cwd(), 'public', 'uploads', type);
+    // Ensure directory exists
+    fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const name = `${randomUUID()}${ext}`;
+    cb(null, name);
+  }
+});
+
+// File filter — only allow safe types
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = {
+    'image/png': true,
+    'image/jpeg': true,
+    'image/jpg': true,
+    'image/webp': true,
+    'image/gif': true,
+    'audio/mpeg': true,    // .mp3
+    'audio/wav': true,     // .wav
+    'audio/ogg': true,     // .ogg
+    'audio/mp4': true,     // .m4a
+    'video/mp4': true,     // .mp4
+    'video/webm': true,    // .webm
+  };
+  if (allowedTypes[file.mimetype]) {
+    cb(null, true);
+  } else {
+    cb(new Error(`File type ${file.mimetype} not allowed`), false);
+  }
+};
+
+// Size limits
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB max (for audio/video)
+  }
+});
+
+// POST /api/admin/upload — single file upload
+app.post('/api/admin/upload', isAdmin, upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+
+  const type = req.body.type || 'general';
+  const url = `/uploads/${type}/${req.file.filename}`;
+
+  res.json({
+    success: true,
+    url,
+    filename: req.file.filename,
+    originalName: req.file.originalname,
+    size: req.file.size,
+    mimetype: req.file.mimetype
+  });
+});
+
+// GET /api/admin/media — list all uploaded files
+app.get('/api/admin/media', isAdmin, (req, res) => {
+  const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+  // Return list of all uploaded files with metadata
+  // ... scan directories and return file list
+});
+
+// DELETE /api/admin/media/:filename — delete uploaded file
+app.delete('/api/admin/media/:filename', isAdmin, (req, res) => {
+  // Delete file from disk
+  // ... validate filename, delete, return success
+});
+```
+
+**Create the uploads directory structure:**
+```
+public/
+  uploads/
+    images/      ← book covers, short thumbnails, infographics
+    audio/       ← book audio summaries, short audio
+    video/       ← short videos
+    thumbnails/  ← auto-generated or uploaded thumbnails
+```
+
+**Serve uploads as static files:**
+```typescript
+app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')));
+```
+
+---
+
+### PART 2: Frontend — Reusable FileUpload Component
+
+**Create `client/src/components/admin/FileUpload.tsx`:**
+
+This is a reusable component used across the entire admin portal.
+
+**Features:**
+1. **Drag-and-drop zone** — dashed border area, shows "Drop your file here or click to browse"
+2. **Click to browse** — triggers hidden `<input type="file">` with correct `accept` attribute
+3. **Upload progress bar** — shows percentage during upload with purple (#341539) progress bar
+4. **Preview after upload:**
+   - Images: show thumbnail preview inline
+   - Audio: show waveform icon + filename + duration + play button
+   - Video: show video thumbnail + filename + duration
+5. **URL fallback** — small link below: "Or paste a URL instead" that shows a text input
+6. **Remove/Replace** — X button to remove uploaded file, or "Replace" to upload a new one
+7. **File validation** — check type and size BEFORE uploading, show error if invalid
+8. **Loading state** — skeleton shimmer while uploading
+
+**Props:**
+```typescript
+interface FileUploadProps {
+  accept: 'image' | 'audio' | 'video' | 'any';
+  value: string; // current URL (could be existing or newly uploaded)
+  onChange: (url: string) => void;
+  maxSize?: number; // in MB, default 50
+  label?: string;
+  required?: boolean;
+  placeholder?: string;
+}
+```
+
+**Accept attribute mapping:**
+- `image` → `accept="image/png,image/jpeg,image/webp,image/gif"`
+- `audio` → `accept="audio/mpeg,audio/wav,audio/ogg,audio/mp4"`
+- `video` → `accept="video/mp4,video/webm"`
+- `any` → all of the above
+
+---
+
+### PART 3: Replace URL Inputs in Book Editor
+
+**In the Book Setup section of `/admin/books/:id`:**
+
+Replace this:
+```
+Cover Image URL:  [/images/book-atomic-habits.png]  (text input)
+Audio URL (MP3):  [placeholder]                      (text input)
+```
+
+With this:
+```
+Cover Image:
++-----------------------------------------------+
+|                                                |
+|  [Current cover image preview shown here]      |
+|                                                |
+|  Drop a new image here or click to browse      |
+|  PNG, JPG, WebP — Max 5MB                      |
+|                                                |
+|  Or paste a URL instead                        |
++-----------------------------------------------+
+
+Audio Summary (MP3):
++-----------------------------------------------+
+|                                                |
+|  🎵 No audio file uploaded                     |
+|                                                |
+|  Drop an audio file here or click to browse    |
+|  MP3, WAV, OGG — Max 50MB                      |
+|                                                |
+|  Or paste a URL instead                        |
++-----------------------------------------------+
+```
+
+**File: `client/src/pages/admin/BookEditor.tsx`** (or wherever Book Setup renders)
+
+Replace the Cover Image URL text input with:
+```tsx
+<FileUpload
+  accept="image"
+  value={book.coverImage}
+  onChange={(url) => updateBook({ coverImage: url })}
+  maxSize={5}
+  label="Cover Image"
+  required
+/>
+```
+
+Replace the Audio URL text input with:
+```tsx
+<FileUpload
+  accept="audio"
+  value={book.audioUrl}
+  onChange={(url) => updateBook({ audioUrl: url })}
+  maxSize={50}
+  label="Audio Summary (MP3)"
+/>
+```
+
+---
+
+### PART 4: Replace URL Inputs in Shorts Creator
+
+**In `/admin/shorts/new` (and `/admin/shorts/:id/edit`):**
+
+Replace the Media URL text input with:
+```tsx
+<FileUpload
+  accept={mediaType} // 'image', 'audio', or 'video' based on selected type
+  value={short.mediaUrl}
+  onChange={(url) => setShort({ ...short, mediaUrl: url })}
+  maxSize={mediaType === 'video' ? 50 : mediaType === 'audio' ? 50 : 5}
+  label={`${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} File`}
+  required
+/>
+```
+
+Replace the Thumbnail URL text input with:
+```tsx
+<FileUpload
+  accept="image"
+  value={short.thumbnailUrl}
+  onChange={(url) => setShort({ ...short, thumbnailUrl: url })}
+  maxSize={5}
+  label="Thumbnail Image"
+  required={mediaType === 'audio' || mediaType === 'video'}
+/>
+```
+
+---
+
+### PART 5: Image Preview for Uploaded Covers
+
+When a cover image is uploaded or URL is pasted, show an inline preview:
+- In the Book Editor: show 120x180px thumbnail next to the upload zone
+- In the Shorts Creator: show 80x80px thumbnail next to the upload zone
+- If the URL is invalid or image fails to load, show a gray placeholder with "Image not found"
+
+---
+
+## FILE SIZE LIMITS
+
+| File Type | Max Size | Formats |
+|-----------|----------|---------|
+| Book cover image | 5 MB | PNG, JPG, WebP |
+| Short thumbnail | 5 MB | PNG, JPG, WebP |
+| Short image media | 5 MB | PNG, JPG, WebP, GIF |
+| Audio summary | 50 MB | MP3, WAV, OGG, M4A |
+| Video short | 50 MB | MP4, WebM |
+| Infographic | 10 MB | PNG, JPG, WebP |
+
+---
+
+## MIGRATION: Existing Cover Images
+
+The current cover images at `/images/book-*.png` should continue to work. The FileUpload component should:
+1. Display the existing image preview if the URL starts with `/images/`
+2. When admin uploads a new cover, save to `/uploads/images/` and update the database
+3. Do NOT delete old `/images/` files — they may be cached by the service worker
+
+---
+
+## TESTING CHECKLIST
+
+After implementation, verify:
+- [ ] Can upload a PNG cover image in Book Editor → shows preview → saves to DB
+- [ ] Can upload an MP3 audio file in Book Editor → shows audio info → saves to DB
+- [ ] Can upload an image in Shorts Creator (Image type) → shows preview
+- [ ] Can upload an audio file in Shorts Creator (Audio type) → shows audio info
+- [ ] Can upload a video in Shorts Creator (Video type) → shows video info
+- [ ] Can upload a thumbnail in Shorts Creator → shows preview
+- [ ] Drag-and-drop works for all upload zones
+- [ ] "Or paste a URL instead" fallback works
+- [ ] File too large shows error (try 60MB file)
+- [ ] Wrong file type shows error (try .exe)
+- [ ] Upload progress bar animates during upload
+- [ ] Replacing an existing file works
+- [ ] Removing an uploaded file clears the URL
+- [ ] Existing `/images/book-*.png` covers still display correctly
+- [ ] Service worker caches new uploads correctly
+
+---
+
+## ESTIMATED EFFORT
+- Backend (multer + routes): ~30 min
+- FileUpload component: ~45 min
+- Integration in Book Editor: ~20 min
+- Integration in Shorts Creator: ~20 min
+- Testing: ~15 min
+- **Total: ~2-3 hours**

@@ -245,49 +245,13 @@ export default function AdminBooks() {
           </div>
           <div className="flex items-center gap-3">
             <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-              data-testid="button-theme-toggle"
-            >
-              {resolvedTheme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </Button>
-            <Link href="/">
-              <Button variant="ghost" className="gap-2 text-muted-foreground" data-testid="button-view-app">
-                <ExternalLink className="w-4 h-4" />
-                View App
-              </Button>
-            </Link>
-            {isSuperAdmin && (
-              <Link href="/admin/users">
-                <Button variant="outline" className="gap-2" data-testid="button-admin-users">
-                  <Users className="w-4 h-4" />
-                  Team & Users
-                </Button>
-              </Link>
-            )}
-            <Link href="/admin/shorts">
-              <Button variant="outline" className="gap-2" data-testid="button-admin-shorts">
-                <Film className="w-4 h-4" />
-                Shorts
-              </Button>
-            </Link>
-            {isSuperAdmin && (
-              <Link href="/admin/analytics">
-                <Button variant="outline" className="gap-2" data-testid="button-admin-analytics">
-                  <BarChart3 className="w-4 h-4" />
-                  Analytics
-                </Button>
-              </Link>
-            )}
-            <Button
               onClick={() => createBookMutation.mutate()}
               disabled={createBookMutation.isPending}
               className="gap-2"
               data-testid="button-create-book"
             >
               <Plus className="w-4 h-4" />
-              Create New Book Breakdown
+              Create New Book
             </Button>
           </div>
         </div>

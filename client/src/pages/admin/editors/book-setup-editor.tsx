@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CHAKRA_MAP, type ChakraType, type Category } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
+import { FileUpload } from "@/components/admin/FileUpload";
 
 const CHAKRA_OPTIONS: { value: ChakraType; label: string; color: string }[] = [
   { value: "crown", label: "Crown — Spiritual Connection", color: CHAKRA_MAP.crown.color },
@@ -147,26 +148,23 @@ export function BookSetupEditor({
         </div>
 
         <div className="grid grid-cols-2 gap-4 mt-4">
-          <div>
-            <Label htmlFor="coverImage" className="text-xs font-semibold">Cover Image URL</Label>
-            <Input
-              id="coverImage"
-              value={coverImage}
-              onChange={(e) => onChange("coverImage", e.target.value)}
-              placeholder="https://..."
-              data-testid="input-cover-image"
-            />
-          </div>
-          <div>
-            <Label htmlFor="audioUrl" className="text-xs font-semibold">Audio URL (MP3)</Label>
-            <Input
-              id="audioUrl"
-              value={audioUrl}
-              onChange={(e) => onChange("audioUrl", e.target.value)}
-              placeholder="https://..."
-              data-testid="input-audio-url"
-            />
-          </div>
+          <FileUpload
+            accept="image"
+            value={coverImage}
+            onChange={(url) => onChange("coverImage", url)}
+            maxSize={5}
+            label="Cover Image"
+            required
+            placeholder="Drop a cover image or click to browse"
+          />
+          <FileUpload
+            accept="audio"
+            value={audioUrl}
+            onChange={(url) => onChange("audioUrl", url)}
+            maxSize={50}
+            label="Audio Summary (MP3)"
+            placeholder="Drop an audio file or click to browse"
+          />
         </div>
 
       </section>

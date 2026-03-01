@@ -1,4 +1,5 @@
 import type { Express, Request, Response, NextFunction } from "express";
+import express from "express";
 import { storage } from "./storage";
 import { authStorage } from "./replit_integrations/auth/storage";
 import { isAuthenticated } from "./replit_integrations/auth";
@@ -23,6 +24,10 @@ import { users } from "@shared/models/auth";
 import { db } from "./db";
 import { eq, and, desc, sql, count, isNotNull } from "drizzle-orm";
 import { z } from "zod";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import { randomUUID } from "crypto";
 
 const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
   const user = req.user as any;
@@ -60,7 +65,132 @@ const requireRole = (minRole: "writer" | "editor" | "admin" | "super_admin") => 
   };
 };
 
+function getUploadFolder(mimetype: string): string {
+  if (mimetype.startsWith("image/")) return "images";
+  if (mimetype.startsWith("audio/")) return "audio";
+  if (mimetype.startsWith("video/")) return "video";
+  return "general";
+}
+
+const uploadStorage = multer.diskStorage({
+  destination: (_req, file, cb) => {
+    const folder = getUploadFolder(file.mimetype);
+    const dir = path.join(process.cwd(), "public", "uploads", folder);
+    fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `${randomUUID()}${ext}`);
+  },
+});
+
+const allowedMimeTypes: Record<string, boolean> = {
+  "image/png": true, "image/jpeg": true, "image/jpg": true, "image/webp": true, "image/gif": true,
+  "audio/mpeg": true, "audio/wav": true, "audio/ogg": true, "audio/mp4": true,
+  "video/mp4": true, "video/webm": true,
+};
+
+const uploadFileFilter = (_req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  if (allowedMimeTypes[file.mimetype]) {
+    cb(null, true);
+  } else {
+    cb(new Error(`File type ${file.mimetype} not allowed`));
+  }
+};
+
+const upload = multer({
+  storage: uploadStorage,
+  fileFilter: uploadFileFilter,
+  limits: { fileSize: 50 * 1024 * 1024 },
+});
+
 export function registerAdminRoutes(app: Express) {
+  app.use("/uploads", (_req, res, next) => {
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    next();
+  }, express.static(path.join(process.cwd(), "public", "uploads")));
+
+  app.post("/api/admin/upload", isAuthenticated, isAdmin, (req, res, next) => {
+    upload.single("file")(req, res, (err) => {
+      if (err) {
+        if (err instanceof multer.MulterError) {
+          if (err.code === "LIMIT_FILE_SIZE") {
+            return res.status(400).json({ error: "File too large. Maximum size is 50MB." });
+          }
+          return res.status(400).json({ error: err.message });
+        }
+        return res.status(400).json({ error: err.message });
+      }
+      next();
+    });
+  }, (req: any, res) => {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+    const folder = getUploadFolder(req.file.mimetype);
+    const url = `/uploads/${folder}/${req.file.filename}`;
+    res.json({
+      success: true,
+      url,
+      filename: req.file.filename,
+      originalName: req.file.originalname,
+      size: req.file.size,
+      mimetype: req.file.mimetype,
+    });
+  });
+
+  app.get("/api/admin/media", isAuthenticated, isAdmin, (_req, res) => {
+    try {
+      const uploadsDir = path.join(process.cwd(), "public", "uploads");
+      const files: any[] = [];
+      const types = ["images", "audio", "video", "thumbnails", "general"];
+      for (const type of types) {
+        const dir = path.join(uploadsDir, type);
+        if (fs.existsSync(dir)) {
+          for (const filename of fs.readdirSync(dir)) {
+            const filepath = path.join(dir, filename);
+            const stat = fs.statSync(filepath);
+            files.push({
+              url: `/uploads/${type}/${filename}`,
+              filename,
+              type,
+              size: stat.size,
+              createdAt: stat.birthtime,
+            });
+          }
+        }
+      }
+      files.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      res.json(files);
+    } catch (error) {
+      console.error("Error listing media:", error);
+      res.status(500).json({ error: "Failed to list media" });
+    }
+  });
+
+  app.delete("/api/admin/media/:type/:filename", isAuthenticated, isSuperAdmin, (req, res) => {
+    try {
+      const { type, filename } = req.params;
+      const validTypes = ["images", "audio", "video", "thumbnails", "general"];
+      if (!validTypes.includes(type)) {
+        return res.status(400).json({ error: "Invalid file type" });
+      }
+      if (filename.includes("..") || filename.includes("/")) {
+        return res.status(400).json({ error: "Invalid filename" });
+      }
+      const filepath = path.join(process.cwd(), "public", "uploads", type, filename);
+      if (!fs.existsSync(filepath)) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      fs.unlinkSync(filepath);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting media:", error);
+      res.status(500).json({ error: "Failed to delete file" });
+    }
+  });
+
   app.get("/api/admin/books", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const allBooks = await storage.getBooks();

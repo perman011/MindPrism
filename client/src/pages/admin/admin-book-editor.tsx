@@ -18,6 +18,7 @@ import { MistakeEditor } from "./editors/mistake-editor";
 import { InfographicEditor } from "./editors/infographic-editor";
 import { ExerciseEditor } from "./editors/exercise-editor";
 import { ActionItemEditor } from "./editors/action-item-editor";
+import { PreviewMode } from "@/components/admin/PreviewMode";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -26,7 +27,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Save, Loader2, CheckCircle2, AlertCircle, GitBranch, Plus, Trash2, Edit2, Film, Check, X, Sun, Moon } from "lucide-react";
+import { ArrowLeft, Save, Loader2, CheckCircle2, AlertCircle, GitBranch, Plus, Trash2, Edit2, Film, Check, X, Sun, Moon, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/components/theme-provider";
 
@@ -280,6 +281,7 @@ export default function AdminBookEditor() {
   const { resolvedTheme, setTheme } = useTheme();
   const [activeSection, setActiveSection] = useState("setup");
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [showPreview, setShowPreview] = useState(false);
   const centerRef = useRef<HTMLDivElement>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -461,8 +463,12 @@ export default function AdminBookEditor() {
     );
   }
 
+  if (showPreview && book) {
+    return <PreviewMode book={book} onClose={() => setShowPreview(false)} />;
+  }
+
   return (
-    <div className="h-screen flex flex-col bg-background" data-testid="admin-book-editor">
+    <div className="h-screen flex flex-col bg-background overflow-hidden" data-testid="admin-book-editor">
       <SEOHead title={`Edit - ${book.title}`} noIndex />
       <header className="h-14 bg-background border-b border-border flex items-center px-4 gap-3 flex-shrink-0">
         <Link href="/admin">
@@ -476,12 +482,14 @@ export default function AdminBookEditor() {
         </div>
         <div className="flex items-center gap-2">
           <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-            data-testid="button-theme-toggle"
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs h-8"
+            onClick={() => setShowPreview(true)}
+            data-testid="button-preview"
           >
-            {resolvedTheme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            <Eye className="w-3.5 h-3.5" />
+            Preview
           </Button>
           {saveStatus === "saving" && (
             <div className="flex items-center gap-1.5 text-muted-foreground" data-testid="status-saving">

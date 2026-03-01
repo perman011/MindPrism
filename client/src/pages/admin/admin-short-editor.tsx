@@ -13,6 +13,7 @@ import { ArrowLeft, Save, Trash2, Image, Headphones, Video, Check } from "lucide
 import { Link, useLocation, useParams } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
+import { FileUpload } from "@/components/admin/FileUpload";
 
 export default function AdminShortEditor() {
   const { id } = useParams<{ id: string }>();
@@ -269,26 +270,26 @@ export default function AdminShortEditor() {
               </div>
 
               <div>
-                <Label htmlFor="mediaUrl" className="text-sm font-medium mb-2 block">Media URL</Label>
-                <Input
-                  id="mediaUrl"
+                <FileUpload
+                  accept={mediaType as "image" | "audio" | "video"}
                   value={mediaUrl}
-                  onChange={(e) => setMediaUrl(e.target.value)}
-                  placeholder="https://..."
-                  data-testid="input-media-url"
+                  onChange={(url) => setMediaUrl(url)}
+                  maxSize={mediaType === "video" ? 50 : mediaType === "audio" ? 50 : 5}
+                  label={`${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} File`}
+                  required
+                  placeholder={`Drop ${mediaType} file here or click to browse`}
                 />
               </div>
 
               <div>
-                <Label htmlFor="thumbnailUrl" className="text-sm font-medium mb-2 block">
-                  Thumbnail URL {needsThumbnail && "*"}
-                </Label>
-                <Input
-                  id="thumbnailUrl"
+                <FileUpload
+                  accept="image"
                   value={thumbnailUrl}
-                  onChange={(e) => setThumbnailUrl(e.target.value)}
-                  placeholder="https://..."
-                  data-testid="input-thumbnail-url"
+                  onChange={(url) => setThumbnailUrl(url)}
+                  maxSize={5}
+                  label={`Thumbnail Image${needsThumbnail ? " *" : ""}`}
+                  required={needsThumbnail}
+                  placeholder="Drop a thumbnail image or click to browse"
                 />
                 {needsThumbnail && (
                   <p className="text-xs text-purple-700 mt-1">Required for audio/video shorts</p>

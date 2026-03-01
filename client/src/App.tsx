@@ -29,7 +29,9 @@ import AdminAccessDenied from "@/pages/admin/admin-access-denied";
 import AnalyticsDashboard from "@/pages/admin/analytics-dashboard";
 import AdminShorts from "@/pages/admin/admin-shorts";
 import AdminShortEditor from "@/pages/admin/admin-short-editor";
+import AdminMediaLibrary from "@/pages/admin/admin-media-library";
 import ShortsPage from "@/pages/shorts-page";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 import { getQueryFn } from "@/lib/queryClient";
 import type { UserInterest } from "@shared/schema";
 import { hasMinRole } from "@shared/models/auth";
@@ -131,16 +133,19 @@ function AppRouter() {
       return <AdminAccessDenied />;
     }
     return (
-      <Switch>
-        <Route path="/admin" component={AdminBooks} />
-        <Route path="/admin/books/:id" component={AdminBookEditor} />
-        <Route path="/admin/shorts" component={AdminShorts} />
-        <Route path="/admin/shorts/new" component={AdminShortEditor} />
-        <Route path="/admin/shorts/:id/edit" component={AdminShortEditor} />
-        <Route path="/admin/users" component={AdminUsers} />
-        <Route path="/admin/analytics" component={AnalyticsDashboard} />
-        <Route component={NotFound} />
-      </Switch>
+      <AdminLayout>
+        <Switch>
+          <Route path="/admin" component={AdminBooks} />
+          <Route path="/admin/books/:id" component={AdminBookEditor} />
+          <Route path="/admin/shorts" component={AdminShorts} />
+          <Route path="/admin/shorts/new" component={AdminShortEditor} />
+          <Route path="/admin/shorts/:id/edit" component={AdminShortEditor} />
+          <Route path="/admin/users" component={AdminUsers} />
+          <Route path="/admin/analytics" component={AnalyticsDashboard} />
+          <Route path="/admin/media" component={AdminMediaLibrary} />
+          <Route component={NotFound} />
+        </Switch>
+      </AdminLayout>
     );
   }
 

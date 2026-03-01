@@ -53,6 +53,10 @@ The content is organized into a hierarchical "Psychological Taxonomy." The appli
 - Sentry error tracking (guarded by SENTRY_DSN env var)
 
 ### Admin Portal
+- **Persistent Sidebar Navigation** — collapsible left sidebar with Books, Shorts, Users, Analytics, Media nav items; replaces distributed header buttons
+- **File Upload System** — multer-based upload API (`POST /api/admin/upload`), drag-and-drop FileUpload component with progress bar, URL fallback, image/audio/video preview; integrated in Book Setup Editor and Shorts Creator
+- **Media Library** — `/admin/media` page listing all uploaded files with type filters, copy URL, and delete (super_admin only)
+- **Admin Preview Mode** — full-screen preview from book editor with Desktop/Tablet/Mobile viewport switching, preview warning banner, and book detail simulation
 - Draft workflow for content editing with publish cycle
 - 3-panel editor with Mind Tree navigator, Block Builder, mobile preview
 - Admin-specific book API (`/api/admin/books/:id`) that loads books regardless of status (draft/published)
@@ -63,7 +67,6 @@ The content is organized into a hierarchical "Psychological Taxonomy." The appli
 - User management with role assignment, email privacy masking (show/hide toggle), and user activity details (last login, books started, progress)
 - Analytics dashboard (Overview/Engagement/Content/Revenue tabs) with events pagination, type filtering, and CSV export
 - Shorts management with gradient picker, rich text editing, 12 seed shorts across all 5 books
-- Admin dark mode toggle in all admin pages (sun/moon icon in header)
 - Consistent admin access control middleware (isAdmin/requireAdminRole) across all admin API endpoints
 
 ## External Dependencies

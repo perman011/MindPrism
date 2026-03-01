@@ -502,21 +502,8 @@ export default function AnalyticsDashboard() {
 
       <div className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3 flex-wrap">
-          <Link href="/admin">
-            <Button size="icon" variant="ghost" data-testid="button-back-admin">
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-          </Link>
           <BarChart3 className="w-5 h-5 text-primary" />
           <h1 className="text-lg font-semibold text-foreground flex-1">Analytics Dashboard</h1>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-            data-testid="button-theme-toggle"
-          >
-            {resolvedTheme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </Button>
           <DateRangeSelector value={dateRange} onChange={setDateRange} />
         </div>
       </div>

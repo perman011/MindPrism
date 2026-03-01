@@ -193,29 +193,10 @@ export default function AdminUsers() {
     <div className="min-h-screen bg-background p-6 md:p-8" data-testid="admin-users-page">
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
-          <Link href="/admin">
-            <Button variant="ghost" size="icon" data-testid="button-back-admin">
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-          </Link>
           <Users className="w-6 h-6 text-primary" />
           <h1 className="text-2xl font-bold">Team & Users</h1>
           <Badge variant="secondary" className="ml-2">{allUsers?.length || 0} users</Badge>
           <div className="flex-1" />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-            data-testid="button-theme-toggle"
-          >
-            {resolvedTheme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </Button>
-          <Link href="/">
-            <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground" data-testid="button-view-app-users">
-              <ExternalLink className="w-3.5 h-3.5" />
-              View App
-            </Button>
-          </Link>
         </div>
 
         <Card className="p-5 mb-6 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent" data-testid="invite-section">

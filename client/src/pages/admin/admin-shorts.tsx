@@ -104,32 +104,10 @@ export default function AdminShorts() {
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <div className="flex items-center gap-3 mb-1">
-              <Link href="/admin">
-                <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground" data-testid="button-back-admin">
-                  <ArrowLeft className="w-4 h-4" />
-                  Books
-                </Button>
-              </Link>
-            </div>
             <h1 className="text-3xl font-bold" data-testid="text-shorts-title">Story Shorts</h1>
             <p className="text-muted-foreground mt-1">Manage bite-sized content shorts</p>
           </div>
           <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-              data-testid="button-theme-toggle"
-            >
-              {resolvedTheme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </Button>
-            <Link href="/">
-              <Button variant="ghost" className="gap-2 text-muted-foreground" data-testid="button-view-app">
-                <ExternalLink className="w-4 h-4" />
-                View App
-              </Button>
-            </Link>
             <Link href="/admin/shorts/new">
               <Button className="gap-2" data-testid="button-create-short">
                 <Plus className="w-4 h-4" />
