@@ -414,16 +414,17 @@ export default function Vault() {
                         headers: { "Content-Type": "application/json" },
                         credentials: "include",
                       });
-                      const data = await res.json();
-                      if (data.url) {
+                      let data: any = {};
+                      try { data = await res.json(); } catch {}
+                      if (res.ok && data.url) {
                         window.location.href = data.url;
-                      } else if (data.code === "STRIPE_NOT_CONFIGURED") {
-                        toast({ title: "Not Available", description: "Subscription management is being set up. Please contact support for assistance." });
+                      } else if (res.status === 503 || data.code === "STRIPE_NOT_CONFIGURED") {
+                        toast({ title: "Not Available", description: "Subscription management is not available yet. Please contact support." });
                       } else {
-                        toast({ title: "Error", description: data.message || "Could not open subscription portal", variant: "destructive" });
+                        toast({ title: "Error", description: data.message || "Could not open subscription portal. Please try again later.", variant: "destructive" });
                       }
                     } catch {
-                      toast({ title: "Error", description: "Could not connect to subscription service", variant: "destructive" });
+                      toast({ title: "Error", description: "Could not connect to subscription service. Please try again later.", variant: "destructive" });
                     }
                   }}
                   data-testid="button-manage-subscription"

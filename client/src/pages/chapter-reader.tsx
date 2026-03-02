@@ -403,11 +403,11 @@ export default function ChapterReader() {
         <AnimatePresence mode="wait">
           <motion.div
             key={currentChapter?.id}
-            initial={{ opacity: 0, x: 20 }}
+            initial={false}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
-            className="max-w-2xl mx-auto px-5 pt-4 pb-8"
+            transition={{ duration: 0.15 }}
+            className="max-w-2xl mx-auto px-5 pt-2 pb-8"
           >
             {currentChapter?.subtitle && (
               <p className="text-sm mb-6 italic" style={{ color: "rgba(245,240,235,0.5)" }}>

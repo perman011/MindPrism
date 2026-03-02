@@ -438,10 +438,10 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
           )}
 
           {currentShort.mediaUrl && (
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30" />
           )}
           {!currentShort.mediaUrl && (
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/15" />
           )}
 
           <div
@@ -469,19 +469,36 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
                   <AudioShort short={currentShort} isActive isPaused={isPaused} />
                 </div>
               ) : null}
-              <h2
-                className="text-white font-bold mb-4 text-center"
-                style={{ fontSize: "22px", textShadow: "0 2px 8px rgba(0,0,0,0.3)" }}
-                data-testid="text-short-title"
-              >
-                {currentShort.title}
-              </h2>
-              <div
-                className="text-white leading-relaxed text-center"
-                style={{ fontSize: "16px", opacity: 0.95, textShadow: "0 1px 4px rgba(0,0,0,0.2)" }}
-                data-testid="text-short-content"
-                dangerouslySetInnerHTML={{ __html: renderMarkdown(currentShort.content || "") }}
-              />
+              {(() => {
+                const hasDistinctContent = currentShort.content &&
+                  currentShort.content.trim() !== currentShort.title.trim() &&
+                  currentShort.content.trim().length > 0;
+                return hasDistinctContent ? (
+                  <>
+                    <h2
+                      className="text-white font-bold mb-4 text-center"
+                      style={{ fontSize: "22px", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}
+                      data-testid="text-short-title"
+                    >
+                      {currentShort.title}
+                    </h2>
+                    <div
+                      className="text-white leading-relaxed text-center"
+                      style={{ fontSize: "16px", opacity: 0.95, textShadow: "0 1px 4px rgba(0,0,0,0.3)" }}
+                      data-testid="text-short-content"
+                      dangerouslySetInnerHTML={{ __html: renderMarkdown(currentShort.content) }}
+                    />
+                  </>
+                ) : (
+                  <h2
+                    className="text-white font-bold text-center"
+                    style={{ fontSize: "28px", lineHeight: 1.3, textShadow: "0 2px 12px rgba(0,0,0,0.5)" }}
+                    data-testid="text-short-title"
+                  >
+                    {currentShort.title}
+                  </h2>
+                );
+              })()}
             </div>
           ) : (
             <div className="absolute bottom-0 left-0 right-0 p-6 pb-10 z-10">
