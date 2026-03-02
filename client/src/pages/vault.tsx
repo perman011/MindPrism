@@ -134,13 +134,13 @@ export default function Vault() {
             <p className="text-sm font-semibold" style={{ color: CHAKRA_MAP[selectedChakra].color }}>
               {CHAKRA_MAP[selectedChakra].name} Chakra
             </p>
-            <p className="text-[11px] text-[#6B7280] mt-0.5">
+            <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF] mt-0.5">
               {chakraProgress?.find(p => p.chakra === selectedChakra)?.points ?? 0} points earned
             </p>
           </div>
         )}
         {!selectedChakra && (
-          <p className="text-xs text-[#6B7280] text-center pb-4">
+          <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF] text-center pb-4">
             Tap a chakra to see your progress
           </p>
         )}
@@ -194,7 +194,7 @@ export default function Vault() {
                 <div
                   key={ms.days}
                   className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-full border transition-all ${
-                    achieved ? "border-transparent" : "border-border opacity-60"
+                    achieved ? "border-transparent" : "border-border opacity-70"
                   }`}
                   style={achieved ? { background: `linear-gradient(135deg, ${ms.color}15, ${ms.color}05)`, borderColor: `${ms.color}30` } : {}}
                   data-testid={`vault-milestone-${ms.days}`}
@@ -205,7 +205,7 @@ export default function Vault() {
                   >
                     <Icon className="w-3.5 h-3.5" style={{ color: achieved ? ms.color : "var(--muted-foreground)" }} />
                   </div>
-                  <span className="text-[11px] font-semibold whitespace-nowrap">{ms.label}</span>
+                  <span className="text-xs font-semibold whitespace-nowrap">{ms.label}</span>
                 </div>
               );
             })}
@@ -409,22 +409,29 @@ export default function Vault() {
                   className="w-full gap-2"
                   onClick={async () => {
                     try {
+                      console.log("[ManageSubscription] Starting fetch...");
                       const res = await fetch("/api/stripe/create-portal-session", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         credentials: "include",
                       });
+                      console.log("[ManageSubscription] Response status:", res.status);
                       let data: any = {};
                       try { data = await res.json(); } catch {}
+                      console.log("[ManageSubscription] Response data:", data);
                       if (res.ok && data.url) {
                         window.location.href = data.url;
                       } else if (res.status === 503 || data.code === "STRIPE_NOT_CONFIGURED") {
                         toast({ title: "Not Available", description: "Subscription management is not available yet. Please contact support." });
+                        window.alert("Subscription management is not available yet. Please contact support.");
                       } else {
                         toast({ title: "Error", description: data.message || "Could not open subscription portal. Please try again later.", variant: "destructive" });
+                        window.alert(data.message || "Could not open subscription portal. Please try again later.");
                       }
-                    } catch {
+                    } catch (err) {
+                      console.error("[ManageSubscription] Error:", err);
                       toast({ title: "Error", description: "Could not connect to subscription service. Please try again later.", variant: "destructive" });
+                      window.alert("Could not connect to subscription service. Please try again later.");
                     }
                   }}
                   data-testid="button-manage-subscription"
