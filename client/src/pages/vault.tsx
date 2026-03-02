@@ -407,32 +407,28 @@ export default function Vault() {
                 <Button
                   variant="outline"
                   className="w-full gap-2"
-                  onClick={async () => {
-                    try {
-                      console.log("[ManageSubscription] Starting fetch...");
-                      const res = await fetch("/api/stripe/create-portal-session", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        credentials: "include",
-                      });
-                      console.log("[ManageSubscription] Response status:", res.status);
-                      let data: any = {};
-                      try { data = await res.json(); } catch {}
-                      console.log("[ManageSubscription] Response data:", data);
-                      if (res.ok && data.url) {
-                        window.location.href = data.url;
-                      } else if (res.status === 503 || data.code === "STRIPE_NOT_CONFIGURED") {
-                        toast({ title: "Not Available", description: "Subscription management is not available yet. Please contact support." });
-                        window.alert("Subscription management is not available yet. Please contact support.");
-                      } else {
-                        toast({ title: "Error", description: data.message || "Could not open subscription portal. Please try again later.", variant: "destructive" });
-                        window.alert(data.message || "Could not open subscription portal. Please try again later.");
+                  onClick={() => {
+                    fetch("/api/stripe/create-portal-session", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      credentials: "include",
+                    }).then((res) => {
+                      if (res.ok) {
+                        return res.json().then((data: any) => {
+                          if (data.url) {
+                            window.location.href = data.url;
+                          } else {
+                            window.alert("Subscription portal is not available right now.");
+                            toast({ title: "Not Available", description: "Subscription management is not available yet. Please contact support." });
+                          }
+                        });
                       }
-                    } catch (err) {
-                      console.error("[ManageSubscription] Error:", err);
-                      toast({ title: "Error", description: "Could not connect to subscription service. Please try again later.", variant: "destructive" });
+                      window.alert("Subscription management is not available yet. Please contact support.");
+                      toast({ title: "Not Available", description: "Subscription management is not available yet. Please contact support." });
+                    }).catch(() => {
                       window.alert("Could not connect to subscription service. Please try again later.");
-                    }
+                      toast({ title: "Error", description: "Could not connect to subscription service.", variant: "destructive" });
+                    });
                   }}
                   data-testid="button-manage-subscription"
                 >
