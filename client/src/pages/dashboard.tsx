@@ -7,7 +7,8 @@ import type { Book, Category, UserStreak, UserProgress, ChakraProgress, ChakraTy
 import { CHAKRA_MAP } from "@shared/schema";
 import { BookCard } from "@/components/book-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Brain, Flame, ArrowRight, Sparkles, BookOpen, ChevronRight, ChevronLeft, X, Film, Headphones, Play, Trophy, Star, Shield, Zap, Award } from "lucide-react";
+import { Flame, ArrowRight, Sparkles, BookOpen, ChevronRight, ChevronLeft, X, Film, Headphones, Play, Trophy, Star, Shield, Zap, Award } from "lucide-react";
+import logoImg from "@assets/IMG_5175_1772414805387.png";
 import { Link, useLocation } from "wouter";
 import type { Short } from "@shared/schema";
 import { ShortsPlayer, ShortCard } from "@/components/shorts-player";
@@ -280,9 +281,7 @@ export default function Dashboard() {
       <div className="bg-background">
         <div className="px-5 pt-4 pb-1 flex items-center justify-between" data-testid="header-brand">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[#341539] flex items-center justify-center">
-              <Brain className="w-4 h-4 text-white" />
-            </div>
+            <img src={logoImg} alt="MindPrism" className="w-7 h-7 rounded-lg object-cover" />
             <span className="text-sm font-bold tracking-tight text-foreground">MindPrism</span>
           </div>
         </div>
