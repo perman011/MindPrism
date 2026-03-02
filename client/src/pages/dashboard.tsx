@@ -8,7 +8,7 @@ import { CHAKRA_MAP } from "@shared/schema";
 import { BookCard } from "@/components/book-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Flame, ArrowRight, Sparkles, BookOpen, ChevronRight, ChevronLeft, X, Film, Headphones, Play, Trophy, Star, Shield, Zap, Award } from "lucide-react";
-import logoImg from "@assets/IMG_5175_1772414805387.png";
+import logoImg from "@assets/87E16C70-F9FB-4CDA-B4BB-FDA7C2FF841A_1772414927855.png";
 import { Link, useLocation } from "wouter";
 import type { Short } from "@shared/schema";
 import { ShortsPlayer, ShortCard } from "@/components/shorts-player";
