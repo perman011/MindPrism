@@ -10,7 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Users, Crown, Shield, ArrowLeft, Search, Star, StarOff, Copy, Check, Link2, ExternalLink, Eye, EyeOff, BookOpen, Clock, TrendingUp, Sun, Moon } from "lucide-react";
+import { Users, Crown, Shield, ArrowLeft, Search, Star, StarOff, Copy, Check, Link2, ExternalLink, Eye, EyeOff, BookOpen, Clock, TrendingUp, Sun, Moon, Trash2 } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/components/theme-provider";
@@ -149,6 +149,23 @@ export default function AdminUsers() {
       toast({ title: "Updated", description: "Premium status changed" });
     },
     onError: () => toast({ title: "Error", description: "Failed to update premium", variant: "destructive" }),
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("DELETE", `/api/admin/users/${id}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({ title: "Removed", description: "User has been removed" });
+    },
+    onError: (error: Error) => {
+      const msg = error.message.includes("403") ? "Cannot delete a super admin" :
+                  error.message.includes("400") ? "Cannot delete your own account" :
+                  "Failed to remove user";
+      toast({ title: "Error", description: msg, variant: "destructive" });
+    },
   });
 
   const handleCopyInviteLink = () => {
@@ -339,6 +356,24 @@ export default function AdminUsers() {
                           <><Star className="w-3.5 h-3.5" />Grant Premium</>
                         )}
                       </Button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => {
+                              if (confirm(`Remove ${u.firstName || ""} ${u.lastName || ""}? This cannot be undone.`)) {
+                                deleteUserMutation.mutate(u.id);
+                              }
+                            }}
+                            data-testid={`button-delete-${u.id}`}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Remove user</TooltipContent>
+                      </Tooltip>
                     </div>
                   </Card>
                 );
@@ -432,6 +467,24 @@ export default function AdminUsers() {
                         <><Star className="w-3.5 h-3.5" />Grant Premium</>
                       )}
                     </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={() => {
+                            if (confirm(`Remove ${u.firstName || ""} ${u.lastName || ""}? This cannot be undone.`)) {
+                              deleteUserMutation.mutate(u.id);
+                            }
+                          }}
+                          data-testid={`button-delete-${u.id}`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Remove user</TooltipContent>
+                    </Tooltip>
                   </div>
                 </Card>
               );

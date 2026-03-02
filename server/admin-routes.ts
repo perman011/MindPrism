@@ -193,13 +193,14 @@ export function registerAdminRoutes(app: Express) {
           const pathParts = relativePath.split("/");
           const type = pathParts.length > 1 ? pathParts[0] : "general";
           const filename = pathParts[pathParts.length - 1];
-          const meta = f.metadata || {};
+          const fileMeta = f.metadata?.metadata || f.metadata || {};
+          const topMeta = f.metadata || {};
           return {
             url: `/objects/uploads/${relativePath}`,
             filename,
             type,
-            size: Number(meta.size || 0),
-            createdAt: meta.timeCreated || meta.updated || new Date().toISOString(),
+            size: Number(topMeta.size || fileMeta.size || 0),
+            createdAt: topMeta.timeCreated || topMeta.updated || fileMeta.uploadedAt || new Date().toISOString(),
           };
         })
         .filter((f: any) => f.filename && !f.filename.startsWith("."));
@@ -895,6 +896,26 @@ export function registerAdminRoutes(app: Express) {
     } catch (error) {
       console.error("Error updating premium status:", error);
       res.status(500).json({ message: "Failed to update premium status" });
+    }
+  });
+
+  app.delete("/api/admin/users/:id", isAuthenticated, isSuperAdmin, async (req: any, res) => {
+    try {
+      const targetId = req.params.id;
+      const currentUserId = req.user.claims.sub;
+      if (targetId === currentUserId) {
+        return res.status(400).json({ message: "Cannot delete your own account" });
+      }
+      const [targetUser] = await db.select().from(users).where(eq(users.id, targetId));
+      if (!targetUser) return res.status(404).json({ message: "User not found" });
+      if (targetUser.role === "super_admin") {
+        return res.status(403).json({ message: "Cannot delete a super admin" });
+      }
+      await db.delete(users).where(eq(users.id, targetId));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Failed to delete user" });
     }
   });
 

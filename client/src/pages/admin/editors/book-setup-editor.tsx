@@ -162,8 +162,8 @@ export function BookSetupEditor({
             value={audioUrl}
             onChange={(url) => onChange("audioUrl", url)}
             maxSize={50}
-            label="Audio Summary (MP3)"
-            placeholder="Drop an audio file or click to browse"
+            label="Book Audio (Listen feature)"
+            placeholder="Upload MP3 for the audio player"
           />
         </div>
 

@@ -17,7 +17,7 @@ export function BottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-[#E5E7EB] safe-area-bottom" data-testid="bottom-nav" aria-label="Main navigation">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-[#0F0A14] border-t border-[#E5E7EB] dark:border-[#2A1E35] safe-area-bottom" data-testid="bottom-nav" aria-label="Main navigation">
       <div className="flex items-center justify-around h-14 max-w-2xl mx-auto px-4" role="tablist">
         {navItems.map((item) => {
           const active = isActive(item.path);

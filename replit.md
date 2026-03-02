@@ -66,9 +66,9 @@ The content is organized into a hierarchical "Psychological Taxonomy." The appli
 - Admin-specific book API (`/api/admin/books/:id`) that loads books regardless of status (draft/published)
 - Publishing validation checklist: core thesis 50+ chars, 3+ chapters, 1+ mental model, description, cover image, category required
 - Content Quality Scoring with completeness % per book and tooltip formula breakdown
-- Auto-save indicator showing "Saving...", "All changes saved" status
+- Auto-save indicator showing "Saving...", "All changes saved" status, plus explicit "Save Changes" button in editor header
 - Book list with search, status filter (All/Published/Draft), sort (Name/Completeness), and bulk publish/unpublish with validation
-- User management with role assignment, email privacy masking (show/hide toggle), and user activity details (last login, books started, progress)
+- User management with role assignment, email privacy masking (show/hide toggle), user activity details (last login, books started, progress), and Remove User (super_admin, DELETE endpoint)
 - Analytics dashboard (Overview/Engagement/Content/Revenue tabs) with events pagination, type filtering, and CSV export
 - Shorts management with gradient picker, rich text editing, 12 seed shorts across all 5 books
 - Consistent admin access control middleware (isAdmin/requireAdminRole) across all admin API endpoints

@@ -278,8 +278,16 @@ export default function Dashboard() {
         noIndex
       />
       <div className="bg-background">
+        <div className="px-5 pt-4 pb-1 flex items-center justify-between" data-testid="header-brand">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-[#341539] flex items-center justify-center">
+              <Brain className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-sm font-bold tracking-tight text-foreground">MindPrism</span>
+          </div>
+        </div>
         {booksLoading ? (
-          <div className="px-5 pt-8 pb-5 flex items-center justify-between gap-3">
+          <div className="px-5 pt-4 pb-5 flex items-center justify-between gap-3">
             <div className="flex-1">
               <Skeleton className="h-3 w-24 mb-2" />
               <Skeleton className="h-9 w-40" />
@@ -290,7 +298,7 @@ export default function Dashboard() {
             </div>
           </div>
         ) : (
-        <div className="px-5 pt-8 pb-5 flex items-center justify-between gap-3">
+        <div className="px-5 pt-4 pb-5 flex items-center justify-between gap-3">
           <div className="flex-1">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{greeting()}</p>
             <h1 className="text-[32px] font-bold text-[#111827] dark:text-foreground tracking-tight leading-tight" data-testid="text-welcome">

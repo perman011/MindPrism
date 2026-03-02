@@ -10,7 +10,7 @@ import {
   ArrowLeft, BookOpen, Brain,
   Bookmark, BookmarkCheck,
   Clock, Headphones, Share2,
-  Film,
+  Film, ExternalLink,
 } from "lucide-react";
 import type { Short } from "@shared/schema";
 import { ShortsPlayer, ShortCard } from "@/components/shorts-player";
@@ -58,9 +58,9 @@ export default function BookDetail() {
     enabled: !!id,
   });
 
-  const { data: bookShorts } = useQuery<Short[]>({
+  const { data: bookShorts = [] } = useQuery<Short[]>({
     queryKey: ["/api/books", id, "shorts"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+    queryFn: getQueryFn({ on401: "throw" }),
     enabled: !!id,
   });
 
@@ -257,11 +257,14 @@ export default function BookDetail() {
           <Button
             variant="outline"
             className="w-full gap-2"
-            onClick={() => navigate(`/book/${id}/journey`)}
-            data-testid="button-start-journey"
+            onClick={() => {
+              const searchQuery = encodeURIComponent(`${book.title} ${book.author}`);
+              window.open(`https://www.amazon.com/s?k=${searchQuery}`, "_blank", "noopener");
+            }}
+            data-testid="button-buy-online"
           >
-            <Film className="w-4 h-4" />
-            {cardProgress > 0 ? `Interactive Journey (${cardProgress}%)` : "Interactive Journey"}
+            <ExternalLink className="w-4 h-4" />
+            Buy Online
           </Button>
 
           <div className="relative">

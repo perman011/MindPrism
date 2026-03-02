@@ -444,16 +444,36 @@ export default function AdminBookEditor() {
             <Eye className="w-3.5 h-3.5" />
             Preview
           </Button>
-          {saveStatus === "saving" && (
-            <div className="flex items-center gap-1.5 text-muted-foreground" data-testid="status-saving">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs h-8"
+            onClick={() => {
+              if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+              setSaveStatus("saving");
+              updateBookMutation.mutateAsync({}).then(() => {
+                setSaveStatus("saved");
+                toast({ title: "Saved", description: "All changes saved successfully" });
+                setTimeout(() => setSaveStatus("idle"), 4000);
+              }).catch(() => {
+                setSaveStatus("error");
+                toast({ title: "Error", description: "Failed to save changes", variant: "destructive" });
+              });
+            }}
+            disabled={saveStatus === "saving"}
+            data-testid="button-save-draft"
+          >
+            {saveStatus === "saving" ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span className="text-xs">Saving...</span>
-            </div>
-          )}
+            ) : (
+              <Save className="w-3.5 h-3.5" />
+            )}
+            {saveStatus === "saving" ? "Saving..." : "Save Changes"}
+          </Button>
           {saveStatus === "saved" && (
             <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400" data-testid="status-saved">
               <CheckCircle2 className="w-3.5 h-3.5" />
-              <span className="text-xs">All changes saved</span>
+              <span className="text-xs">Saved</span>
             </div>
           )}
           {saveStatus === "error" && (

@@ -274,9 +274,9 @@ export default function Vault() {
                 ))
               ) : !journalEntries || journalEntries.length === 0 ? (
                 <div className="text-center py-14">
-                  <PenLine className="w-10 h-10 text-muted-foreground/20 mx-auto mb-3" />
-                  <p className="text-sm font-medium text-muted-foreground">No journal entries yet</p>
-                  <p className="text-xs text-muted-foreground mt-1">Start reading books to build your journal</p>
+                  <PenLine className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+                  <p className="text-sm font-medium text-foreground">No journal entries yet</p>
+                  <p className="text-xs text-muted-foreground mt-1.5 max-w-[240px] mx-auto leading-relaxed">Complete exercises while reading to see your reflections here. Your growth journey starts with the first book.</p>
                 </div>
               ) : (
                 journalEntries.map((entry) => (
@@ -318,9 +318,9 @@ export default function Vault() {
                 ))
               ) : !highlights || highlights.length === 0 ? (
                 <div className="text-center py-14">
-                  <Bookmark className="w-10 h-10 text-muted-foreground/20 mx-auto mb-3" />
-                  <p className="text-sm font-medium text-muted-foreground">No saved highlights yet</p>
-                  <p className="text-xs text-muted-foreground mt-1">Long-press text or visuals to save them here</p>
+                  <Bookmark className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+                  <p className="text-sm font-medium text-foreground">No saved highlights yet</p>
+                  <p className="text-xs text-muted-foreground mt-1.5 max-w-[240px] mx-auto leading-relaxed">Start highlighting text while reading to see your key insights collected here.</p>
                 </div>
               ) : (
                 highlights.map((h) => {
@@ -415,8 +415,16 @@ export default function Vault() {
                         credentials: "include",
                       });
                       const data = await res.json();
-                      if (data.url) window.location.href = data.url;
-                    } catch {}
+                      if (data.url) {
+                        window.location.href = data.url;
+                      } else if (data.code === "STRIPE_NOT_CONFIGURED") {
+                        toast({ title: "Not Available", description: "Subscription management is being set up. Please contact support for assistance." });
+                      } else {
+                        toast({ title: "Error", description: data.message || "Could not open subscription portal", variant: "destructive" });
+                      }
+                    } catch {
+                      toast({ title: "Error", description: "Could not connect to subscription service", variant: "destructive" });
+                    }
                   }}
                   data-testid="button-manage-subscription"
                 >
