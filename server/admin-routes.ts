@@ -68,8 +68,8 @@ function getUploadFolder(mimetype: string): string {
 }
 
 const allowedMimeTypes: Record<string, boolean> = {
-  "image/png": true, "image/jpeg": true, "image/jpg": true, "image/webp": true, "image/gif": true,
-  "audio/mpeg": true, "audio/wav": true, "audio/ogg": true, "audio/mp4": true,
+  "image/png": true, "image/jpeg": true, "image/jpg": true, "image/webp": true, "image/gif": true, "image/heic": true, "image/heif": true,
+  "audio/mpeg": true, "audio/mp3": true, "audio/wav": true, "audio/x-wav": true, "audio/ogg": true, "audio/mp4": true, "audio/x-m4a": true, "audio/aac": true,
   "video/mp4": true, "video/webm": true,
 };
 

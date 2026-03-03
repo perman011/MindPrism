@@ -16,15 +16,15 @@ interface FileUploadProps {
 }
 
 const ACCEPT_MAP: Record<string, string> = {
-  image: "image/png,image/jpeg,image/webp,image/gif",
-  audio: "audio/mpeg,audio/wav,audio/ogg,audio/mp4",
+  image: "image/png,image/jpeg,image/webp,image/gif,image/heic,image/heif",
+  audio: "audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/ogg,audio/mp4,audio/x-m4a,audio/aac",
   video: "video/mp4,video/webm",
-  any: "image/png,image/jpeg,image/webp,image/gif,audio/mpeg,audio/wav,audio/ogg,audio/mp4,video/mp4,video/webm",
+  any: "image/png,image/jpeg,image/webp,image/gif,image/heic,image/heif,audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/ogg,audio/mp4,audio/x-m4a,audio/aac,video/mp4,video/webm",
 };
 
 const FORMAT_LABELS: Record<string, string> = {
-  image: "PNG, JPG, WebP, GIF",
-  audio: "MP3, WAV, OGG, M4A",
+  image: "PNG, JPG, WebP, GIF, HEIC",
+  audio: "MP3, WAV, OGG, M4A, AAC",
   video: "MP4, WebM",
   any: "Images, Audio, Video",
 };
