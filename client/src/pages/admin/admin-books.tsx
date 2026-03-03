@@ -125,6 +125,14 @@ export default function AdminBooks() {
     navigate("/admin/books/new");
   };
 
+
+  const invalidateConsumerContentQueries = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/books"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/books/recommended"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/books/because-you-read"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/shorts"] });
+  };
+
   const deleteBookMutation = useMutation({
     mutationFn: async (bookId: string) => {
       await apiRequest("DELETE", `/api/admin/books/${bookId}`);
@@ -134,8 +142,14 @@ export default function AdminBooks() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/content-health"] });
       toast({ title: "Deleted", description: "Book and all content removed" });
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to delete book", variant: "destructive" });
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : "Failed to delete book";
+      const description = message.includes("403")
+        ? "You need admin role to delete books"
+        : message.includes("500")
+          ? "Could not delete book because related content is still linked"
+          : "Failed to delete book";
+      toast({ title: "Error", description, variant: "destructive" });
     },
   });
 
@@ -146,10 +160,13 @@ export default function AdminBooks() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/books"] });
+      invalidateConsumerContentQueries();
       toast({ title: "Published", description: "Book is now live in the app" });
     },
-    onError: () => toast({ title: "Error", description: "Failed to publish book", variant: "destructive" }),
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message.replace(/^\d+\:\s*/, "") : "Failed to publish book";
+      toast({ title: "Error", description: message, variant: "destructive" });
+    },
   });
 
   const unpublishMutation = useMutation({
@@ -159,11 +176,28 @@ export default function AdminBooks() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/books"] });
+      invalidateConsumerContentQueries();
       toast({ title: "Unpublished", description: "Book moved to draft" });
     },
     onError: () => toast({ title: "Error", description: "Failed to unpublish book", variant: "destructive" }),
   });
+
+  const publishDraftMutation = useMutation({
+    mutationFn: async (bookId: string) => {
+      const res = await apiRequest("POST", `/api/admin/books/${bookId}/publish-draft`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
+      invalidateConsumerContentQueries();
+      toast({ title: "Changes Published", description: "Latest draft changes are now live" });
+    },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message.replace(/^\d+\:\s*/, "") : "Failed to publish draft changes";
+      toast({ title: "Error", description: message, variant: "destructive" });
+    },
+  });
+
 
   const bulkStatusMutation = useMutation({
     mutationFn: async ({ bookIds, status }: { bookIds: string[]; status: "published" | "draft" }) => {
@@ -172,7 +206,7 @@ export default function AdminBooks() {
     },
     onSuccess: (data: { updated: number; total: number }, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/books"] });
+      invalidateConsumerContentQueries();
       queryClient.invalidateQueries({ queryKey: ["/api/admin/content-health"] });
       setSelectedBookIds(new Set());
       const action = variables.status === "published" ? "published" : "unpublished";
@@ -463,7 +497,7 @@ export default function AdminBooks() {
                         data-testid={`badge-status-${book.id}`}
                       >
                         {isPublished ? (
-                          <><Globe className="w-3 h-3 mr-1" />Live</>
+                          <><Globe className="w-3 h-3 mr-1" />{book.status === "published_with_changes" ? "Live + Draft" : "Live"}</>
                         ) : (
                           <><FileText className="w-3 h-3 mr-1" />Draft</>
                         )}
@@ -508,21 +542,25 @@ export default function AdminBooks() {
                       </Link>
                       {canPublish && (
                         <Button
-                          variant={isPublished ? "outline" : "default"}
+                          variant={book.status === "published_with_changes" ? "default" : isPublished ? "outline" : "default"}
                           size="sm"
-                          className={`gap-1 text-xs ${!isPublished ? "bg-emerald-600" : ""}`}
+                          className={`gap-1 text-xs ${!isPublished || book.status === "published_with_changes" ? "bg-emerald-600" : ""}`}
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (isPublished) {
+                            if (book.status === "published_with_changes") {
+                              publishDraftMutation.mutate(book.id);
+                            } else if (isPublished) {
                               unpublishMutation.mutate(book.id);
                             } else {
                               publishMutation.mutate(book.id);
                             }
                           }}
-                          disabled={publishMutation.isPending || unpublishMutation.isPending}
+                          disabled={publishMutation.isPending || unpublishMutation.isPending || publishDraftMutation.isPending}
                           data-testid={`button-publish-${book.id}`}
                         >
-                          {isPublished ? (
+                          {book.status === "published_with_changes" ? (
+                            <><Rocket className="w-3.5 h-3.5" />Publish Changes</>
+                          ) : isPublished ? (
                             <><ArrowDownCircle className="w-3.5 h-3.5" />Unpublish</>
                           ) : (
                             <><Rocket className="w-3.5 h-3.5" />Publish</>

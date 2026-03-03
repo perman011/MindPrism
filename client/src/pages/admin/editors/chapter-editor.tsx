@@ -229,6 +229,8 @@ interface ChapterEditorProps {
 export function ChapterEditor({ bookId, chapters }: ChapterEditorProps) {
   const { toast } = useToast();
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
+  const [chapterDrafts, setChapterDrafts] = useState<Record<string, Partial<ChapterSummary>>>({});
+  const saveTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const toggleExpanded = useCallback((id: string) => {
     setExpandedChapters(prev => {
@@ -265,6 +267,36 @@ export function ChapterEditor({ bookId, chapters }: ChapterEditorProps) {
     },
   });
 
+  const queueChapterSave = useCallback((id: string, data: any, delay = 450) => {
+    const existing = saveTimersRef.current[id];
+    if (existing) clearTimeout(existing);
+    saveTimersRef.current[id] = setTimeout(() => {
+      updateMutation.mutate({ id, data });
+    }, delay);
+  }, [updateMutation]);
+
+  useEffect(() => {
+    setChapterDrafts((prev) => {
+      const next = { ...prev };
+      for (const chapter of chapters) {
+        const draft = next[chapter.id] || {};
+        next[chapter.id] = {
+          chapterTitle: draft.chapterTitle ?? chapter.chapterTitle,
+          subtitle: draft.subtitle ?? (chapter.subtitle || ""),
+          audioUrl: draft.audioUrl ?? (chapter.audioUrl || ""),
+          content: draft.content ?? (chapter.content || ""),
+        };
+      }
+      return next;
+    });
+  }, [chapters]);
+
+  useEffect(() => {
+    return () => {
+      Object.values(saveTimersRef.current).forEach(clearTimeout);
+    };
+  }, []);
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       await apiRequest("DELETE", `/api/admin/chapters/${id}`);
@@ -277,6 +309,7 @@ export function ChapterEditor({ bookId, chapters }: ChapterEditorProps) {
   });
 
   const handleContentUpdate = useCallback((chapterId: string, html: string) => {
+    setChapterDrafts((prev) => ({ ...prev, [chapterId]: { ...prev[chapterId], content: html } }));
     const readTime = calculateReadTime(html);
     const cards = extractCardsFromHtml(html);
     updateMutation.mutate({
@@ -309,8 +342,12 @@ export function ChapterEditor({ bookId, chapters }: ChapterEditorProps) {
                 <GripVertical className="w-4 h-4 text-muted-foreground cursor-grab" />
                 <Badge variant="secondary" className="text-[10px]">Ch. {chapter.chapterNumber}</Badge>
                 <Input
-                  value={chapter.chapterTitle}
-                  onChange={(e) => updateMutation.mutate({ id: chapter.id, data: { chapterTitle: e.target.value } })}
+                  value={chapterDrafts[chapter.id]?.chapterTitle ?? chapter.chapterTitle}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setChapterDrafts((prev) => ({ ...prev, [chapter.id]: { ...prev[chapter.id], chapterTitle: value } }));
+                    queueChapterSave(chapter.id, { chapterTitle: value });
+                  }}
                   className="flex-1 h-8 text-sm font-semibold"
                   data-testid={`input-chapter-title-${chapter.id}`}
                 />
@@ -358,8 +395,12 @@ export function ChapterEditor({ bookId, chapters }: ChapterEditorProps) {
                   <div>
                     <label className="text-xs font-semibold mb-1 block">Subtitle</label>
                     <Input
-                      value={chapter.subtitle || ""}
-                      onChange={(e) => updateMutation.mutate({ id: chapter.id, data: { subtitle: e.target.value } })}
+                      value={chapterDrafts[chapter.id]?.subtitle ?? (chapter.subtitle || "")}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setChapterDrafts((prev) => ({ ...prev, [chapter.id]: { ...prev[chapter.id], subtitle: value } }));
+                        queueChapterSave(chapter.id, { subtitle: value });
+                      }}
                       placeholder="Brief chapter description (1-2 sentences)"
                       className="h-8 text-sm"
                       data-testid={`input-chapter-subtitle-${chapter.id}`}
@@ -369,7 +410,7 @@ export function ChapterEditor({ bookId, chapters }: ChapterEditorProps) {
                   <div>
                     <label className="text-xs font-semibold mb-1 block">Chapter Content</label>
                     <TipTapEditor
-                      content={chapter.content || ""}
+                      content={chapterDrafts[chapter.id]?.content ?? (chapter.content || "")}
                       onUpdate={(html) => handleContentUpdate(chapter.id, html)}
                       chapterId={chapter.id}
                     />
@@ -379,12 +420,17 @@ export function ChapterEditor({ bookId, chapters }: ChapterEditorProps) {
                     <label className="text-xs font-semibold mb-1 block">Chapter Audio (MP3)</label>
                     <FileUpload
                       accept="audio"
-                      value={chapter.audioUrl || ""}
-                      onChange={(url) => updateMutation.mutate({ id: chapter.id, data: { audioUrl: url } })}
+                      value={chapterDrafts[chapter.id]?.audioUrl ?? (chapter.audioUrl || "")}
+                      onChange={(url) => {
+                        setChapterDrafts((prev) => ({ ...prev, [chapter.id]: { ...prev[chapter.id], audioUrl: url } }));
+                        updateMutation.mutate({ id: chapter.id, data: { audioUrl: url } });
+                      }}
                       maxSize={50}
                       placeholder="Upload chapter narration MP3"
                     />
-                    {chapter.audioUrl && <ChapterAudioPreview audioUrl={chapter.audioUrl} />}
+                    {(chapterDrafts[chapter.id]?.audioUrl ?? chapter.audioUrl) && (
+                      <ChapterAudioPreview audioUrl={(chapterDrafts[chapter.id]?.audioUrl ?? chapter.audioUrl)!} />
+                    )}
                   </div>
                 </div>
               )}

@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { MentalModel } from "@shared/schema";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,8 @@ interface MentalModelEditorProps {
 
 export function MentalModelEditor({ bookId, models }: MentalModelEditorProps) {
   const { toast } = useToast();
+  const [modelDrafts, setModelDrafts] = useState<Record<string, { title: string; description: string; steps: any[] }>>({});
+  const saveTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const createMutation = useMutation({
     mutationFn: async () => {
@@ -44,6 +47,35 @@ export function MentalModelEditor({ bookId, models }: MentalModelEditorProps) {
     },
   });
 
+  const queueModelSave = useCallback((id: string, data: any, delay = 350) => {
+    const existing = saveTimersRef.current[id];
+    if (existing) clearTimeout(existing);
+    saveTimersRef.current[id] = setTimeout(() => {
+      updateMutation.mutate({ id, data });
+    }, delay);
+  }, [updateMutation]);
+
+  useEffect(() => {
+    setModelDrafts((prev) => {
+      const next = { ...prev };
+      for (const model of models) {
+        const existing = next[model.id];
+        next[model.id] = {
+          title: existing?.title ?? model.title,
+          description: existing?.description ?? model.description,
+          steps: existing?.steps ?? [ ...((model.steps as any[]) || []) ],
+        };
+      }
+      return next;
+    });
+  }, [models]);
+
+  useEffect(() => {
+    return () => {
+      Object.values(saveTimersRef.current).forEach(clearTimeout);
+    };
+  }, []);
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       await apiRequest("DELETE", `/api/admin/mental-models/${id}`);
@@ -55,19 +87,25 @@ export function MentalModelEditor({ bookId, models }: MentalModelEditorProps) {
   });
 
   const addStep = (model: MentalModel) => {
-    const steps = [...((model.steps as any[]) || []), { label: "New Step", explanation: "Explain..." }];
+    const currentSteps = modelDrafts[model.id]?.steps ?? ((model.steps as any[]) || []);
+    const steps = [...currentSteps, { label: "New Step", explanation: "Explain..." }];
+    setModelDrafts((prev) => ({ ...prev, [model.id]: { ...(prev[model.id] || { title: model.title, description: model.description, steps: [] }), steps } }));
     updateMutation.mutate({ id: model.id, data: { steps } });
   };
 
   const updateStep = (model: MentalModel, stepIndex: number, field: string, value: string) => {
-    const steps = [...((model.steps as any[]) || [])];
+    const baseSteps = modelDrafts[model.id]?.steps ?? ((model.steps as any[]) || []);
+    const steps = [...baseSteps];
     steps[stepIndex] = { ...steps[stepIndex], [field]: value };
-    updateMutation.mutate({ id: model.id, data: { steps } });
+    setModelDrafts((prev) => ({ ...prev, [model.id]: { ...(prev[model.id] || { title: model.title, description: model.description, steps: [] }), steps } }));
+    queueModelSave(model.id, { steps });
   };
 
   const removeStep = (model: MentalModel, stepIndex: number) => {
-    const steps = [...((model.steps as any[]) || [])];
+    const baseSteps = modelDrafts[model.id]?.steps ?? ((model.steps as any[]) || []);
+    const steps = [...baseSteps];
     steps.splice(stepIndex, 1);
+    setModelDrafts((prev) => ({ ...prev, [model.id]: { ...(prev[model.id] || { title: model.title, description: model.description, steps: [] }), steps } }));
     updateMutation.mutate({ id: model.id, data: { steps } });
   };
 
@@ -86,22 +124,45 @@ export function MentalModelEditor({ bookId, models }: MentalModelEditorProps) {
 
       <div className="space-y-4">
         {models.map((model) => {
-          const steps = (model.steps as any[]) || [];
+          const draft = modelDrafts[model.id];
+          const steps = draft?.steps ?? ((model.steps as any[]) || []);
           return (
             <Card key={model.id} className="p-4" data-testid={`model-block-${model.id}`}>
               <div className="flex items-start gap-3 mb-3">
                 <GripVertical className="w-4 h-4 text-muted-foreground mt-2 cursor-grab" />
                 <div className="flex-1 space-y-2">
                   <Input
-                    value={model.title}
-                    onChange={(e) => updateMutation.mutate({ id: model.id, data: { title: e.target.value } })}
+                    value={draft?.title ?? model.title}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setModelDrafts((prev) => ({
+                        ...prev,
+                        [model.id]: {
+                          title: value,
+                          description: prev[model.id]?.description ?? model.description,
+                          steps: prev[model.id]?.steps ?? ((model.steps as any[]) || []),
+                        },
+                      }));
+                      queueModelSave(model.id, { title: value });
+                    }}
                     className="font-semibold"
                     placeholder="Model title..."
                     data-testid={`input-model-title-${model.id}`}
                   />
                   <Textarea
-                    value={model.description}
-                    onChange={(e) => updateMutation.mutate({ id: model.id, data: { description: e.target.value } })}
+                    value={draft?.description ?? model.description}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setModelDrafts((prev) => ({
+                        ...prev,
+                        [model.id]: {
+                          title: prev[model.id]?.title ?? model.title,
+                          description: value,
+                          steps: prev[model.id]?.steps ?? ((model.steps as any[]) || []),
+                        },
+                      }));
+                      queueModelSave(model.id, { description: value });
+                    }}
                     rows={2}
                     className="text-sm"
                     placeholder="Description..."

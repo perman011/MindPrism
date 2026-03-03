@@ -18,7 +18,7 @@ import {
   chakraProgress, shorts, shortViews, userActivityLog,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, sql, desc, asc } from "drizzle-orm";
+import { eq, and, sql, desc, asc, inArray } from "drizzle-orm";
 
 export interface IStorage {
   getCategories(): Promise<Category[]>;
@@ -338,6 +338,12 @@ export class DatabaseStorage implements IStorage {
 
   async deleteBookCascade(id: string): Promise<void> {
     await db.transaction(async (tx) => {
+      const bookShorts = await tx.select({ id: shorts.id }).from(shorts).where(eq(shorts.bookId, id));
+      const shortIds = bookShorts.map((s) => s.id);
+      if (shortIds.length > 0) {
+        await tx.delete(shortViews).where(inArray(shortViews.shortId, shortIds));
+      }
+
       await tx.delete(shorts).where(eq(shorts.bookId, id));
       await tx.delete(userActivityLog).where(eq(userActivityLog.bookId, id));
       await tx.delete(comments).where(eq(comments.bookId, id));
