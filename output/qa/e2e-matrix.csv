@@ -1,0 +1,5 @@
+id,journey,priority,preconditions,steps,expected_result,status
+E2E-001,Create project,P1,Test account + seeded data,Define step-by-step actions,Journey completes without error,Not Run
+E2E-002,Estimate tasks,P1,Test account + seeded data,Define step-by-step actions,Journey completes without error,Not Run
+E2E-003,Log actuals,P1,Test account + seeded data,Define step-by-step actions,Journey completes without error,Not Run
+E2E-004,Review variance dashboard,P1,Test account + seeded data,Define step-by-step actions,Journey completes without error,Not Run

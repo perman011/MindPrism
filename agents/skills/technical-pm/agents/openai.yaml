@@ -1,0 +1,4 @@
+interface:
+  display_name: "Technical PM"
+  short_description: "Technical PRDs, sequencing, and delivery tickets."
+  default_prompt: "Create a technical PRD and chunked delivery backlog with clear acceptance criteria and sequencing."

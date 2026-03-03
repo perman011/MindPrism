@@ -1,0 +1,4 @@
+interface:
+  display_name: "Solution Architect"
+  short_description: "Scalable architecture design and migration planning."
+  default_prompt: "Design a scalable architecture and phased migration plan with explicit reliability, security, and data-flow decisions."

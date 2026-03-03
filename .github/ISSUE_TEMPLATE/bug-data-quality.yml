@@ -1,0 +1,55 @@
+name: Bug / Data Quality Incident
+description: Report a correctness defect or input-quality problem in notebook analysis output.
+title: "[BUG] "
+labels:
+  - bug
+  - data-quality
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Provide enough detail to reproduce the issue and verify the fix.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Issue summary
+      description: What is failing and what behavior did you expect?
+      placeholder: Briefly describe the defect.
+    validations:
+      required: true
+
+  - type: textarea
+    id: raw_items
+    attributes:
+      label: Input rows (`raw_items`)
+      description: Paste the smallest reproducible input.
+      render: python
+    validations:
+      required: true
+
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed output/error
+      description: Include stack trace or incorrect summary fields.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: Describe the correct summary/takeaway behavior.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Validation checklist
+      options:
+        - label: I reproduced this on the latest `main`.
+          required: true
+        - label: I included the exact `raw_items` used.
+          required: true
