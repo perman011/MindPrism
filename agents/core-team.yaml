@@ -1,0 +1,65 @@
+version: 1
+updated: 2026-03-03
+
+team:
+  name: core-product-team
+  mode: orchestrated
+  objective: Design, specify, validate, and scale a production-grade application.
+
+roles:
+  - id: UX
+    title: UX Designer
+    skill: agents/skills/ux-designer
+    responsibility:
+      - Run competitor-inspired UX discovery
+      - Define dark-purple visual system and UX flows
+      - Produce implementation-ready screen/interaction specs
+    outputs:
+      - output/design/ux-brief.md
+      - output/design/feature-flow-spec.md
+
+  - id: TPM
+    title: Technical Product Manager
+    skill: agents/skills/technical-pm
+    responsibility:
+      - Write technical PRDs
+      - Decompose PRDs into small executable tickets
+      - Maintain milestone sequencing and dependency map
+    outputs:
+      - output/product/*-prd.md
+      - output/product/*-tickets.md
+
+  - id: QA
+    title: QA E2E Engineer
+    skill: agents/skills/qa-e2e
+    responsibility:
+      - Build end-to-end test matrix
+      - Validate critical user journeys and regressions
+      - Provide release gate decision
+    outputs:
+      - output/qa/e2e-matrix.csv
+      - output/qa/release-gate-report.md
+
+  - id: ARCH
+    title: Solution Architect
+    skill: agents/skills/solution-architect
+    responsibility:
+      - Define target scalable architecture
+      - Produce ADRs and migration plan
+      - Establish reliability/security/NFR baselines
+    outputs:
+      - output/architecture/target-architecture.md
+      - output/architecture/scorecard.md
+
+coordination:
+  handoff_order:
+    - UX -> TPM
+    - TPM -> ARCH
+    - ARCH -> QA
+    - QA -> TPM
+  required_handoff_fields:
+    - task
+    - inputs
+    - outputs
+    - risks
+    - next_owner

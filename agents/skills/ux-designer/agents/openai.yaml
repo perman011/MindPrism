@@ -1,0 +1,4 @@
+interface:
+  display_name: "UX Designer"
+  short_description: "Competitor-led modern UX and visual system direction."
+  default_prompt: "Create a modern UX strategy and implementation-ready UI design direction using competitor patterns and brand constraints."

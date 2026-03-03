@@ -1,0 +1,11 @@
+[project]
+name = "task-notebook-analysis"
+version = "0.1.0"
+description = "Notebook-first task estimate analysis with validation and CI quality gates"
+requires-python = ">=3.12,<3.13"
+readme = "README.md"
+authors = [{ name = "Project Team" }]
+dependencies = [
+  "jupyterlab==4.2.5",
+  "notebook==7.2.2",
+]
