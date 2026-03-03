@@ -9,6 +9,7 @@ interface FileUploadProps {
   accept: "image" | "audio" | "video" | "any";
   value: string;
   onChange: (url: string) => void;
+  onUploadStateChange?: (isUploading: boolean) => void;
   maxSize?: number;
   label?: string;
   required?: boolean;
@@ -16,16 +17,16 @@ interface FileUploadProps {
 }
 
 const ACCEPT_MAP: Record<string, string> = {
-  image: "image/png,image/jpeg,image/webp,image/gif,image/heic,image/heif",
+  image: "image/png,image/jpeg,image/webp,image/gif,image/avif",
   audio: "audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/ogg,audio/mp4,audio/x-m4a,audio/aac",
-  video: "video/mp4,video/webm",
-  any: "image/png,image/jpeg,image/webp,image/gif,image/heic,image/heif,audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/ogg,audio/mp4,audio/x-m4a,audio/aac,video/mp4,video/webm",
+  video: "video/mp4,video/webm,video/quicktime,video/x-m4v",
+  any: "image/png,image/jpeg,image/webp,image/gif,image/avif,audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/ogg,audio/mp4,audio/x-m4a,audio/aac,video/mp4,video/webm,video/quicktime,video/x-m4v",
 };
 
 const FORMAT_LABELS: Record<string, string> = {
-  image: "PNG, JPG, WebP, GIF, HEIC",
+  image: "PNG, JPG, WebP, GIF, AVIF",
   audio: "MP3, WAV, OGG, M4A, AAC",
-  video: "MP4, WebM",
+  video: "MP4, WebM, MOV, M4V",
   any: "Images, Audio, Video",
 };
 
@@ -41,7 +42,7 @@ function getFileIcon(accept: string) {
 function isImageUrl(url: string): boolean {
   if (!url) return false;
   const lower = url.toLowerCase();
-  return lower.match(/\.(png|jpg|jpeg|webp|gif|svg)(\?.*)?$/) !== null ||
+  return lower.match(/\.(png|jpg|jpeg|webp|gif|avif|svg)(\?.*)?$/) !== null ||
     lower.startsWith("/images/") ||
     lower.startsWith("/objects/") ||
     lower.includes("/uploads/images/") ||
@@ -52,6 +53,7 @@ export function FileUpload({
   accept,
   value,
   onChange,
+  onUploadStateChange,
   maxSize = 50,
   label,
   required,
@@ -69,6 +71,10 @@ export function FileUpload({
   useEffect(() => {
     setDisplayUrl(value || "");
   }, [value]);
+
+  useEffect(() => {
+    onUploadStateChange?.(isUploading);
+  }, [isUploading, onUploadStateChange]);
 
   const Icon = getFileIcon(accept);
 
