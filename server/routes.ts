@@ -7,7 +7,7 @@ import { registerStripeRoutes } from "./stripe-routes";
 import { z } from "zod";
 import { encrypt, decrypt } from "./crypto";
 import { db } from "./db";
-import { userActivityLog, userProgress, books, categories, journalEntries, quizResults, chapterSummaries, shorts, shortViews } from "@shared/schema";
+import { userActivityLog, userProgress, books, categories, journalEntries, quizResults, chapterSummaries, shorts, shortViews, insertShortSchema } from "@shared/schema";
 import { eq, and, sql as dsql, desc, gte, count, lte, asc } from "drizzle-orm";
 
 export async function registerRoutes(
@@ -946,6 +946,57 @@ export async function registerRoutes(
     next();
   };
 
+  const shortPayloadSchema = insertShortSchema.extend({
+    mediaType: z.enum(["text", "image", "audio", "video"]),
+    status: z.enum(["draft", "published"]).optional(),
+  });
+
+  const normalizeShortPayload = <T extends Record<string, any>>(data: T): T => {
+    const normalized = { ...data };
+    if (typeof normalized.mediaUrl === "string") {
+      normalized.mediaUrl = normalized.mediaUrl.trim() || null;
+    }
+    if (typeof normalized.thumbnailUrl === "string") {
+      normalized.thumbnailUrl = normalized.thumbnailUrl.trim() || null;
+    }
+    if (typeof normalized.backgroundGradient === "string") {
+      normalized.backgroundGradient = normalized.backgroundGradient.trim() || null;
+    }
+    if (typeof normalized.title === "string") {
+      normalized.title = normalized.title.trim();
+    }
+    if (typeof normalized.content === "string") {
+      normalized.content = normalized.content.trim();
+    }
+    return normalized;
+  };
+
+  const getPublishedMediaValidationError = (data: {
+    status?: string | null;
+    mediaType?: string | null;
+    mediaUrl?: string | null;
+    thumbnailUrl?: string | null;
+  }): string | null => {
+    const status = data.status ?? "draft";
+    if (status !== "published") return null;
+
+    const mediaType = data.mediaType;
+    const requiresMedia = mediaType === "image" || mediaType === "audio" || mediaType === "video";
+    const mediaUrl = typeof data.mediaUrl === "string" ? data.mediaUrl.trim() : "";
+    if (requiresMedia && !mediaUrl) {
+      return "Published image/audio/video shorts require an uploaded media file.";
+    }
+
+    if (mediaType === "audio" || mediaType === "video") {
+      const thumbnailUrl = typeof data.thumbnailUrl === "string" ? data.thumbnailUrl.trim() : "";
+      if (!thumbnailUrl) {
+        return "Published audio/video shorts require a thumbnail image.";
+      }
+    }
+
+    return null;
+  };
+
   app.get("/api/admin/shorts", isAuthenticated, requireAdminRole, async (req: any, res) => {
     try {
       const allShorts = await db.select().from(shorts).orderBy(desc(shorts.createdAt));
@@ -958,7 +1009,21 @@ export async function registerRoutes(
 
   app.post("/api/admin/shorts", isAuthenticated, requireAdminRole, async (req: any, res) => {
     try {
-      const result = await storage.createShort(req.body);
+      const normalized = normalizeShortPayload(req.body ?? {});
+      const parsed = shortPayloadSchema.safeParse(normalized);
+      if (!parsed.success) {
+        return res.status(400).json({
+          message: "Invalid short payload",
+          errors: parsed.error.issues.map((i) => i.message),
+        });
+      }
+
+      const mediaValidationError = getPublishedMediaValidationError(parsed.data);
+      if (mediaValidationError) {
+        return res.status(400).json({ message: mediaValidationError });
+      }
+
+      const result = await storage.createShort(parsed.data);
       res.status(201).json(result);
     } catch (error) {
       console.error("Error creating short:", error);
@@ -968,7 +1033,27 @@ export async function registerRoutes(
 
   app.put("/api/admin/shorts/:id", isAuthenticated, requireAdminRole, async (req: any, res) => {
     try {
-      const result = await storage.updateShort(req.params.id, req.body);
+      const existing = await storage.getShort(req.params.id);
+      if (!existing) {
+        return res.status(404).json({ message: "Short not found" });
+      }
+
+      const normalized = normalizeShortPayload(req.body ?? {});
+      const parsed = shortPayloadSchema.partial().safeParse(normalized);
+      if (!parsed.success) {
+        return res.status(400).json({
+          message: "Invalid short payload",
+          errors: parsed.error.issues.map((i) => i.message),
+        });
+      }
+
+      const merged = { ...existing, ...parsed.data };
+      const mediaValidationError = getPublishedMediaValidationError(merged);
+      if (mediaValidationError) {
+        return res.status(400).json({ message: mediaValidationError });
+      }
+
+      const result = await storage.updateShort(req.params.id, parsed.data);
       res.json(result);
     } catch (error) {
       console.error("Error updating short:", error);

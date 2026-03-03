@@ -118,7 +118,12 @@ function AudioShort({ short, isActive, isPaused }: { short: Short; isActive: boo
 
 function VideoShort({ short, isActive, isMuted, isPaused, onProgressUpdate }: { short: Short; isActive: boolean; isMuted: boolean; isPaused: boolean; onProgressUpdate?: (progress: number) => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [hasPlaybackError, setHasPlaybackError] = useState(false);
   const animFrameRef = useRef<number>(0);
+
+  useEffect(() => {
+    setHasPlaybackError(false);
+  }, [short.id, short.mediaUrl]);
 
   useEffect(() => {
     if (!videoRef.current) return;
@@ -164,15 +169,26 @@ function VideoShort({ short, isActive, isMuted, isPaused, onProgressUpdate }: { 
 
   return (
     <div className="absolute inset-0" data-testid="video-short-player">
-      {short.mediaUrl && (
+      {short.mediaUrl && !hasPlaybackError && (
         <video
           ref={videoRef}
           src={short.mediaUrl}
+          poster={short.thumbnailUrl || undefined}
           className="w-full h-full object-cover"
           playsInline
           loop
           muted={isMuted}
           data-video-element="true"
+          onError={() => setHasPlaybackError(true)}
+          onLoadedData={() => setHasPlaybackError(false)}
+        />
+      )}
+      {hasPlaybackError && short.thumbnailUrl && (
+        <img
+          src={short.thumbnailUrl}
+          alt={short.title}
+          className="w-full h-full object-cover"
+          loading="lazy"
         />
       )}
     </div>
@@ -262,6 +278,7 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
     }
   }, [allShorts.length, currentIndex]);
   const currentShort = allShorts[currentIndex];
+  const shouldShowThumbnailBackground = !!currentShort?.thumbnailUrl && (currentShort?.mediaType !== "image" || !currentShort?.mediaUrl);
 
   useEffect(() => {
     if (!currentShort) return;
@@ -430,7 +447,16 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
             />
           )}
 
-          {!currentShort.mediaUrl && (
+          {shouldShowThumbnailBackground && (
+            <img
+              src={currentShort.thumbnailUrl!}
+              alt={currentShort.title}
+              className="absolute inset-0 w-full h-full object-cover"
+              loading="lazy"
+            />
+          )}
+
+          {!currentShort.mediaUrl && !shouldShowThumbnailBackground && (
             <div
               className="absolute inset-0"
               style={{ background: currentShort.backgroundGradient || getDefaultGradient(currentShort) }}

@@ -73,7 +73,12 @@ export function registerObjectStorageRoutes(app: Express): void {
   app.get("/objects/:objectPath(*)", async (req, res) => {
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(req.path);
-      await objectStorageService.downloadObject(objectFile, res);
+      await objectStorageService.downloadObject(
+        objectFile,
+        res,
+        3600,
+        typeof req.headers.range === "string" ? req.headers.range : undefined,
+      );
     } catch (error) {
       console.error("Error serving object:", error);
       if (error instanceof ObjectNotFoundError) {
@@ -83,4 +88,3 @@ export function registerObjectStorageRoutes(app: Express): void {
     }
   });
 }
-
