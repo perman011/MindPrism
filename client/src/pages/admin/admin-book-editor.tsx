@@ -292,6 +292,17 @@ export default function AdminBookEditor() {
     secondaryChakra: "",
     categoryId: "",
   });
+  const [bookFormData, setBookFormData] = useState({
+    title: "",
+    author: "",
+    description: "",
+    coreThesis: "",
+    coverImage: "",
+    audioUrl: "",
+    primaryChakra: "",
+    secondaryChakra: "",
+    categoryId: "",
+  });
 
   const { data: book, isLoading: bookLoading } = useQuery<Book>({
     queryKey: ["/api/admin/books", bookId],
@@ -351,6 +362,22 @@ export default function AdminBookEditor() {
     return book;
   }, [book, hasDraft, draftVersion]);
 
+  useEffect(() => {
+    if (!isNew && editableBook) {
+      setBookFormData({
+        title: editableBook.title || "",
+        author: editableBook.author || "",
+        description: editableBook.description || "",
+        coreThesis: editableBook.coreThesis || "",
+        coverImage: editableBook.coverImage || "",
+        audioUrl: editableBook.audioUrl || "",
+        primaryChakra: editableBook.primaryChakra || "",
+        secondaryChakra: editableBook.secondaryChakra || "",
+        categoryId: editableBook.categoryId || "",
+      });
+    }
+  }, [editableBook, isNew]);
+
   const createBookMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", "/api/admin/books", {
@@ -405,6 +432,7 @@ export default function AdminBookEditor() {
       setNewBookData(prev => ({ ...prev, [field]: value }));
       return;
     }
+    setBookFormData((prev) => ({ ...prev, [field]: String(value ?? "") }));
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     setSaveStatus("saving");
     saveTimeoutRef.current = setTimeout(async () => {
@@ -471,8 +499,17 @@ export default function AdminBookEditor() {
     return <PreviewMode book={book} onClose={() => setShowPreview(false)} />;
   }
 
-  const displayTitle = isNew ? (newBookData.title || "New Book") : (editableBook?.title || book!.title);
-  const displayAuthor = isNew ? (newBookData.author || "") : (editableBook?.author || book!.author);
+  const displayTitleValue = isNew ? newBookData.title : (bookFormData.title || editableBook?.title || book!.title);
+  const displayAuthorValue = isNew ? newBookData.author : (bookFormData.author || editableBook?.author || book!.author);
+  const displayDescriptionValue = isNew ? newBookData.description : (bookFormData.description || editableBook?.description || book!.description || "");
+  const displayCoreThesisValue = isNew ? newBookData.coreThesis : (bookFormData.coreThesis || editableBook?.coreThesis || book!.coreThesis || "");
+  const displayCoverImageValue = isNew ? newBookData.coverImage : (bookFormData.coverImage || editableBook?.coverImage || book!.coverImage || "");
+  const displayAudioUrlValue = isNew ? newBookData.audioUrl : (bookFormData.audioUrl || editableBook?.audioUrl || book!.audioUrl || "");
+  const displayPrimaryChakraValue = isNew ? newBookData.primaryChakra : (bookFormData.primaryChakra || editableBook?.primaryChakra || book!.primaryChakra || "");
+  const displaySecondaryChakraValue = isNew ? newBookData.secondaryChakra : (bookFormData.secondaryChakra || editableBook?.secondaryChakra || book!.secondaryChakra || "");
+  const displayCategoryValue = isNew ? newBookData.categoryId : (bookFormData.categoryId || editableBook?.categoryId || book!.categoryId || "");
+  const displayTitle = isNew ? (newBookData.title || "New Book") : (displayTitleValue || "Untitled Book");
+  const displayAuthor = isNew ? (newBookData.author || "") : (displayAuthorValue || "");
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden" data-testid="admin-book-editor">
@@ -595,15 +632,15 @@ export default function AdminBookEditor() {
 
         <div ref={centerRef} className="flex-1 overflow-y-auto p-6 space-y-10" data-testid="block-builder">
           <BookSetupEditor
-            title={isNew ? newBookData.title : (editableBook?.title || book!.title)}
-            author={isNew ? newBookData.author : (editableBook?.author || book!.author)}
-            description={isNew ? newBookData.description : (editableBook?.description || book!.description || "")}
-            coreThesis={isNew ? newBookData.coreThesis : (editableBook?.coreThesis || book!.coreThesis || "")}
-            coverImage={isNew ? newBookData.coverImage : (editableBook?.coverImage || book!.coverImage || "")}
-            audioUrl={isNew ? newBookData.audioUrl : (editableBook?.audioUrl || book!.audioUrl || "")}
-            primaryChakra={isNew ? newBookData.primaryChakra : (editableBook?.primaryChakra || book!.primaryChakra || "")}
-            secondaryChakra={isNew ? newBookData.secondaryChakra : (editableBook?.secondaryChakra || book!.secondaryChakra || "")}
-            categoryId={isNew ? newBookData.categoryId : (editableBook?.categoryId || book!.categoryId || "")}
+            title={displayTitleValue}
+            author={displayAuthorValue}
+            description={displayDescriptionValue}
+            coreThesis={displayCoreThesisValue}
+            coverImage={displayCoverImageValue}
+            audioUrl={displayAudioUrlValue}
+            primaryChakra={displayPrimaryChakraValue}
+            secondaryChakra={displaySecondaryChakraValue}
+            categoryId={displayCategoryValue}
             onChange={handleBookFieldChange}
           />
 
@@ -624,9 +661,9 @@ export default function AdminBookEditor() {
         {!isNew && (
           <div className="w-[375px] flex-shrink-0 overflow-hidden">
             <MobilePreview
-              bookTitle={editableBook?.title || book!.title}
-              bookAuthor={editableBook?.author || book!.author}
-              coreThesis={editableBook?.coreThesis || book!.coreThesis || ""}
+              bookTitle={displayTitleValue || "Untitled Book"}
+              bookAuthor={displayAuthorValue || ""}
+              coreThesis={displayCoreThesisValue}
               activeSection={activeSection}
               sectionData={getPreviewData()}
             />
