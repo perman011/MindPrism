@@ -1,8 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
 import { SEOHead } from "@/components/SEOHead";
 import { useQuery, useMutation } from "@tanstack/react-query";
-rg -n "BookSetupEditor" client/src/pages/admin/admin-book-editor.tsx
-  import type { Book } from "@shared/schema";
+import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
+import type { Book } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
 import { hasMinRole } from "@shared/models/auth";
 import { Button } from "@/components/ui/button";
@@ -121,26 +121,9 @@ export default function AdminBooks() {
     return result;
   }, [books, searchQuery, statusFilter, sortBy, contentHealth]);
 
-  const createBookMutation = useMutation({
-    mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/admin/books", {
-        title: "Untitled Book",
-        author: "Unknown Author",
-        description: "A new book breakdown",
-        readTime: 10,
-        listenTime: 8,
-      });
-      return res.json();
-    },
-    onSuccess: (newBook: Book) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/content-health"] });
-      navigate(`/admin/books/${newBook.id}`);
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to create book", variant: "destructive" });
-    },
-  });
+  const handleCreateNewBook = () => {
+    navigate("/admin/books/new");
+  };
 
   const deleteBookMutation = useMutation({
     mutationFn: async (bookId: string) => {
@@ -245,8 +228,7 @@ export default function AdminBooks() {
           </div>
           <div className="flex items-center gap-3">
             <Button
-              onClick={() => createBookMutation.mutate()}
-              disabled={createBookMutation.isPending}
+              onClick={handleCreateNewBook}
               className="gap-2"
               data-testid="button-create-book"
             >
@@ -431,7 +413,7 @@ export default function AdminBooks() {
             <BookOpen className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
             <h2 className="text-xl font-semibold mb-2">No books yet</h2>
             <p className="text-muted-foreground mb-6">Create your first book breakdown to get started</p>
-            <Button onClick={() => createBookMutation.mutate()} className="gap-2" data-testid="button-create-first">
+            <Button onClick={handleCreateNewBook} className="gap-2" data-testid="button-create-first">
               <Plus className="w-4 h-4" />
               Create New Book Breakdown
             </Button>

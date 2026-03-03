@@ -2,8 +2,8 @@ import { SEOHead } from "@/components/SEOHead";
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
-rg -n "bookId|newBook|isNew|/new" client/src/pages/admin/admin-book-editor.tsx | head -n 50
-  sed -n '1,120p' client/src/pages/admin/admin-book-editor.tsx
+import { useRoute, Link, useLocation } from "wouter";
+import {
     Book, ChapterSummary, MentalModel, BookVersion, Short,
 } from "@shared/schema";
 import { MindTree } from "./mind-tree";
@@ -271,6 +271,8 @@ function ShortsEditor({ bookId, shorts }: { bookId: string; shorts: Short[] }) {
 export default function AdminBookEditor() {
   const [, params] = useRoute("/admin/books/:id");
   const bookId = params?.id || "";
+  const isNew = bookId === "new";
+  const [, navigate] = useLocation();
   const { toast } = useToast();
   const { resolvedTheme, setTheme } = useTheme();
   const [activeSection, setActiveSection] = useState("setup");
@@ -279,38 +281,54 @@ export default function AdminBookEditor() {
   const centerRef = useRef<HTMLDivElement>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [newBookData, setNewBookData] = useState({
+    title: "",
+    author: "",
+    description: "",
+    coreThesis: "",
+    coverImage: "",
+    audioUrl: "",
+    primaryChakra: "",
+    secondaryChakra: "",
+    categoryId: "",
+  });
+
   const { data: book, isLoading: bookLoading } = useQuery<Book>({
     queryKey: ["/api/admin/books", bookId],
     queryFn: getQueryFn({ on401: "throw" }),
-    enabled: !!bookId,
+    enabled: !!bookId && !isNew,
   });
 
   useEffect(() => {
-    document.title = book?.title ? `Edit: ${book.title} | MindPrism Admin` : "Edit Book | MindPrism Admin";
-  }, [book?.title]);
+    if (isNew) {
+      document.title = "New Book | MindPrism Admin";
+    } else {
+      document.title = book?.title ? `Edit: ${book.title} | MindPrism Admin` : "Edit Book | MindPrism Admin";
+    }
+  }, [book?.title, isNew]);
 
   const { data: contentCounts } = useQuery<any>({
     queryKey: ["/api/books", bookId, "content-counts"],
     queryFn: getQueryFn({ on401: "throw" }),
-    enabled: !!bookId,
+    enabled: !!bookId && !isNew,
   });
 
   const { data: chapters = [] } = useQuery<ChapterSummary[]>({
     queryKey: ["/api/books", bookId, "chapter-summaries"],
     queryFn: getQueryFn({ on401: "throw" }),
-    enabled: !!bookId,
+    enabled: !!bookId && !isNew,
   });
 
   const { data: mentalModels = [] } = useQuery<MentalModel[]>({
     queryKey: ["/api/books", bookId, "mental-models"],
     queryFn: getQueryFn({ on401: "throw" }),
-    enabled: !!bookId,
+    enabled: !!bookId && !isNew,
   });
 
   const { data: allShorts = [] } = useQuery<Short[]>({
     queryKey: ["/api/admin/shorts"],
     queryFn: getQueryFn({ on401: "throw" }),
-    enabled: !!bookId,
+    enabled: !!bookId && !isNew,
   });
 
   const bookShorts = useMemo(() => allShorts.filter(s => s.bookId === bookId), [allShorts, bookId]);
@@ -318,7 +336,7 @@ export default function AdminBookEditor() {
   const { data: draftVersion } = useQuery<BookVersion | null>({
     queryKey: ["/api/admin/books", bookId, "draft"],
     queryFn: getQueryFn({ on401: "returnNull" }),
-    enabled: !!bookId,
+    enabled: !!bookId && !isNew,
   });
 
   const isPublishedBook = book?.status === "published" || book?.status === "published_with_changes";
@@ -332,6 +350,35 @@ export default function AdminBookEditor() {
     }
     return book;
   }, [book, hasDraft, draftVersion]);
+
+  const createBookMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/admin/books", {
+        title: newBookData.title || "Untitled Book",
+        author: newBookData.author || "Unknown Author",
+        description: newBookData.description || "A new book breakdown",
+        coreThesis: newBookData.coreThesis || null,
+        coverImage: newBookData.coverImage || null,
+        audioUrl: newBookData.audioUrl || null,
+        primaryChakra: newBookData.primaryChakra || null,
+        secondaryChakra: newBookData.secondaryChakra || null,
+        categoryId: newBookData.categoryId || null,
+        readTime: 10,
+        listenTime: 8,
+        status: "draft",
+      });
+      return res.json();
+    },
+    onSuccess: (createdBook: Book) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/books"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/content-health"] });
+      toast({ title: "Book Created", description: `"${createdBook.title}" has been created as a draft.` });
+      navigate(`/admin/books/${createdBook.id}`);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to create book", variant: "destructive" });
+    },
+  });
 
   const updateBookMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -354,6 +401,10 @@ export default function AdminBookEditor() {
   });
 
   const handleBookFieldChange = useCallback((field: string, value: string | number | boolean) => {
+    if (isNew) {
+      setNewBookData(prev => ({ ...prev, [field]: value }));
+      return;
+    }
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     setSaveStatus("saving");
     saveTimeoutRef.current = setTimeout(async () => {
@@ -365,7 +416,7 @@ export default function AdminBookEditor() {
         setSaveStatus("error");
       }
     }, 1500);
-  }, [bookId, isPublishedBook]);
+  }, [bookId, isPublishedBook, isNew]);
 
   const handleSectionClick = (section: string) => {
     setActiveSection(section);
@@ -383,7 +434,7 @@ export default function AdminBookEditor() {
     }
   };
 
-  if (bookLoading) {
+  if (!isNew && bookLoading) {
     return (
       <div className="min-h-screen bg-background flex">
         <div className="w-[280px] border-r p-4">
@@ -399,7 +450,7 @@ export default function AdminBookEditor() {
     );
   }
 
-  if (!book) {
+  if (!isNew && !book) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -416,13 +467,16 @@ export default function AdminBookEditor() {
     );
   }
 
-  if (showPreview && book) {
+  if (!isNew && showPreview && book) {
     return <PreviewMode book={book} onClose={() => setShowPreview(false)} />;
   }
 
+  const displayTitle = isNew ? (newBookData.title || "New Book") : (editableBook?.title || book!.title);
+  const displayAuthor = isNew ? (newBookData.author || "") : (editableBook?.author || book!.author);
+
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden" data-testid="admin-book-editor">
-      <SEOHead title={`Edit - ${book.title}`} noIndex />
+      <SEOHead title={isNew ? "New Book" : `Edit - ${book!.title}`} noIndex />
       <header className="h-14 bg-background border-b border-border flex items-center px-4 gap-3 flex-shrink-0">
         <Link href="/admin">
           <Button variant="ghost" size="icon" className="h-8 w-8" data-testid="button-back-admin">
@@ -430,46 +484,65 @@ export default function AdminBookEditor() {
           </Button>
         </Link>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold truncate">{book.title}</p>
-          <p className="text-[10px] text-muted-foreground">by {book.author}</p>
+          <p className="text-sm font-semibold truncate">{displayTitle}</p>
+          {displayAuthor && <p className="text-[10px] text-muted-foreground">by {displayAuthor}</p>}
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5 text-xs h-8"
-            onClick={() => setShowPreview(true)}
-            data-testid="button-preview"
-          >
-            <Eye className="w-3.5 h-3.5" />
-            Preview
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5 text-xs h-8"
-            onClick={() => {
-              if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-              setSaveStatus("saving");
-              updateBookMutation.mutateAsync({}).then(() => {
-                setSaveStatus("saved");
-                toast({ title: "Saved", description: "All changes saved successfully" });
-                setTimeout(() => setSaveStatus("idle"), 4000);
-              }).catch(() => {
-                setSaveStatus("error");
-                toast({ title: "Error", description: "Failed to save changes", variant: "destructive" });
-              });
-            }}
-            disabled={saveStatus === "saving"}
-            data-testid="button-save-draft"
-          >
-            {saveStatus === "saving" ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Save className="w-3.5 h-3.5" />
-            )}
-            {saveStatus === "saving" ? "Saving..." : "Save Changes"}
-          </Button>
+          {!isNew && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs h-8"
+              onClick={() => setShowPreview(true)}
+              data-testid="button-preview"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              Preview
+            </Button>
+          )}
+          {isNew ? (
+            <Button
+              size="sm"
+              className="gap-1.5 text-xs h-8"
+              onClick={() => createBookMutation.mutate()}
+              disabled={createBookMutation.isPending || (!newBookData.title.trim() && !newBookData.author.trim())}
+              data-testid="button-create-book"
+            >
+              {createBookMutation.isPending ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Plus className="w-3.5 h-3.5" />
+              )}
+              {createBookMutation.isPending ? "Creating..." : "Create Book"}
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs h-8"
+              onClick={() => {
+                if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+                setSaveStatus("saving");
+                updateBookMutation.mutateAsync({}).then(() => {
+                  setSaveStatus("saved");
+                  toast({ title: "Saved", description: "All changes saved successfully" });
+                  setTimeout(() => setSaveStatus("idle"), 4000);
+                }).catch(() => {
+                  setSaveStatus("error");
+                  toast({ title: "Error", description: "Failed to save changes", variant: "destructive" });
+                });
+              }}
+              disabled={saveStatus === "saving"}
+              data-testid="button-save-draft"
+            >
+              {saveStatus === "saving" ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Save className="w-3.5 h-3.5" />
+              )}
+              {saveStatus === "saving" ? "Saving..." : "Save Changes"}
+            </Button>
+          )}
           {saveStatus === "saved" && (
             <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400" data-testid="status-saved">
               <CheckCircle2 className="w-3.5 h-3.5" />
@@ -482,19 +555,21 @@ export default function AdminBookEditor() {
               <span className="text-xs">Save failed</span>
             </div>
           )}
-          {book.status === "published_with_changes" ? (
+          {isNew ? (
+            <Badge variant="secondary" className="text-[10px]">New</Badge>
+          ) : book!.status === "published_with_changes" ? (
             <Badge className="text-[10px] bg-primary/20 text-primary border-primary/30">
               <GitBranch className="w-3 h-3 mr-1" />Draft Changes
             </Badge>
           ) : (
-            <Badge variant={book.status === "published" ? "default" : "secondary"} className="text-[10px]">
-              {book.status === "published" ? "Published" : "Draft"}
+            <Badge variant={book!.status === "published" ? "default" : "secondary"} className="text-[10px]">
+              {book!.status === "published" ? "Published" : "Draft"}
             </Badge>
           )}
         </div>
       </header>
 
-      {book.status === "published_with_changes" && (
+      {!isNew && book!.status === "published_with_changes" && (
         <div className="bg-primary/10 border-b border-primary/20 px-4 py-2.5 flex items-center gap-2" data-testid="banner-editing-published">
           <AlertCircle className="w-4 h-4 text-primary flex-shrink-0" />
           <p className="text-xs text-primary">
@@ -504,45 +579,59 @@ export default function AdminBookEditor() {
       )}
 
       <div className="flex flex-1 overflow-hidden">
-        <div className="w-[280px] flex-shrink-0 overflow-y-auto">
-          <MindTree
-            counts={contentCounts ? { ...contentCounts, shorts: bookShorts.length } : undefined}
-            activeSection={activeSection}
-            onSectionClick={handleSectionClick}
-            bookTitle={editableBook?.title || book.title}
-          />
-          <div className="p-3 border-t">
-            <PublishPanel book={book} contentCounts={contentCounts} />
+        {!isNew && (
+          <div className="w-[280px] flex-shrink-0 overflow-y-auto">
+            <MindTree
+              counts={contentCounts ? { ...contentCounts, shorts: bookShorts.length } : undefined}
+              activeSection={activeSection}
+              onSectionClick={handleSectionClick}
+              bookTitle={displayTitle}
+            />
+            <div className="p-3 border-t">
+              <PublishPanel book={book!} contentCounts={contentCounts} />
+            </div>
           </div>
-        </div>
+        )}
 
         <div ref={centerRef} className="flex-1 overflow-y-auto p-6 space-y-10" data-testid="block-builder">
           <BookSetupEditor
-            title={editableBook?.title || book.title}
-            author={editableBook?.author || book.author}
-            description={editableBook?.description || book.description || ""}
-            coreThesis={editableBook?.coreThesis || book.coreThesis || ""}
-            coverImage={editableBook?.coverImage || book.coverImage || ""}
-            audioUrl={editableBook?.audioUrl || book.audioUrl || ""}
-            primaryChakra={editableBook?.primaryChakra || book.primaryChakra || ""}
-            secondaryChakra={editableBook?.secondaryChakra || book.secondaryChakra || ""}
-            categoryId={editableBook?.categoryId || book.categoryId || ""}
+            title={isNew ? newBookData.title : (editableBook?.title || book!.title)}
+            author={isNew ? newBookData.author : (editableBook?.author || book!.author)}
+            description={isNew ? newBookData.description : (editableBook?.description || book!.description || "")}
+            coreThesis={isNew ? newBookData.coreThesis : (editableBook?.coreThesis || book!.coreThesis || "")}
+            coverImage={isNew ? newBookData.coverImage : (editableBook?.coverImage || book!.coverImage || "")}
+            audioUrl={isNew ? newBookData.audioUrl : (editableBook?.audioUrl || book!.audioUrl || "")}
+            primaryChakra={isNew ? newBookData.primaryChakra : (editableBook?.primaryChakra || book!.primaryChakra || "")}
+            secondaryChakra={isNew ? newBookData.secondaryChakra : (editableBook?.secondaryChakra || book!.secondaryChakra || "")}
+            categoryId={isNew ? newBookData.categoryId : (editableBook?.categoryId || book!.categoryId || "")}
             onChange={handleBookFieldChange}
           />
 
-          <ChapterEditor bookId={bookId} chapters={chapters} />
-          <MentalModelEditor bookId={bookId} models={mentalModels} />
+          {isNew ? (
+            <Card className="p-8 text-center border-dashed">
+              <AlertCircle className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+              <p className="text-sm font-medium mb-1">Save your book first</p>
+              <p className="text-xs text-muted-foreground">Fill in the book details above and click "Create Book" to add chapters, mental models, and shorts.</p>
+            </Card>
+          ) : (
+            <>
+              <ChapterEditor bookId={bookId} chapters={chapters} />
+              <MentalModelEditor bookId={bookId} models={mentalModels} />
+            </>
+          )}
         </div>
 
-        <div className="w-[375px] flex-shrink-0 overflow-hidden">
-          <MobilePreview
-            bookTitle={editableBook?.title || book.title}
-            bookAuthor={editableBook?.author || book.author}
-            coreThesis={editableBook?.coreThesis || book.coreThesis || ""}
-            activeSection={activeSection}
-            sectionData={getPreviewData()}
-          />
-        </div>
+        {!isNew && (
+          <div className="w-[375px] flex-shrink-0 overflow-hidden">
+            <MobilePreview
+              bookTitle={editableBook?.title || book!.title}
+              bookAuthor={editableBook?.author || book!.author}
+              coreThesis={editableBook?.coreThesis || book!.coreThesis || ""}
+              activeSection={activeSection}
+              sectionData={getPreviewData()}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
