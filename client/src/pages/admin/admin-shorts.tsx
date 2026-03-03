@@ -27,6 +27,13 @@ function getDisplayMediaType(short: { mediaType: string; mediaUrl?: string | nul
   return short.mediaType;
 }
 
+function isLikelyMediaUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  const trimmed = url.trim();
+  if (!trimmed) return false;
+  return /^(https?:\/\/|\/|blob:|data:)/.test(trimmed);
+}
+
 export default function AdminShorts() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -168,8 +175,15 @@ export default function AdminShorts() {
                 <Card key={short.id} className="p-4 hover:shadow-lg transition-shadow" data-testid={`card-short-${short.id}`}>
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-muted/20">
-                      {short.thumbnailUrl ? (
-                        <img src={short.thumbnailUrl} alt={short.title} className="w-full h-full object-cover" />
+                      {isLikelyMediaUrl(short.thumbnailUrl) ? (
+                        <img
+                          src={short.thumbnailUrl!.trim()}
+                          alt={short.title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).style.display = "none";
+                          }}
+                        />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center" style={{ background: short.backgroundGradient || "linear-gradient(135deg, #34153930, #34153910)" }}>
                           <MediaIcon className="w-6 h-6 text-muted-foreground/50" />
