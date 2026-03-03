@@ -1,0 +1,4 @@
+interface:
+  display_name: "QA E2E"
+  short_description: "End-to-end QA strategy, regressions, and release gates."
+  default_prompt: "Create and execute an end-to-end QA plan with regression coverage and release gate decisions."

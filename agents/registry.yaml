@@ -1,0 +1,125 @@
+version: 1
+updated: 2026-03-03
+
+orchestrator:
+  name: codex-orchestrator
+  responsibility: Owns planning, routing, conflict resolution, and merge order.
+  coordination_rules:
+    - Every agent writes artifacts only in its assigned paths.
+    - Handoffs must include inputs used, outputs produced, and open risks.
+    - Breaking interface changes require schema update + test update in same handoff.
+
+agents:
+  - id: A1
+    name: notebook-architect
+    mission: Maintain notebook UX and execution flow.
+    skills:
+      - jupyter-notebook
+    owns:
+      - output/jupyter-notebook/task-notebook.ipynb
+    input_contract:
+      - module API from task_analysis/core.py
+    output_contract:
+      - notebook cells execute top-to-bottom
+      - summary and artifact cells remain deterministic
+
+  - id: A2
+    name: validation-engineer
+    mission: Enforce input schema and normalization rules.
+    skills:
+      - none
+    owns:
+      - task_analysis/core.py
+    input_contract:
+      - raw_items schema v1
+    output_contract:
+      - actionable ValidationError messages
+      - coercion policy behavior covered by tests
+
+  - id: A3
+    name: analytics-engineer
+    mission: Maintain metric correctness and delta logic.
+    skills:
+      - none
+    owns:
+      - task_analysis/core.py
+      - output/artifacts/summary.json (contract)
+    input_contract:
+      - list[TaskItem]
+    output_contract:
+      - summary schema v1 fields preserved
+      - largest_positive_delta_* behavior deterministic
+
+  - id: A4
+    name: qa-test-engineer
+    mission: Build and maintain regression/unit test coverage.
+    skills:
+      - none
+    owns:
+      - tests/test_core.py
+      - scripts/notebook_smoke_test.py
+    input_contract:
+      - core module public API
+      - notebook deterministic baseline
+    output_contract:
+      - failing tests for regressions
+      - green suite for accepted changes
+
+  - id: A5
+    name: ci-release-engineer
+    mission: Keep CI quality gates reliable and fast.
+    skills:
+      - none
+    owns:
+      - .github/workflows/quality.yml
+      - requirements.txt
+      - pyproject.toml
+      - .python-version
+    input_contract:
+      - reproducible python runtime
+    output_contract:
+      - PR gate runs unit + notebook smoke tests
+
+  - id: A6
+    name: docs-runbook-engineer
+    mission: Keep operational docs and troubleshooting current.
+    skills:
+      - doc
+    owns:
+      - README.md
+      - RUNBOOK.md
+      - TICKETS.md
+    input_contract:
+      - implemented behavior from code/tests
+    output_contract:
+      - setup/run/incident docs match actual system behavior
+
+  - id: A7
+    name: interface-audit-engineer
+    mission: Verify public contract drift and compatibility.
+    skills:
+      - openai-docs
+      - pdf
+    owns:
+      - contract notes in TICKETS.md
+      - optional generated compliance reports under output/
+    input_contract:
+      - summary schema v1
+      - input schema v1
+    output_contract:
+      - documented contract diffs before/after changes
+
+  - id: A8
+    name: collaboration-admin
+    mission: Maintain issue/PR hygiene templates and process guardrails.
+    skills:
+      - skill-creator
+      - skill-installer
+    owns:
+      - .github/ISSUE_TEMPLATE/*
+      - .github/pull_request_template.md
+      - agents/*
+    input_contract:
+      - team workflow requirements
+    output_contract:
+      - actionable issue template + PR checklist quality
