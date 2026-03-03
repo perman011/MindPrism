@@ -951,14 +951,19 @@ export async function registerRoutes(
     status: z.enum(["draft", "published"]).optional(),
   });
 
+  const normalizeStoredMediaPath = (value: unknown): unknown => {
+    if (typeof value !== "string") return value;
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    if (trimmed.startsWith("/uploads/")) return `/objects${trimmed}`;
+    if (trimmed.startsWith("uploads/")) return `/objects/${trimmed}`;
+    return trimmed;
+  };
+
   const normalizeShortPayload = <T extends Record<string, any>>(data: T): T => {
     const normalized = { ...data };
-    if (typeof normalized.mediaUrl === "string") {
-      normalized.mediaUrl = normalized.mediaUrl.trim() || null;
-    }
-    if (typeof normalized.thumbnailUrl === "string") {
-      normalized.thumbnailUrl = normalized.thumbnailUrl.trim() || null;
-    }
+    normalized.mediaUrl = normalizeStoredMediaPath(normalized.mediaUrl);
+    normalized.thumbnailUrl = normalizeStoredMediaPath(normalized.thumbnailUrl);
     if (typeof normalized.backgroundGradient === "string") {
       normalized.backgroundGradient = normalized.backgroundGradient.trim() || null;
     }

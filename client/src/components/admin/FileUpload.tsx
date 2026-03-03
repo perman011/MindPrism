@@ -49,6 +49,14 @@ function isImageUrl(url: string): boolean {
     lower.includes("/objects/uploads/");
 }
 
+function normalizeMediaUrl(url: string): string {
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+  if (trimmed.startsWith("/uploads/")) return `/objects${trimmed}`;
+  if (trimmed.startsWith("uploads/")) return `/objects/${trimmed}`;
+  return trimmed;
+}
+
 export function FileUpload({
   accept,
   value,
@@ -69,7 +77,7 @@ export function FileUpload({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setDisplayUrl(value || "");
+    setDisplayUrl(normalizeMediaUrl(value || ""));
   }, [value]);
 
   useEffect(() => {
@@ -118,10 +126,11 @@ export function FileUpload({
       }
 
       const data = await response.json();
+      const normalizedUrl = normalizeMediaUrl(data.url || "");
       setUploadProgress(100);
       setTimeout(() => {
-        setDisplayUrl(data.url);
-        onChange(data.url);
+        setDisplayUrl(normalizedUrl);
+        onChange(normalizedUrl);
         setIsUploading(false);
         setUploadProgress(0);
       }, 300);
@@ -157,7 +166,7 @@ export function FileUpload({
 
   const handleUrlSubmit = useCallback(() => {
     if (urlInputValue.trim()) {
-      const url = urlInputValue.trim();
+      const url = normalizeMediaUrl(urlInputValue);
       setDisplayUrl(url);
       onChange(url);
       setUrlInputValue("");
