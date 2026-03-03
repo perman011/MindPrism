@@ -27,11 +27,25 @@ function getDisplayMediaType(short: { mediaType: string; mediaUrl?: string | nul
   return short.mediaType;
 }
 
-function isLikelyMediaUrl(url: string | null | undefined): boolean {
-  if (!url) return false;
+function resolveMediaUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
   const trimmed = url.trim();
-  if (!trimmed) return false;
-  return /^(https?:\/\/|\/|blob:|data:)/.test(trimmed);
+  if (!trimmed) return null;
+
+  if (trimmed.startsWith("/uploads/")) {
+    return `/objects${trimmed}`;
+  }
+  if (trimmed.startsWith("uploads/")) {
+    return `/objects/${trimmed}`;
+  }
+  if (trimmed.startsWith("/objects/uploads/")) {
+    return trimmed;
+  }
+  if (/^(https?:\/\/|\/|blob:|data:)/.test(trimmed)) {
+    return trimmed;
+  }
+
+  return null;
 }
 
 export default function AdminShorts() {
@@ -171,13 +185,14 @@ export default function AdminShorts() {
           <div className="space-y-3">
             {filtered.map((short) => {
               const MediaIcon = MEDIA_ICONS[getDisplayMediaType(short)] || Film;
+              const thumbnailUrl = resolveMediaUrl(short.thumbnailUrl);
               return (
                 <Card key={short.id} className="p-4 hover:shadow-lg transition-shadow" data-testid={`card-short-${short.id}`}>
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-muted/20">
-                      {isLikelyMediaUrl(short.thumbnailUrl) ? (
+                      {thumbnailUrl ? (
                         <img
-                          src={short.thumbnailUrl!.trim()}
+                          src={thumbnailUrl}
                           alt={short.title}
                           className="w-full h-full object-cover"
                           onError={(e) => {
