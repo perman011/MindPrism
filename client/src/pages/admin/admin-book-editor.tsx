@@ -2,9 +2,9 @@ import { SEOHead } from "@/components/SEOHead";
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
-import { useRoute, Link } from "wouter";
-import type {
-  Book, ChapterSummary, MentalModel, BookVersion, Short,
+rg -n "bookId|newBook|isNew|/new" client/src/pages/admin/admin-book-editor.tsx | head -n 50
+  sed -n '1,120p' client/src/pages/admin/admin-book-editor.tsx
+    Book, ChapterSummary, MentalModel, BookVersion, Short,
 } from "@shared/schema";
 import { MindTree } from "./mind-tree";
 import { MobilePreview } from "./mobile-preview";

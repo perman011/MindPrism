@@ -1,8 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
 import { SEOHead } from "@/components/SEOHead";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
-import type { Book } from "@shared/schema";
+rg -n "BookSetupEditor" client/src/pages/admin/admin-book-editor.tsx
+  import type { Book } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
 import { hasMinRole } from "@shared/models/auth";
 import { Button } from "@/components/ui/button";
