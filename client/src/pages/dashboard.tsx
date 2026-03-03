@@ -8,7 +8,7 @@ import { CHAKRA_MAP } from "@shared/schema";
 import { BookCard } from "@/components/book-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Flame, ArrowRight, Sparkles, BookOpen, ChevronRight, ChevronLeft, X, Film, Headphones, Play, Trophy, Star, Shield, Zap, Award } from "lucide-react";
-import logoImg from "@assets/mindprism-logo-transparent.png";
+import logoImg from "@assets/77531E8D-B1EB-4D23-A577-C8EC54A4B63C_1772158344341.png";
 import { Link, useLocation } from "wouter";
 import type { Short } from "@shared/schema";
 import { ShortsPlayer, ShortCard } from "@/components/shorts-player";
@@ -31,11 +31,24 @@ const STREAK_MILESTONES = [
   { days: 100, label: "100 Days", icon: Trophy, color: "#9B59B6" },
 ];
 
-function isLikelyMediaUrl(url: string | null | undefined): boolean {
-  if (!url) return false;
+function resolveMediaUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
   const trimmed = url.trim();
-  if (!trimmed) return false;
-  return /^(https?:\/\/|\/|blob:|data:)/.test(trimmed);
+  if (!trimmed) return null;
+
+  if (trimmed.startsWith("/uploads/")) {
+    return `/objects${trimmed}`;
+  }
+  if (trimmed.startsWith("uploads/")) {
+    return `/objects/${trimmed}`;
+  }
+  if (trimmed.startsWith("/objects/uploads/")) {
+    return trimmed;
+  }
+  if (/^(https?:\/\/|\/|blob:|data:)/.test(trimmed)) {
+    return trimmed;
+  }
+  return null;
 }
 
 function CelebrationModal({ milestone, open, onClose }: { milestone: typeof STREAK_MILESTONES[0] | null; open: boolean; onClose: () => void }) {
@@ -406,8 +419,8 @@ export default function Dashboard() {
                       }}
                     />
                     {(() => {
-                      const thumbUrl = isLikelyMediaUrl(short.thumbnailUrl) ? short.thumbnailUrl!.trim() : null;
-                      const imageMediaUrl = short.mediaType === "image" && isLikelyMediaUrl(short.mediaUrl) ? short.mediaUrl!.trim() : null;
+                      const thumbUrl = resolveMediaUrl(short.thumbnailUrl);
+                      const imageMediaUrl = short.mediaType === "image" ? resolveMediaUrl(short.mediaUrl) : null;
                       const previewUrl = thumbUrl || imageMediaUrl;
                       if (!previewUrl) return null;
                       return (
@@ -503,7 +516,7 @@ export default function Dashboard() {
                   {chakraFilteredBooks.map((book) => (
                     <Link key={book.id} href={`/book/${book.id}`}>
                       {(() => {
-                        const coverUrl = isLikelyMediaUrl(book.coverImage) ? book.coverImage!.trim() : null;
+                        const coverUrl = resolveMediaUrl(book.coverImage);
                         return (
                       <div
                         className="flex-shrink-0 w-32 cursor-pointer active:scale-95 transition-transform"
@@ -601,42 +614,48 @@ export default function Dashboard() {
             </Link>
           </div>
           <div className="px-5 space-y-2">
-            {allBooks.filter(b => b.audioUrl && b.audioUrl !== "placeholder" && !b.audioUrl.includes("placeholder")).slice(0, 3).map((book) => (
-              <button
-                key={book.id}
-                onClick={() => play(book)}
-                className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-card-border hover-elevate transition-all text-left"
-                data-testid={`continue-listening-${book.id}`}
-              >
-                <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                    <Headphones className="w-5 h-5 text-primary/30" />
-                  </div>
-                  {isLikelyMediaUrl(book.coverImage) && (
-                    <img
-                      src={book.coverImage!.trim()}
-                      alt={book.title}
-                      className="relative z-10 w-full h-full object-cover"
-                      loading="lazy"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).style.display = "none";
-                      }}
-                    />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-sm truncate">{book.title}</h3>
-                  <p className="text-[10px] text-muted-foreground">
-                    {book.audioDuration
-                      ? `${Math.floor(book.audioDuration / 60)}:${String(book.audioDuration % 60).padStart(2, '0')}`
-                      : `${book.listenTime} min`}
-                  </p>
-                </div>
-                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Play className="w-4 h-4 text-primary ml-0.5" />
-                </div>
-              </button>
-            ))}
+            {allBooks
+              .filter(b => b.audioUrl && b.audioUrl !== "placeholder" && !b.audioUrl.includes("placeholder"))
+              .slice(0, 3)
+              .map((book) => {
+                const coverUrl = resolveMediaUrl(book.coverImage);
+                return (
+                  <button
+                    key={book.id}
+                    onClick={() => play(book)}
+                    className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-card-border hover-elevate transition-all text-left"
+                    data-testid={`continue-listening-${book.id}`}
+                  >
+                    <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                        <Headphones className="w-5 h-5 text-primary/30" />
+                      </div>
+                      {coverUrl && (
+                        <img
+                          src={coverUrl}
+                          alt={book.title}
+                          className="relative z-10 w-full h-full object-cover"
+                          loading="lazy"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).style.display = "none";
+                          }}
+                        />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm truncate">{book.title}</h3>
+                      <p className="text-[10px] text-muted-foreground">
+                        {book.audioDuration
+                          ? `${Math.floor(book.audioDuration / 60)}:${String(book.audioDuration % 60).padStart(2, '0')}`
+                          : `${book.listenTime} min`}
+                      </p>
+                    </div>
+                    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Play className="w-4 h-4 text-primary ml-0.5" />
+                    </div>
+                  </button>
+                );
+              })}
           </div>
         </section>
       )}
@@ -646,7 +665,7 @@ export default function Dashboard() {
           {inProgressBooks.map((prog) => {
             const book = allBooks.find(b => b.id === prog.bookId);
             if (!book) return null;
-            const coverUrl = isLikelyMediaUrl(book.coverImage) ? book.coverImage!.trim() : null;
+            const coverUrl = resolveMediaUrl(book.coverImage);
             const pct = prog.totalCards ? Math.round((prog.currentCardIndex! / prog.totalCards) * 100) : 0;
             return (
               <Link key={prog.id} href={`/book/${book.id}/journey`}>
