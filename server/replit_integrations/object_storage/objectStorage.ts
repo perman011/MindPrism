@@ -95,23 +95,76 @@ export class ObjectStorageService {
   }
 
   // Downloads an object to the response.
-  async downloadObject(file: File, res: Response, cacheTtlSec: number = 3600) {
+  async downloadObject(
+    file: File,
+    res: Response,
+    cacheTtlSec: number = 3600,
+    rangeHeader?: string,
+  ) {
     try {
       // Get file metadata
       const [metadata] = await file.getMetadata();
+      const contentType = metadata.contentType || "application/octet-stream";
+      const totalSize = Number(metadata.size || 0);
       // Get the ACL policy for the object.
       const aclPolicy = await getObjectAclPolicy(file);
       const isPublic = aclPolicy?.visibility === "public";
       // Set appropriate headers
       res.set({
-        "Content-Type": metadata.contentType || "application/octet-stream",
-        "Content-Length": metadata.size,
+        "Content-Type": contentType,
         "Cache-Control": `${
           isPublic ? "public" : "private"
         }, max-age=${cacheTtlSec}`,
+        "Accept-Ranges": "bytes",
       });
 
-      // Stream the file to the response
+      // Support byte-range requests for browser media playback/seeking.
+      const rangeMatch = rangeHeader?.match(/bytes=(\d*)-(\d*)/);
+      if (rangeMatch && totalSize > 0) {
+        const start = rangeMatch[1] ? Number.parseInt(rangeMatch[1], 10) : 0;
+        const end = rangeMatch[2] ? Number.parseInt(rangeMatch[2], 10) : totalSize - 1;
+
+        if (
+          Number.isNaN(start) ||
+          Number.isNaN(end) ||
+          start < 0 ||
+          end < 0 ||
+          start > end ||
+          start >= totalSize
+        ) {
+          res.status(416).set({
+            "Content-Range": `bytes */${totalSize}`,
+          });
+          res.end();
+          return;
+        }
+
+        const boundedEnd = Math.min(end, totalSize - 1);
+        const chunkSize = boundedEnd - start + 1;
+
+        res.status(206).set({
+          "Content-Range": `bytes ${start}-${boundedEnd}/${totalSize}`,
+          "Content-Length": String(chunkSize),
+        });
+
+        const stream = file.createReadStream({ start, end: boundedEnd });
+
+        stream.on("error", (err) => {
+          console.error("Stream error:", err);
+          if (!res.headersSent) {
+            res.status(500).json({ error: "Error streaming file" });
+          }
+        });
+
+        stream.pipe(res);
+        return;
+      }
+
+      if (totalSize > 0) {
+        res.set("Content-Length", String(totalSize));
+      }
+
+      // Stream the full file response.
       const stream = file.createReadStream();
 
       stream.on("error", (err) => {
@@ -297,4 +350,3 @@ async function signObjectURL({
   const { signed_url: signedURL } = await response.json();
   return signedURL;
 }
-

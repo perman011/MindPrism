@@ -27,6 +27,8 @@ export default function AdminShortEditor() {
   const [mediaType, setMediaType] = useState("image");
   const [mediaUrl, setMediaUrl] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [isMediaUploading, setIsMediaUploading] = useState(false);
+  const [isThumbnailUploading, setIsThumbnailUploading] = useState(false);
   const [backgroundGradient, setBackgroundGradient] = useState("");
   const [duration, setDuration] = useState<number | undefined>();
   const [status, setStatus] = useState("draft");
@@ -85,8 +87,9 @@ export default function AdminShortEditor() {
       toast({ title: "Saved", description: isNew ? "Short created" : "Short updated" });
       navigate("/admin/shorts");
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to save short", variant: "destructive" });
+    onError: (error) => {
+      const message = error instanceof Error ? error.message.replace(/^\d+:\s*/, "") : "Failed to save short";
+      toast({ title: "Error", description: message, variant: "destructive" });
     },
   });
 
@@ -113,8 +116,19 @@ export default function AdminShortEditor() {
     { name: "Cosmic Lavender", value: "linear-gradient(135deg, #2E1065 0%, #581C87 50%, #0F0F1A 100%)" },
   ];
 
-  const canSave = bookId && title.trim() && content.trim() && mediaType;
+  const hasMedia = mediaUrl.trim().length > 0;
+  const hasThumbnail = thumbnailUrl.trim().length > 0;
   const needsThumbnail = mediaType === "audio" || mediaType === "video";
+  const canSave = !!(
+    bookId &&
+    title.trim() &&
+    content.trim() &&
+    mediaType &&
+    hasMedia &&
+    (!needsThumbnail || hasThumbnail) &&
+    !isMediaUploading &&
+    !isThumbnailUploading
+  );
 
   return (
     <div className="min-h-screen bg-background p-8" data-testid="admin-short-editor">
@@ -274,11 +288,15 @@ export default function AdminShortEditor() {
                   accept={mediaType as "image" | "audio" | "video"}
                   value={mediaUrl}
                   onChange={(url) => setMediaUrl(url)}
+                  onUploadStateChange={setIsMediaUploading}
                   maxSize={mediaType === "video" ? 50 : mediaType === "audio" ? 50 : 5}
                   label={`${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} File`}
                   required
                   placeholder={`Drop ${mediaType} file here or click to browse`}
                 />
+                {!hasMedia && (
+                  <p className="text-xs text-purple-700 mt-1">Required before saving/publishing</p>
+                )}
               </div>
 
               <div>
@@ -286,6 +304,7 @@ export default function AdminShortEditor() {
                   accept="image"
                   value={thumbnailUrl}
                   onChange={(url) => setThumbnailUrl(url)}
+                  onUploadStateChange={setIsThumbnailUploading}
                   maxSize={5}
                   label={`Thumbnail Image${needsThumbnail ? " *" : ""}`}
                   required={needsThumbnail}

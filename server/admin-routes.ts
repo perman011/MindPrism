@@ -68,9 +68,9 @@ function getUploadFolder(mimetype: string): string {
 }
 
 const allowedMimeTypes: Record<string, boolean> = {
-  "image/png": true, "image/jpeg": true, "image/jpg": true, "image/webp": true, "image/gif": true, "image/heic": true, "image/heif": true,
+  "image/png": true, "image/jpeg": true, "image/jpg": true, "image/webp": true, "image/gif": true, "image/avif": true,
   "audio/mpeg": true, "audio/mp3": true, "audio/wav": true, "audio/x-wav": true, "audio/ogg": true, "audio/mp4": true, "audio/x-m4a": true, "audio/aac": true,
-  "video/mp4": true, "video/webm": true,
+  "video/mp4": true, "video/webm": true, "video/quicktime": true, "video/x-m4v": true,
 };
 
 const uploadFileFilter = (_req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
@@ -97,7 +97,12 @@ export function registerAdminRoutes(app: Express) {
         return res.status(403).json({ error: "Access denied" });
       }
       const objectFile = await objectStorageService.getObjectEntityFile(`/objects/${objectPath}`);
-      await objectStorageService.downloadObject(objectFile, res, 31536000);
+      await objectStorageService.downloadObject(
+        objectFile,
+        res,
+        31536000,
+        typeof req.headers.range === "string" ? req.headers.range : undefined,
+      );
     } catch (error: any) {
       if (error?.name === "ObjectNotFoundError") {
         return res.status(404).json({ error: "File not found" });
