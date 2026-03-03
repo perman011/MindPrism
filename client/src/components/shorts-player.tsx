@@ -5,6 +5,13 @@ import type { Short } from "@shared/schema";
 import { X, Play, Pause, Volume2, VolumeX, Image, Headphones, Video, Share2 } from "lucide-react";
 import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 
+function isLikelyMediaUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  const trimmed = url.trim();
+  if (!trimmed) return false;
+  return /^(https?:\/\/|\/|blob:|data:)/.test(trimmed);
+}
+
 function escapeHtml(str: string): string {
   return str
     .replace(/&/g, '&amp;')
@@ -25,6 +32,7 @@ function renderMarkdown(text: string): string {
 
 function AudioShort({ short, isActive, isPaused }: { short: Short; isActive: boolean; isPaused: boolean }) {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const audioUrl = isLikelyMediaUrl(short.mediaUrl) ? short.mediaUrl!.trim() : null;
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -78,7 +86,7 @@ function AudioShort({ short, isActive, isPaused }: { short: Short; isActive: boo
 
   return (
     <div className="flex flex-col items-center justify-center gap-8 px-8" data-testid="audio-short-player">
-      {short.mediaUrl && <audio ref={audioRef} src={short.mediaUrl} preload="metadata" />}
+      {audioUrl && <audio ref={audioRef} src={audioUrl} preload="metadata" />}
       <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary/40">
         <Volume2 className="w-10 h-10 text-primary" />
       </div>
@@ -118,12 +126,14 @@ function AudioShort({ short, isActive, isPaused }: { short: Short; isActive: boo
 
 function VideoShort({ short, isActive, isMuted, isPaused, onProgressUpdate }: { short: Short; isActive: boolean; isMuted: boolean; isPaused: boolean; onProgressUpdate?: (progress: number) => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const mediaUrl = isLikelyMediaUrl(short.mediaUrl) ? short.mediaUrl!.trim() : null;
+  const thumbnailUrl = isLikelyMediaUrl(short.thumbnailUrl) ? short.thumbnailUrl!.trim() : null;
   const [hasPlaybackError, setHasPlaybackError] = useState(false);
   const animFrameRef = useRef<number>(0);
 
   useEffect(() => {
     setHasPlaybackError(false);
-  }, [short.id, short.mediaUrl]);
+  }, [short.id, mediaUrl]);
 
   useEffect(() => {
     if (!videoRef.current) return;
@@ -169,11 +179,11 @@ function VideoShort({ short, isActive, isMuted, isPaused, onProgressUpdate }: { 
 
   return (
     <div className="absolute inset-0" data-testid="video-short-player">
-      {short.mediaUrl && !hasPlaybackError && (
+      {mediaUrl && !hasPlaybackError && (
         <video
           ref={videoRef}
-          src={short.mediaUrl}
-          poster={short.thumbnailUrl || undefined}
+          src={mediaUrl!}
+          poster={thumbnailUrl || undefined}
           className="w-full h-full object-cover"
           playsInline
           loop
@@ -183,9 +193,9 @@ function VideoShort({ short, isActive, isMuted, isPaused, onProgressUpdate }: { 
           onLoadedData={() => setHasPlaybackError(false)}
         />
       )}
-      {hasPlaybackError && short.thumbnailUrl && (
+      {hasPlaybackError && thumbnailUrl && (
         <img
-          src={short.thumbnailUrl}
+          src={thumbnailUrl}
           alt={short.title}
           className="w-full h-full object-cover"
           loading="lazy"
@@ -278,7 +288,9 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
     }
   }, [allShorts.length, currentIndex]);
   const currentShort = allShorts[currentIndex];
-  const shouldShowThumbnailBackground = !!currentShort?.thumbnailUrl && (currentShort?.mediaType !== "image" || !currentShort?.mediaUrl);
+  const currentMediaUrl = isLikelyMediaUrl(currentShort?.mediaUrl) ? currentShort!.mediaUrl!.trim() : null;
+  const currentThumbnailUrl = isLikelyMediaUrl(currentShort?.thumbnailUrl) ? currentShort!.thumbnailUrl!.trim() : null;
+  const shouldShowThumbnailBackground = !!currentThumbnailUrl && (currentShort?.mediaType !== "image" || !currentMediaUrl);
 
   useEffect(() => {
     if (!currentShort) return;
@@ -438,9 +450,9 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
             <VideoShort short={currentShort} isActive isMuted={isMuted} isPaused={isPaused} onProgressUpdate={setVideoProgress} />
           )}
 
-          {currentShort.mediaType === "image" && currentShort.mediaUrl && (
+          {currentShort.mediaType === "image" && currentMediaUrl && (
             <img
-              src={currentShort.mediaUrl}
+              src={currentMediaUrl}
               alt={currentShort.title}
               className="absolute inset-0 w-full h-full object-cover"
               loading="lazy"
@@ -449,24 +461,24 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
 
           {shouldShowThumbnailBackground && (
             <img
-              src={currentShort.thumbnailUrl!}
+              src={currentThumbnailUrl!}
               alt={currentShort.title}
               className="absolute inset-0 w-full h-full object-cover"
               loading="lazy"
             />
           )}
 
-          {!currentShort.mediaUrl && !shouldShowThumbnailBackground && (
+          {!currentMediaUrl && !shouldShowThumbnailBackground && (
             <div
               className="absolute inset-0"
               style={{ background: currentShort.backgroundGradient || getDefaultGradient(currentShort) }}
             />
           )}
 
-          {currentShort.mediaUrl && (
+          {currentMediaUrl && (
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30" />
           )}
-          {!currentShort.mediaUrl && (
+          {!currentMediaUrl && (
             <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/15" />
           )}
 
@@ -488,7 +500,7 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
             )}
           </div>
 
-          {!currentShort.mediaUrl ? (
+          {!currentMediaUrl ? (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center px-8 pointer-events-none">
               {currentShort.mediaType === "audio" ? (
                 <div className="mb-6 w-full pointer-events-auto">
@@ -556,6 +568,12 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
 
 export function ShortCard({ short, onClick, fluid }: { short: Short & { bookTitle?: string }; onClick: () => void; fluid?: boolean }) {
   const MediaIcon = short.mediaType === "audio" ? Headphones : short.mediaType === "video" ? Video : Image;
+  const thumbnailUrl = isLikelyMediaUrl(short.thumbnailUrl) ? short.thumbnailUrl!.trim() : null;
+  const [thumbLoadError, setThumbLoadError] = useState(false);
+
+  useEffect(() => {
+    setThumbLoadError(false);
+  }, [thumbnailUrl]);
 
   return (
     <div
@@ -564,8 +582,13 @@ export function ShortCard({ short, onClick, fluid }: { short: Short & { bookTitl
       data-testid={`card-short-${short.id}`}
     >
       <div className={`relative rounded-xl overflow-hidden ${fluid ? "w-full aspect-[2/3]" : "w-[120px] h-[180px]"}`}>
-        {short.thumbnailUrl ? (
-          <img src={short.thumbnailUrl} alt={short.title} className="w-full h-full object-cover" />
+        {thumbnailUrl && !thumbLoadError ? (
+          <img
+            src={thumbnailUrl}
+            alt={short.title}
+            className="w-full h-full object-cover"
+            onError={() => setThumbLoadError(true)}
+          />
         ) : short.backgroundGradient ? (
           <div className="w-full h-full" style={{ background: short.backgroundGradient }} />
         ) : (

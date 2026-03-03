@@ -8,7 +8,7 @@ import { CHAKRA_MAP } from "@shared/schema";
 import { BookCard } from "@/components/book-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Flame, ArrowRight, Sparkles, BookOpen, ChevronRight, ChevronLeft, X, Film, Headphones, Play, Trophy, Star, Shield, Zap, Award } from "lucide-react";
-import logoImg from "@assets/87E16C70-F9FB-4CDA-B4BB-FDA7C2FF841A_1772414927855.png";
+import logoImg from "@assets/mindprism-logo-transparent.png";
 import { Link, useLocation } from "wouter";
 import type { Short } from "@shared/schema";
 import { ShortsPlayer, ShortCard } from "@/components/shorts-player";
@@ -30,6 +30,13 @@ const STREAK_MILESTONES = [
   { days: 60, label: "2 Months", icon: Zap, color: "#3D8B8B" },
   { days: 100, label: "100 Days", icon: Trophy, color: "#9B59B6" },
 ];
+
+function isLikelyMediaUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  const trimmed = url.trim();
+  if (!trimmed) return false;
+  return /^(https?:\/\/|\/|blob:|data:)/.test(trimmed);
+}
 
 function CelebrationModal({ milestone, open, onClose }: { milestone: typeof STREAK_MILESTONES[0] | null; open: boolean; onClose: () => void }) {
   if (!milestone) return null;
@@ -280,9 +287,13 @@ export default function Dashboard() {
       />
       <div className="bg-background">
         <div className="px-5 pt-4 pb-1 flex items-center justify-between" data-testid="header-brand">
-          <div className="flex items-center gap-2">
-            <img src={logoImg} alt="MindPrism" className="w-7 h-7 rounded-lg object-cover" />
-            <span className="text-sm font-bold tracking-tight text-foreground">MindPrism</span>
+          <div className="flex items-center gap-3">
+            <img
+              src={logoImg}
+              alt="mindprism"
+              className="w-10 h-10 object-contain dark:brightness-125"
+            />
+            <span className="text-lg font-bold tracking-tight text-foreground dark:text-primary-lighter">mindprism</span>
           </div>
         </div>
         {booksLoading ? (
@@ -394,6 +405,23 @@ export default function Dashboard() {
                         background: short.backgroundGradient || "linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%)"
                       }}
                     />
+                    {(() => {
+                      const thumbUrl = isLikelyMediaUrl(short.thumbnailUrl) ? short.thumbnailUrl!.trim() : null;
+                      const imageMediaUrl = short.mediaType === "image" && isLikelyMediaUrl(short.mediaUrl) ? short.mediaUrl!.trim() : null;
+                      const previewUrl = thumbUrl || imageMediaUrl;
+                      if (!previewUrl) return null;
+                      return (
+                        <img
+                          src={previewUrl}
+                          alt={short.title}
+                          className="absolute inset-0 w-full h-full object-cover"
+                          loading="lazy"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).style.display = "none";
+                          }}
+                        />
+                      );
+                    })()}
                     <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
                     <div className="absolute bottom-0 left-0 right-0 p-2">
                       <p className="text-[10px] text-white font-semibold line-clamp-2 leading-tight">{short.title}</p>
@@ -474,25 +502,39 @@ export default function Dashboard() {
                 <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
                   {chakraFilteredBooks.map((book) => (
                     <Link key={book.id} href={`/book/${book.id}`}>
+                      {(() => {
+                        const coverUrl = isLikelyMediaUrl(book.coverImage) ? book.coverImage!.trim() : null;
+                        return (
                       <div
                         className="flex-shrink-0 w-32 cursor-pointer active:scale-95 transition-transform"
                         data-testid={`chakra-book-${book.id}`}
                       >
-                        <div className="w-32 h-40 rounded-xl overflow-hidden mb-2 ring-1 ring-border">
-                          {book.coverImage ? (
-                            <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" loading="lazy" width={128} height={160} />
-                          ) : (
-                            <div
-                              className="w-full h-full flex items-center justify-center"
-                              style={{ background: `linear-gradient(135deg, ${CHAKRA_MAP[activeChakra].color}33, ${CHAKRA_MAP[activeChakra].color}11)` }}
-                            >
-                              <span className="text-lg font-bold text-muted-foreground/30">{book.title[0]}</span>
-                            </div>
+                        <div className="relative w-32 h-40 rounded-xl overflow-hidden mb-2 ring-1 ring-border">
+                          <div
+                            className="absolute inset-0 flex items-center justify-center"
+                            style={{ background: `linear-gradient(135deg, ${CHAKRA_MAP[activeChakra].color}33, ${CHAKRA_MAP[activeChakra].color}11)` }}
+                          >
+                            <span className="text-lg font-bold text-muted-foreground/30">{book.title[0]}</span>
+                          </div>
+                          {coverUrl && (
+                            <img
+                              src={coverUrl}
+                              alt={book.title}
+                              className="relative z-10 w-full h-full object-cover"
+                              loading="lazy"
+                              width={128}
+                              height={160}
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.display = "none";
+                              }}
+                            />
                           )}
                         </div>
                         <p className="text-xs font-medium truncate">{book.title}</p>
                         <p className="text-[10px] text-muted-foreground">{book.author}</p>
                       </div>
+                        );
+                      })()}
                     </Link>
                   ))}
                 </div>
@@ -567,12 +609,19 @@ export default function Dashboard() {
                 data-testid={`continue-listening-${book.id}`}
               >
                 <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
-                  {book.coverImage ? (
-                    <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" loading="lazy" />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                      <Headphones className="w-5 h-5 text-primary/30" />
-                    </div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                    <Headphones className="w-5 h-5 text-primary/30" />
+                  </div>
+                  {isLikelyMediaUrl(book.coverImage) && (
+                    <img
+                      src={book.coverImage!.trim()}
+                      alt={book.title}
+                      className="relative z-10 w-full h-full object-cover"
+                      loading="lazy"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).style.display = "none";
+                      }}
+                    />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -597,17 +646,27 @@ export default function Dashboard() {
           {inProgressBooks.map((prog) => {
             const book = allBooks.find(b => b.id === prog.bookId);
             if (!book) return null;
+            const coverUrl = isLikelyMediaUrl(book.coverImage) ? book.coverImage!.trim() : null;
             const pct = prog.totalCards ? Math.round((prog.currentCardIndex! / prog.totalCards) * 100) : 0;
             return (
               <Link key={prog.id} href={`/book/${book.id}/journey`}>
                 <div className="flex-shrink-0 w-40 cursor-pointer" data-testid={`resume-book-${book.id}`}>
                   <div className="relative w-40 h-48 rounded-xl overflow-hidden mb-2 ring-1 ring-border">
-                    {book.coverImage ? (
-                      <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" loading="lazy" width={160} height={192} />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                        <span className="text-xl font-bold text-primary/30">{book.title[0]}</span>
-                      </div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                      <span className="text-xl font-bold text-primary/30">{book.title[0]}</span>
+                    </div>
+                    {coverUrl && (
+                      <img
+                        src={coverUrl}
+                        alt={book.title}
+                        className="relative z-10 w-full h-full object-cover"
+                        loading="lazy"
+                        width={160}
+                        height={192}
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.display = "none";
+                        }}
+                      />
                     )}
                     <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gray-200/40">
                       <div
