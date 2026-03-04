@@ -4,27 +4,7 @@ import { getQueryFn } from "@/lib/queryClient";
 import type { Short } from "@shared/schema";
 import { X, Play, Pause, Volume2, VolumeX, Image, Headphones, Video, Share2 } from "lucide-react";
 import { motion, AnimatePresence, type PanInfo } from "framer-motion";
-
-function resolveMediaUrl(url: string | null | undefined): string | null {
-  if (!url) return null;
-  const trimmed = url.trim();
-  if (!trimmed) return null;
-
-  if (trimmed.startsWith("/uploads/")) {
-    return `/objects${trimmed}`;
-  }
-  if (trimmed.startsWith("uploads/")) {
-    return `/objects/${trimmed}`;
-  }
-  if (trimmed.startsWith("/objects/uploads/")) {
-    return trimmed;
-  }
-  if (/^(https?:\/\/|\/|blob:|data:)/.test(trimmed)) {
-    return trimmed;
-  }
-
-  return null;
-}
+import { normalizeMediaUrl } from "@/lib/media-url";
 
 function escapeHtml(str: string): string {
   return str
@@ -46,7 +26,7 @@ function renderMarkdown(text: string): string {
 
 function AudioShort({ short, isActive, isPaused }: { short: Short; isActive: boolean; isPaused: boolean }) {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const audioUrl = resolveMediaUrl(short.mediaUrl);
+  const audioUrl = normalizeMediaUrl(short.mediaUrl);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -140,8 +120,8 @@ function AudioShort({ short, isActive, isPaused }: { short: Short; isActive: boo
 
 function VideoShort({ short, isActive, isMuted, isPaused, onProgressUpdate }: { short: Short; isActive: boolean; isMuted: boolean; isPaused: boolean; onProgressUpdate?: (progress: number) => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const mediaUrl = resolveMediaUrl(short.mediaUrl);
-  const thumbnailUrl = resolveMediaUrl(short.thumbnailUrl);
+  const mediaUrl = normalizeMediaUrl(short.mediaUrl);
+  const thumbnailUrl = normalizeMediaUrl(short.thumbnailUrl);
   const [hasPlaybackError, setHasPlaybackError] = useState(false);
   const animFrameRef = useRef<number>(0);
 
@@ -302,8 +282,8 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
     }
   }, [allShorts.length, currentIndex]);
   const currentShort = allShorts[currentIndex];
-  const currentMediaUrl = resolveMediaUrl(currentShort?.mediaUrl);
-  const currentThumbnailUrl = resolveMediaUrl(currentShort?.thumbnailUrl);
+  const currentMediaUrl = normalizeMediaUrl(currentShort?.mediaUrl);
+  const currentThumbnailUrl = normalizeMediaUrl(currentShort?.thumbnailUrl);
   const shouldShowThumbnailBackground = !!currentThumbnailUrl && (currentShort?.mediaType !== "image" || !currentMediaUrl);
 
   useEffect(() => {
@@ -582,7 +562,7 @@ export function ShortsPlayer({ shorts: propShorts, bookId, initialIndex = 0, onC
 
 export function ShortCard({ short, onClick, fluid }: { short: Short & { bookTitle?: string }; onClick: () => void; fluid?: boolean }) {
   const MediaIcon = short.mediaType === "audio" ? Headphones : short.mediaType === "video" ? Video : Image;
-  const thumbnailUrl = resolveMediaUrl(short.thumbnailUrl);
+  const thumbnailUrl = normalizeMediaUrl(short.thumbnailUrl);
   const [thumbLoadError, setThumbLoadError] = useState(false);
 
   useEffect(() => {

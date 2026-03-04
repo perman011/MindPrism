@@ -19,6 +19,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/components/theme-provider";
+import { normalizeMediaUrl } from "@/lib/media-url";
 
 interface ContentHealthSection {
   label: string;
@@ -467,6 +468,7 @@ export default function AdminBooks() {
               const isPublished = book.status === "published" || book.status === "published_with_changes";
               const score = getBookScore(book.id);
               const isSelected = selectedBookIds.has(book.id);
+              const coverUrl = normalizeMediaUrl(book.coverImage);
               return (
                 <Card
                   key={book.id}
@@ -474,8 +476,8 @@ export default function AdminBooks() {
                   data-testid={`card-book-${book.id}`}
                 >
                   <div className="h-32 bg-gradient-to-br from-primary/20 to-primary/5 relative">
-                    {book.coverImage && (
-                      <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
+                    {coverUrl && (
+                      <img src={coverUrl} alt={book.title} className="w-full h-full object-cover" />
                     )}
                     {canPublish && (
                       <div className="absolute top-2 left-2 z-10">

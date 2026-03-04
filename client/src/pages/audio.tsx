@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Headphones, Clock, Play } from "lucide-react";
 import { useAudio } from "@/lib/audio-context";
 import { trackAudioPlay } from "@/lib/analytics";
+import { normalizeMediaUrl } from "@/lib/media-url";
 
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -70,6 +71,7 @@ export default function AudioPage() {
           <div className="space-y-3" data-testid="audio-list">
             {audioBooks.map((book) => {
               const isCurrentlyPlaying = currentBook?.id === book.id && isPlaying;
+              const coverUrl = normalizeMediaUrl(book.coverImage);
               return (
                 <button
                   key={book.id}
@@ -79,8 +81,8 @@ export default function AudioPage() {
                   aria-label={`Play ${book.title} by ${book.author}`}
                 >
                   <div className="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0">
-                    {book.coverImage ? (
-                      <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
+                    {coverUrl ? (
+                      <img src={coverUrl} alt={book.title} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
                         <span className="text-lg font-bold text-primary/30">{book.title[0]}</span>

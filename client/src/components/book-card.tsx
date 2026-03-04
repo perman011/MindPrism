@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, Headphones } from "lucide-react";
 import { Link } from "wouter";
 import { useEffect, useMemo, useState } from "react";
+import { normalizeMediaUrl } from "@/lib/media-url";
 
 interface BookCardProps {
   book: Book;
@@ -11,29 +12,8 @@ interface BookCardProps {
   audioMode?: boolean;
 }
 
-function resolveMediaUrl(url: string | null | undefined): string | null {
-  if (!url) return null;
-  const trimmed = url.trim();
-  if (!trimmed) return null;
-
-  if (trimmed.startsWith("/uploads/")) {
-    return `/objects${trimmed}`;
-  }
-  if (trimmed.startsWith("uploads/")) {
-    return `/objects/${trimmed}`;
-  }
-  if (trimmed.startsWith("/objects/uploads/")) {
-    return trimmed;
-  }
-  if (/^(https?:\/\/|\/|blob:|data:)/.test(trimmed)) {
-    return trimmed;
-  }
-
-  return null;
-}
-
 export function BookCard({ book, compact, audioMode }: BookCardProps) {
-  const normalizedCoverUrl = useMemo(() => resolveMediaUrl(book.coverImage) ?? "", [book.coverImage]);
+  const normalizedCoverUrl = useMemo(() => normalizeMediaUrl(book.coverImage) ?? "", [book.coverImage]);
   const isLikelyCoverUrl = useMemo(
     () => /^(https?:\/\/|\/|blob:|data:)/.test(normalizedCoverUrl),
     [normalizedCoverUrl],

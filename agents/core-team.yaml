@@ -1,19 +1,28 @@
-version: 1
-updated: 2026-03-03
+version: 2
+updated: 2026-03-04
 
 team:
-  name: core-product-team
+  name: mindprism-endgame-team
   mode: orchestrated
-  objective: Design, specify, validate, and scale a production-grade application.
+  objective: Ship Mind Prism to stable production with secure billing, reliable content ops, strong UX, and enforced release gates.
+
+orchestrator:
+  id: ORCH
+  name: codex-orchestrator
+  responsibilities:
+    - Plan wave sequencing and safe parallelization
+    - Route work to the correct role and merge artifacts
+    - Enforce handoff contracts and quality-gate criteria
+    - Resolve role conflicts around ownership and interfaces
 
 roles:
   - id: UX
     title: UX Designer
     skill: agents/skills/ux-designer
     responsibility:
-      - Run competitor-inspired UX discovery
-      - Define dark-purple visual system and UX flows
-      - Produce implementation-ready screen/interaction specs
+      - Define user-facing flows for onboarding, dashboard, library, and shorts
+      - Maintain design system consistency and accessibility guidelines
+      - Deliver implementation-ready UX specs with component states
     outputs:
       - output/design/ux-brief.md
       - output/design/feature-flow-spec.md
@@ -22,153 +31,181 @@ roles:
     title: Technical Product Manager
     skill: agents/skills/technical-pm
     responsibility:
-      - Write technical PRDs
-      - Decompose PRDs into small executable tickets
-      - Maintain milestone sequencing and dependency map
+      - Convert strategy into technical PRDs and executable tickets
+      - Sequence milestones and dependency chains across all roles
+      - Keep acceptance criteria and release scope explicit
     outputs:
-      - output/product/*-prd.md
-      - output/product/*-tickets.md
-
-  - id: QA
-    title: QA E2E Engineer
-    skill: agents/skills/qa-e2e
-    responsibility:
-      - Build end-to-end test matrix
-      - Validate critical user journeys and regressions
-      - Provide release gate decision
-    outputs:
-      - output/qa/e2e-matrix.csv
-      - output/qa/release-gate-report.md
+      - output/product/mindprism-technical-prd.md
+      - output/product/mindprism-execution-tickets.md
 
   - id: ARCH
     title: Solution Architect
     skill: agents/skills/solution-architect
     responsibility:
-      - Define target scalable architecture
-      - Produce ADRs and migration plan
-      - Establish reliability/security/NFR baselines
+      - Define target architecture and interface contracts
+      - Produce ADRs for major technical decisions
+      - Set NFR baselines for reliability, security, and scalability
     outputs:
       - output/architecture/target-architecture.md
-      - output/architecture/scorecard.md
-
-  - id: FE
-    title: Frontend Engineer
-    skill: agents/skills/frontend-engineer
-    responsibility:
-      - Audit and harden all React components
-      - Optimize Vite bundle splitting and lazy loading
-      - Ensure PWA readiness and Core Web Vitals compliance
-    outputs:
-      - output/frontend/component-audit.md
-      - output/frontend/bundle-report.md
-
-  - id: BE
-    title: Backend Engineer
-    skill: agents/skills/backend-engineer
-    responsibility:
-      - Harden all API endpoints with validation and error handling
-      - Complete Stripe webhook coverage
-      - Fix session management and N+1 queries
-    outputs:
-      - output/backend/api-audit.md
-      - output/backend/stripe-event-matrix.md
-
-  - id: OPS
-    title: DevOps / SRE Engineer
-    skill: agents/skills/devops-sre
-    responsibility:
-      - Build CI/CD with JS and Python quality gates
-      - Containerize application with Docker
-      - Establish health checks and deployment automation
-    outputs:
-      - output/devops/infra-audit.md
-      - output/devops/deployment-runbook.md
-
-  - id: SEC
-    title: Security Engineer
-    skill: agents/skills/security-engineer
-    responsibility:
-      - Run OWASP Top 10 audit
-      - Implement CSRF and harden input sanitization
-      - Audit secrets and environment configuration
-    outputs:
-      - output/security/security-audit.md
-      - output/security/owasp-matrix.md
-
-  - id: DATA
-    title: Data / Analytics Engineer
-    skill: agents/skills/data-analytics
-    responsibility:
-      - Build reliable analytics pipeline with proper caching
-      - Define complete event tracking catalog
-      - Enforce GDPR compliance for journal encryption
-    outputs:
-      - output/analytics/event-audit.md
-      - output/analytics/retention-policy.md
-
-  - id: PERF
-    title: Performance Engineer
-    skill: agents/skills/performance-engineer
-    responsibility:
-      - Establish performance budgets and baselines
-      - Design load testing strategy
-      - Optimize caching and image pipeline
-    outputs:
-      - output/performance/perf-report.md
-      - output/performance/load-test-results.md
+      - output/architecture/architecture-scorecard.md
 
   - id: DBA
     title: Database Engineer
     skill: agents/skills/database-engineer
     responsibility:
-      - Design index strategy for all tables
-      - Establish migration workflow replacing db:push
-      - Configure connection pooling and JSONB validation
+      - Design indexing, schema integrity, and migration workflows
+      - Improve query efficiency for dashboard and analytics paths
+      - Protect data integrity and backup/restore safety
     outputs:
       - output/database/db-audit.md
       - output/database/index-strategy.md
+
+  - id: SEC
+    title: Security Engineer
+    skill: agents/skills/security-engineer
+    responsibility:
+      - Enforce OWASP controls and secure middleware policies
+      - Harden auth/session/secret handling and abuse protections
+      - Drive security test coverage and remediation priority
+    outputs:
+      - output/security/security-audit.md
+      - output/security/owasp-matrix.md
+
+  - id: BE
+    title: Backend Engineer
+    skill: agents/skills/backend-engineer
+    responsibility:
+      - Harden API contracts and server validation behavior
+      - Stabilize Stripe subscription lifecycle and webhook handling
+      - Improve storage/query patterns and failure handling
+    outputs:
+      - output/backend/api-audit.md
+      - output/backend/stripe-event-matrix.md
+
+  - id: FE
+    title: Frontend Engineer
+    skill: agents/skills/frontend-engineer
+    responsibility:
+      - Implement resilient and accessible UI components
+      - Improve route-level code splitting and runtime stability
+      - Maintain PWA readiness and client-side error resilience
+    outputs:
+      - output/frontend/component-audit.md
+      - output/frontend/bundle-report.md
+
+  - id: DATA
+    title: Data / Analytics Engineer
+    skill: agents/skills/data-analytics
+    responsibility:
+      - Define event taxonomy and ingestion reliability
+      - Build admin-facing analytics and subscription metrics confidence
+      - Enforce retention and privacy controls for user data
+    outputs:
+      - output/analytics/event-audit.md
+      - output/analytics/retention-policy.md
+
+  - id: OPS
+    title: DevOps / SRE Engineer
+    skill: agents/skills/devops-sre
+    responsibility:
+      - Build CI/CD quality gates and deployment guardrails
+      - Harden runtime configuration and health checks
+      - Own rollback and incident response automation
+    outputs:
+      - output/devops/infra-audit.md
+      - output/devops/deployment-runbook.md
+
+  - id: PERF
+    title: Performance Engineer
+    skill: agents/skills/performance-engineer
+    responsibility:
+      - Set measurable performance budgets and pass/fail limits
+      - Evaluate load behavior and bottlenecks end-to-end
+      - Optimize asset delivery, caching, and render-time hotspots
+    outputs:
+      - output/performance/perf-report.md
+      - output/performance/load-test-results.md
+
+  - id: QA
+    title: QA E2E Engineer
+    skill: agents/skills/qa-e2e
+    responsibility:
+      - Maintain end-to-end coverage for critical user/admin journeys
+      - Detect regressions in media, billing, auth, and publishing workflows
+      - Produce objective go/no-go release gate outcomes
+    outputs:
+      - output/qa/e2e-matrix.csv
+      - output/qa/release-gate-report.md
 
   - id: RM
     title: Release Manager
     skill: agents/skills/release-manager
     responsibility:
-      - Coordinate release gates across all agents
-      - Manage versioning and changelog automation
-      - Define rollback procedures
+      - Aggregate gate evidence across all roles
+      - Manage release checklist, changelog, and rollback readiness
+      - Approve final go/no-go with explicit risk callouts
     outputs:
       - output/releases/release-checklist.md
       - output/releases/changelog.md
 
 coordination:
-  handoff_order:
-    # Phase 1: Design and Planning
-    - UX -> TPM
-    - TPM -> ARCH
-    # Phase 2: Foundation
-    - ARCH -> DBA
-    - ARCH -> SEC
-    # Phase 3: Implementation (parallel)
-    - DBA -> BE
-    - SEC -> BE
-    - ARCH -> FE
-    - SEC -> FE
-    # Phase 4: Infrastructure and data
-    - BE -> OPS
-    - BE -> DATA
-    - FE -> PERF
-    - DBA -> PERF
-    # Phase 5: Validation
-    - OPS -> QA
-    - DATA -> QA
-    - PERF -> QA
-    - FE -> QA
-    - BE -> QA
-    # Phase 6: Release
-    - QA -> RM
-    - RM -> TPM
+  max_parallel_agents: 6
+  waves:
+    - name: Wave 1 - Product and Architecture
+      agents:
+        - UX
+        - TPM
+        - ARCH
+      exit_criteria:
+        - UX spec and PRD approved
+        - target architecture and ADR baseline committed
+
+    - name: Wave 2 - Foundation Hardening
+      agents:
+        - DBA
+        - SEC
+      prerequisites:
+        - ARCH outputs available
+      exit_criteria:
+        - schema/index/security recommendations accepted
+
+    - name: Wave 3 - Implementation
+      agents:
+        - BE
+        - FE
+        - DATA
+        - OPS
+      prerequisites:
+        - Wave 2 recommendations integrated
+      exit_criteria:
+        - key implementation changes merged behind stable interfaces
+
+    - name: Wave 4 - Validation
+      agents:
+        - PERF
+        - QA
+      prerequisites:
+        - Wave 3 merged
+      exit_criteria:
+        - performance gates and E2E release gates green
+
+    - name: Wave 5 - Release
+      agents:
+        - RM
+        - TPM
+      prerequisites:
+        - Wave 4 green
+      exit_criteria:
+        - release checklist complete and rollback plan verified
+
   required_handoff_fields:
     - task
     - inputs
     - outputs
     - risks
     - next_owner
+
+  hard_rules:
+    - No agent edits another agent's owned output paths without explicit handoff.
+    - API or schema changes must include test updates in the same handoff.
+    - A red QA or security gate blocks release progression.

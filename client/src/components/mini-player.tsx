@@ -1,10 +1,12 @@
 import { useAudio } from "@/lib/audio-context";
 import { Play, Pause, X } from "lucide-react";
+import { normalizeMediaUrl } from "@/lib/media-url";
 
 export function MiniPlayer() {
   const { book, isPlaying, currentTime, duration, togglePlay, setFullScreen, close } = useAudio();
 
   if (!book) return null;
+  const coverUrl = normalizeMediaUrl(book.coverImage);
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
@@ -20,8 +22,8 @@ export function MiniPlayer() {
         </div>
         <div className="flex items-center gap-3 px-4 py-2.5">
           <div className="w-10 h-10 rounded-md overflow-hidden flex-shrink-0">
-            {book.coverImage ? (
-              <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
+            {coverUrl ? (
+              <img src={coverUrl} alt={book.title} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full bg-primary/20 flex items-center justify-center">
                 <span className="text-sm font-bold text-primary/50">{book.title[0]}</span>
