@@ -1,0 +1,27 @@
+TICKET MIND-8 + MIND-9 (COMBINED): Implement Shorts and Mental Models data model and API. This is a MAJOR new feature from the PRD.
+
+PART A — DATABASE SCHEMA UPDATES (in shared/schema.ts):
+1) Add "shorts" table: short_id (serial PK), book_id (FK to books), chapter_id (FK to chapters), title (varchar 255), type (varchar 50 — values: story, principle, mental_model, strategy), video_url (text, required), thumbnail_url (text, nullable), duration_seconds (integer, required), sort_order (integer, default 0), status (varchar 20, default 'draft' — values: draft, published, archived), created_at (timestamp, default now), updated_at (timestamp, default now).
+2) Add "mental_models" table: model_id (serial PK), book_id (FK to books), chapter_id (FK to chapters), name (varchar 255, required), one_liner (text, required — one sentence explanation), example (text, required — real-world scenario), sort_order (integer, default 0), status (varchar 20, default 'draft'), created_at (timestamp, default now), updated_at (timestamp, default now).
+3) Add proper foreign key relations and indexes on book_id and chapter_id for both tables.
+4) Run the database migration to apply changes.
+
+PART B — API ENDPOINTS:
+Customer-facing (public):
+- GET /api/books/:id/shorts — list all published shorts for a book
+- GET /api/chapters/:id/shorts — list shorts for a specific chapter
+- GET /api/books/:id/mental-models — list all published mental models for a book
+- GET /api/chapters/:id/mental-models — list mental models for a specific chapter
+
+Admin (auth required):
+- POST /api/admin/shorts — create a new short
+- PUT /api/admin/shorts/:id — update a short
+- DELETE /api/admin/shorts/:id — delete a short
+- POST /api/admin/mental-models — create a new mental model
+- PUT /api/admin/mental-models/:id — update a mental model
+- DELETE /api/admin/mental-models/:id — delete a mental model
+
+PART C — SEED DATA:
+Add seed data for at least 2 books with 3 shorts each and 3 mental models each so the UI has content to display.
+
+Run tests and publish when done.

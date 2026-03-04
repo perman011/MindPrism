@@ -51,12 +51,121 @@ roles:
       - output/architecture/target-architecture.md
       - output/architecture/scorecard.md
 
+  - id: FE
+    title: Frontend Engineer
+    skill: agents/skills/frontend-engineer
+    responsibility:
+      - Audit and harden all React components
+      - Optimize Vite bundle splitting and lazy loading
+      - Ensure PWA readiness and Core Web Vitals compliance
+    outputs:
+      - output/frontend/component-audit.md
+      - output/frontend/bundle-report.md
+
+  - id: BE
+    title: Backend Engineer
+    skill: agents/skills/backend-engineer
+    responsibility:
+      - Harden all API endpoints with validation and error handling
+      - Complete Stripe webhook coverage
+      - Fix session management and N+1 queries
+    outputs:
+      - output/backend/api-audit.md
+      - output/backend/stripe-event-matrix.md
+
+  - id: OPS
+    title: DevOps / SRE Engineer
+    skill: agents/skills/devops-sre
+    responsibility:
+      - Build CI/CD with JS and Python quality gates
+      - Containerize application with Docker
+      - Establish health checks and deployment automation
+    outputs:
+      - output/devops/infra-audit.md
+      - output/devops/deployment-runbook.md
+
+  - id: SEC
+    title: Security Engineer
+    skill: agents/skills/security-engineer
+    responsibility:
+      - Run OWASP Top 10 audit
+      - Implement CSRF and harden input sanitization
+      - Audit secrets and environment configuration
+    outputs:
+      - output/security/security-audit.md
+      - output/security/owasp-matrix.md
+
+  - id: DATA
+    title: Data / Analytics Engineer
+    skill: agents/skills/data-analytics
+    responsibility:
+      - Build reliable analytics pipeline with proper caching
+      - Define complete event tracking catalog
+      - Enforce GDPR compliance for journal encryption
+    outputs:
+      - output/analytics/event-audit.md
+      - output/analytics/retention-policy.md
+
+  - id: PERF
+    title: Performance Engineer
+    skill: agents/skills/performance-engineer
+    responsibility:
+      - Establish performance budgets and baselines
+      - Design load testing strategy
+      - Optimize caching and image pipeline
+    outputs:
+      - output/performance/perf-report.md
+      - output/performance/load-test-results.md
+
+  - id: DBA
+    title: Database Engineer
+    skill: agents/skills/database-engineer
+    responsibility:
+      - Design index strategy for all tables
+      - Establish migration workflow replacing db:push
+      - Configure connection pooling and JSONB validation
+    outputs:
+      - output/database/db-audit.md
+      - output/database/index-strategy.md
+
+  - id: RM
+    title: Release Manager
+    skill: agents/skills/release-manager
+    responsibility:
+      - Coordinate release gates across all agents
+      - Manage versioning and changelog automation
+      - Define rollback procedures
+    outputs:
+      - output/releases/release-checklist.md
+      - output/releases/changelog.md
+
 coordination:
   handoff_order:
+    # Phase 1: Design and Planning
     - UX -> TPM
     - TPM -> ARCH
-    - ARCH -> QA
-    - QA -> TPM
+    # Phase 2: Foundation
+    - ARCH -> DBA
+    - ARCH -> SEC
+    # Phase 3: Implementation (parallel)
+    - DBA -> BE
+    - SEC -> BE
+    - ARCH -> FE
+    - SEC -> FE
+    # Phase 4: Infrastructure and data
+    - BE -> OPS
+    - BE -> DATA
+    - FE -> PERF
+    - DBA -> PERF
+    # Phase 5: Validation
+    - OPS -> QA
+    - DATA -> QA
+    - PERF -> QA
+    - FE -> QA
+    - BE -> QA
+    # Phase 6: Release
+    - QA -> RM
+    - RM -> TPM
   required_handoff_fields:
     - task
     - inputs

@@ -1,0 +1,69 @@
+This is a massive strategic breakthrough for your product. You are taking Western behavioral psychology (books like Atomic Habits or Thinking, Fast and Slow) and mapping it to the Eastern holistic philosophy of the 7 Chakras.
+This gives your app a massive Unique Selling Proposition (USP). It gamifies self-improvement not just as "checking off tasks," but as "healing and aligning your personal energy centers." It makes the app highly visual, spiritual, and deeply personal.
+As the Senior Product Owner, I have updated the PRD to v4.0. I have integrated the Chakra system directly into the Home Screen UI, the gamification loop, the database schema, and the analytics, mapping exactly to the blueprint image you provided.
+📄 PRD VERSION 4.0: THE CHAKRA ALIGNMENT ENGINE
+(Addendum to Core PRD)
+1. STRATEGIC CONTEXT & TAXONOMY (The Mind-Body Bridge)
+Instead of generic categories like "Productivity" or "Relationships," the entire app taxonomy is now mapped to the 7 Chakras. Based on your provided architecture, the baseline database mapping is:
+ * 7. Crown (Sahasrara - Violet): Purpose & Meaning ➔ The Power of Now, Man's Search for Meaning
+ * 6. Third Eye (Ajna - Indigo): Cognition & Intuition ➔ Thinking, Fast and Slow
+ * 5. Throat (Vishuddha - Blue): Communication & Truth ➔ Emotional Intelligence (Primary)
+ * 4. Heart (Anahata - Green): Empathy & Connection ➔ Emotional Intelligence (Secondary)
+ * 3. Solar Plexus (Manipura - Yellow): Willpower & Action ➔ Atomic Habits (Primary)
+ * 2. Sacral (Svadhisthana - Orange): Creativity & Emotion ➔ (Future books e.g., Big Magic or Flow)
+ * 1. Root (Muladhara - Red): Foundation & Routine ➔ Atomic Habits (Secondary)
+2. HIGH-FIDELITY UX/UI: The Interactive Home Page
+JTBD (Job To Be Done): When I open the app, I want to visually assess what area of my life needs healing, and instantly find the psychological tools to fix it.
+[S4] The New Home Dashboard ("My Energy Map"):
+ * The Hero Visual (Interactive Avatar): The top 50% of the Home Screen features a beautiful, high-fidelity glowing silhouette of a meditating figure (exactly matching your reference image).
+ * The 7 Glowing Nodes: Along the spine of the avatar are 7 tappable, color-coded orbs representing the chakras (Red, Orange, Yellow, Green, Blue, Indigo, Violet).
+ * Interactive Filtering (The Bottom Sheet): The bottom half of the screen contains the dynamic book library.
+   * Tap Interaction: When the user taps the Yellow Node (Solar Plexus), the node pulses brightly, the rest of the avatar dims slightly, and the library below instantly filters to show only books related to willpower and habits (e.g., Atomic Habits).
+3. FUNCTIONAL REQUIREMENTS (BDD & Gamification)
+Epic 5: Chakra Health Tracking (Gamified Action Items)
+This fulfills your requirement: "When they take action items... what chakra does it actually help?"
+ * AC 5.1 (Action-to-Energy Gamification Loop):
+   * Given a user completes a High-Impact interactive exercise assigned to the Heart Chakra (Anahata - Green) (e.g., an empathy exercise from Emotional Intelligence),
+   * When they hit "Save to Journal",
+   * Then an immediate Lottie animation plays showing a burst of green energy flowing into the screen.
+   * Then a toast notification appears: "✨ Heart Chakra Activated! +10 Empathy Points".
+ * AC 5.2 (The Personal Profile Vault - "My Aura"):
+   * Given the user navigates to their Profile Vault,
+   * Then they see their own personal Meditating Avatar. The brightness and size of each of their 7 Chakras are dynamically rendered based on how many exercises they have completed in that specific category.
+   * (e.g., If they only read productivity books, their Yellow Solar Plexus is huge, but their Green Heart chakra is dim, prompting them to read books on empathy to "restore balance" to their mind).
+4. CORE DATA MODEL (The Updated JSON Schema)
+Backend Engineers: The entire database schema must be updated to support the Chakra Enums. Every Book, Principle, and Exercise must be hard-mapped to these energy centers to make the UI filtering work.
+{
+  "book_id": "uuid_atomic_habits",
+  "meta": { 
+      "title": "Atomic Habits", 
+      "author": "James Clear",
+      "chakra_mapping": {
+          "primary": "enum[3_solar_plexus]",     // Manipura (Willpower/Action)
+          "secondary": "enum[1_root]"            // Muladhara (Routine/Foundation)
+      }
+  },
+  "content_tree": {
+    "core_thesis": "Habits are the compound interest of self-improvement.",
+    "exercises": [
+      { 
+        "module_id": "uuid_ex_001",
+        "prompt": "Design your environment to make your good habit obvious.", 
+        "impact_score": 3,
+        "powers_up_chakra": "enum[1_root]"  // Tells the UI which color to flash upon completion
+      }
+    ]
+  }
+}
+
+5. ADMIN CMS UPDATES (For Content Creators)
+ * The Chakra Assigner Tool: When writers and psychologists are entering a new book into the Admin CMS Web Portal, there is a mandatory new UI panel.
+ * Logic: They must assign a Primary Chakra from a visual dropdown menu before the "Publish" button is enabled. Furthermore, when they create the Exercises and Action Items, they must tag which specific Chakra that specific action heals.
+   * Example: A book like Emotional Intelligence might have an exercise about "Setting Boundaries" tagged to the Throat (Blue), and an exercise about "Active Listening" tagged to the Heart (Green).
+6. SPRINT 1 ENGINEERING SPIKE (Risk Mitigation)
+ * The UI Hit-Zone Risk: Rendering a beautiful, glowing human silhouette with 7 exact, clickable hit-zones (Chakras) that works perfectly on a tiny iPhone Mini, a large iPad Pro, and a Desktop Web browser is technically complex. Standard square HTML/Flutter buttons will break the design.
+ * The Mandatory Spike: In Sprint 1, the UI/UX Lead must export the meditating figure as an Interactive SVG. The Lead Mobile Engineer will use Flutter's CustomPaint or SVG pathing to ensure the tap-zones align perfectly with the glowing Chakra orbs, regardless of screen stretching or responsive resizing.
+💡 Product Owner Note on Marketing & Growth:
+By adding this to the PRD, your marketing team now has an incredibly viral angle for TikTok, Instagram, and Facebook ads.
+ * Ad Concept: "Is your Throat Chakra blocked? You probably struggle with communication, people-pleasing, and setting boundaries at work. Tap the Blue Chakra in our app to instantly unlock the interactive principles from Emotional Intelligence and heal your Vishuddha today."
+This creates an emotional, visual, and highly personal hook that standard book summary apps (like Blinkist) simply cannot compete with.

@@ -1,7 +1,13 @@
+node_modules
+dist
+.DS_Store
+server/public
+vite.config.ts.*
+*.tar.gz
+
 __pycache__/
 *.py[cod]
 .venv/
 .pytest_cache/
-.DS_Store
 
 output/artifacts/*.json

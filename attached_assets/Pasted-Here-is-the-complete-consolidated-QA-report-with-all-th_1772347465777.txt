@@ -1,0 +1,75 @@
+Here is the complete, consolidated QA report with all the technical tickets we gathered during our end-to-end testing. You can copy and paste this entire block directly into Replit AI so it knows exactly what to fix.
+
+---
+
+# QA Testing Report: MindPrism
+
+**Target:** Replit AI Developer
+**Task:** Please review and resolve the following UI, UX, and functional bugs discovered during end-to-end testing.
+
+### Category 1: UI & Branding (Landing Page)
+
+**Ticket 1: Update Header Logo**
+
+* **Location:** Landing Page - Top Left Header.
+* **Issue:** The logo reads "Mind Prism" (two words) and the color blends into the background.
+* **Action:** Change the text to a single word: "mindprism". Change the font/logo color to a highly visible **dark purple**. Increase the logo size to make it more prominent.
+
+**Ticket 2: Remove Redundant "Sign In" Link**
+
+* **Location:** Landing Page - Top Right Header.
+* **Issue:** There is an "I already have an account" link in the top right, but the primary call-to-action button at the bottom center of the hero section does the exact same thing. It clutters the top nav.
+* **Action:** Remove the "I already have an account" link from the top right header. Keep only the primary button in the hero section.
+
+**Ticket 3: Revise Hero Headline Copy**
+
+* **Location:** Landing Page - Main Hero Section.
+* **Issue:** The current headline "Skip the 500 pages. Master the principles." contains phraseology ("Skip the 500 pages") that the product owner flagged as potentially problematic for marketing/legal reasons.
+* **Action:** Remove "Skip the 500 pages." Update the headline to use stronger, more positive marketing copy. Suggestion: *"Master psychology's most powerful concepts in minutes. Master the principles."*
+
+### Category 2: Authentication & Navigation
+
+**Ticket 4: Fix Bottom Navigation Responsiveness**
+
+* **Location:** Bottom Navigation Bar (Global).
+* **Issue:** Clicking links in the bottom navigation (e.g., clicking "Discover" while on the Audio Player page) sometimes fails to trigger the routing. The elements act as if they are unresponsive or out of view.
+* **Action:** Ensure the bottom navigation bar (`Home`, `Discover`, `Audio`, `My Vault`) is properly bound to the router and clickable across all viewports and scrolling contexts.
+
+**Ticket 5: Fix Session Drops / Authentication Stability**
+
+* **Location:** Global Routing / "My Vault".
+* **Issue:** Navigating between primary routes (e.g., from Discover to My Vault) sometimes causes the user session to drop, forcing the user back to the unauthenticated public landing page unexpectedly.
+* **Action:** Implement robust session management and token persistence. Ensure the user's logged-in state (via Replit Auth) remains active and validates correctly during client-side routing.
+
+### Category 3: Discover & Search
+
+**Ticket 6: Populate Default Content on Discover Page**
+
+* **Location:** `/discover`
+* **Issue:** Upon initial load, the area below the "Books" and "Shorts" tabs is completely empty (showing only placeholders).
+* **Action:** Implement a default view. Populate the initial page load with "Trending," "New Releases," or "Suggested Topics" so users have content to browse immediately without needing to perform a search first.
+
+**Ticket 7: Persist Search Query Across Tabs**
+
+* **Location:** `/discover` (Search Bar).
+* **Issue:** When a user types a query (e.g., "Habits") in the "Books" tab and then switches to the "Shorts" tab, the search input is completely cleared.
+* **Action:** Bind the search input state to a higher-level component or context so the query persists when the user toggles between the "Books" and "Shorts" tabs.
+
+**Ticket 8: Maintain Category Filters During Search**
+
+* **Location:** `/discover`.
+* **Issue:** The category filter pills (e.g., "Habits & Productivity") disappear entirely once a user begins typing a text search.
+* **Action:** Keep the category filters accessible (either as pills or a dropdown menu) alongside the search results so users can filter their text search queries by category.
+
+### Category 4: Vault & Content Management
+
+**Ticket 9: Fix "Bookmark Book" Functionality and Vault Display**
+
+* **Location:** Book Detail Pages & `/vault` -> "Saved" tab.
+* **Issue:** Clicking "Bookmark book" on a detail page toggles the button state, but the book does *not* appear in "My Vault" under the "Saved" tab. The Vault currently only seems designed to hold text/visual highlights ("No saved highlights yet"), not entire books.
+* **Action:** 1. If "Bookmark book" is meant to save a book to a library, create a dedicated "Saved Books" or "My Library" section in the Vault and wire the bookmark button to populate it.
+2. If the current "Saved" tab in the Vault is strictly for in-book highlights, rename the tab to "My Highlights" to prevent user confusion.
+
+---
+
+Is there anything else you'd like me to add to this report, or are there other parts of the app (like Account Settings, text reading view, etc.) you want to QA test next?

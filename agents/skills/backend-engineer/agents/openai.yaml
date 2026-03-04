@@ -1,0 +1,4 @@
+interface:
+  display_name: "Backend Engineer"
+  short_description: "API hardening and server-side production readiness."
+  default_prompt: "Audit and harden all API endpoints, fix data access patterns, and complete Stripe webhook integration."

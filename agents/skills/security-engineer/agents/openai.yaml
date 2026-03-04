@@ -1,0 +1,4 @@
+interface:
+  display_name: "Security Engineer"
+  short_description: "OWASP compliance and application security."
+  default_prompt: "Perform an OWASP Top 10 security audit with input sanitization, CSRF, and secrets management review."
