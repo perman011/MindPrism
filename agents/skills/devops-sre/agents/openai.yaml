@@ -1,0 +1,4 @@
+interface:
+  display_name: "DevOps / SRE Engineer"
+  short_description: "CI/CD pipelines and deployment automation."
+  default_prompt: "Build CI/CD quality gates, containerize the application, and establish deployment automation with health checks."

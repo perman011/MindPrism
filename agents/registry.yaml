@@ -123,3 +123,130 @@ agents:
       - team workflow requirements
     output_contract:
       - actionable issue template + PR checklist quality
+
+  - id: A9
+    name: frontend-engineer
+    mission: Harden frontend components, optimize bundles, and ensure PWA production readiness.
+    skills:
+      - frontend-engineer
+    owns:
+      - client/src/components/*
+      - client/src/pages/*
+      - vite.config.ts
+      - client/public/sw.js
+      - client/public/manifest.json
+    input_contract:
+      - UX specs from ux-designer
+      - component inventory from solution-architect
+    output_contract:
+      - component audit with a11y/states verification
+      - bundle optimization report with before/after sizes
+
+  - id: A10
+    name: backend-engineer
+    mission: Harden APIs, fix data patterns, and complete payment integration.
+    skills:
+      - backend-engineer
+    owns:
+      - server/routes.ts
+      - server/routes/*
+      - server/storage.ts
+      - server/stripe-routes.ts
+      - server/db.ts
+    input_contract:
+      - API contracts from solution-architect
+      - security requirements from security-engineer
+    output_contract:
+      - API audit with validation coverage
+      - Stripe webhook event matrix completion
+
+  - id: A11
+    name: devops-sre
+    mission: Automate CI/CD, containerize, and establish deployment infrastructure.
+    skills:
+      - devops-sre
+    owns:
+      - .github/workflows/*
+      - Dockerfile
+      - docker-compose.yml
+    input_contract:
+      - build/test commands from package.json
+      - health check specs from backend-engineer
+    output_contract:
+      - CI pipeline with JS + Python gates
+      - deployment runbook with rollback
+
+  - id: A12
+    name: security-engineer
+    mission: Enforce OWASP compliance and harden application security posture.
+    skills:
+      - security-engineer
+    owns:
+      - server/middleware/security.ts
+      - server/middleware/rateLimiter.ts
+      - server/crypto.ts
+    input_contract:
+      - API surface from backend-engineer
+      - component list from frontend-engineer
+    output_contract:
+      - OWASP compliance matrix
+      - secrets audit with rotation plan
+
+  - id: A13
+    name: data-analytics-engineer
+    mission: Build reliable analytics pipeline and enforce data privacy.
+    skills:
+      - data-analytics
+    owns:
+      - server/routes/analytics.ts
+      - output/analytics/*
+    input_contract:
+      - event tracking requirements from technical-pm
+      - query patterns from database-engineer
+    output_contract:
+      - event catalog with schema definitions
+      - data retention policy
+
+  - id: A14
+    name: performance-engineer
+    mission: Establish performance baselines and optimize for production load.
+    skills:
+      - performance-engineer
+    owns:
+      - output/performance/*
+    input_contract:
+      - bundle config from frontend-engineer
+      - query patterns from database-engineer
+    output_contract:
+      - performance budget document
+      - load test results with pass/fail
+
+  - id: A15
+    name: database-engineer
+    mission: Optimize schema, indexes, migrations, and data integrity.
+    skills:
+      - database-engineer
+    owns:
+      - shared/schema.ts
+      - drizzle.config.ts
+      - migrations/*
+    input_contract:
+      - schema definition from shared/schema.ts
+      - query patterns from backend-engineer and analytics
+    output_contract:
+      - index strategy with SQL statements
+      - migration workflow specification
+
+  - id: A16
+    name: release-manager
+    mission: Coordinate cross-agent release readiness and rollback.
+    skills:
+      - release-manager
+    owns:
+      - CHANGELOG.md
+      - output/releases/*
+    input_contract:
+      - gate reports from all agents
+    output_contract:
+      - release checklist with go/no-go decision
+      - rollback playbook

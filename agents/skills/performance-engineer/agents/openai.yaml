@@ -1,0 +1,4 @@
+interface:
+  display_name: "Performance Engineer"
+  short_description: "Load testing and performance optimization."
+  default_prompt: "Establish performance baselines, optimize bundles and caching, and create load testing plans for production."

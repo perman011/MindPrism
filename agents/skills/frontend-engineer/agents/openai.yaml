@@ -1,0 +1,4 @@
+interface:
+  display_name: "Frontend Engineer"
+  short_description: "Component hardening and bundle optimization."
+  default_prompt: "Audit frontend components for accessibility and performance, optimize bundles, and harden PWA readiness."
