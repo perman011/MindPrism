@@ -1,252 +1,226 @@
-version: 1
-updated: 2026-03-03
+version: 2
+updated: 2026-03-04
 
 orchestrator:
+  id: ORCH
   name: codex-orchestrator
-  responsibility: Owns planning, routing, conflict resolution, and merge order.
+  responsibility: Owns planning, routing, merge order, and release risk visibility.
   coordination_rules:
-    - Every agent writes artifacts only in its assigned paths.
-    - Handoffs must include inputs used, outputs produced, and open risks.
-    - Breaking interface changes require schema update + test update in same handoff.
+    - Every agent writes artifacts only in assigned output paths.
+    - Handoffs must state inputs consumed, outputs produced, risks, and next owner.
+    - Interface-breaking changes require schema or contract tests in the same change set.
+    - No release signoff without QA, security, and performance gate evidence.
 
 agents:
   - id: A1
-    name: notebook-architect
-    mission: Maintain notebook UX and execution flow.
+    role_id: UX
+    name: ux-designer
+    mission: Define premium, accessible product UX and implementation-ready flow specs.
     skills:
-      - jupyter-notebook
+      - ux-designer
     owns:
-      - output/jupyter-notebook/task-notebook.ipynb
+      - output/design/ux-brief.md
+      - output/design/feature-flow-spec.md
     input_contract:
-      - module API from task_analysis/core.py
+      - Product goals, user segments, and constraints from TPM
+      - Architecture boundaries from ARCH
     output_contract:
-      - notebook cells execute top-to-bottom
-      - summary and artifact cells remain deterministic
+      - Flow specs include desktop/mobile states and error paths
+      - Accessibility notes included for key components
 
   - id: A2
-    name: validation-engineer
-    mission: Enforce input schema and normalization rules.
+    role_id: TPM
+    name: technical-pm
+    mission: Translate product vision into executable PRDs, tickets, and milestones.
     skills:
-      - none
+      - technical-pm
     owns:
-      - task_analysis/core.py
+      - output/product/mindprism-technical-prd.md
+      - output/product/mindprism-execution-tickets.md
     input_contract:
-      - raw_items schema v1
+      - UX spec package from UX
+      - NFR requirements from ARCH, SEC, OPS
     output_contract:
-      - actionable ValidationError messages
-      - coercion policy behavior covered by tests
+      - Tickets are sequenced and dependency-linked
+      - Acceptance criteria are testable and role-assigned
 
   - id: A3
-    name: analytics-engineer
-    mission: Maintain metric correctness and delta logic.
+    role_id: ARCH
+    name: solution-architect
+    mission: Establish scalable system design and enforce interface contracts.
     skills:
-      - none
+      - solution-architect
     owns:
-      - task_analysis/core.py
-      - output/artifacts/summary.json (contract)
+      - output/architecture/target-architecture.md
+      - output/architecture/architecture-scorecard.md
+      - output/architecture/adrs/
     input_contract:
-      - list[TaskItem]
+      - Current code topology in client/server/shared
+      - Product scope from TPM
     output_contract:
-      - summary schema v1 fields preserved
-      - largest_positive_delta_* behavior deterministic
+      - ADR decisions with alternatives and consequences
+      - Explicit service boundaries and integration contracts
 
   - id: A4
-    name: qa-test-engineer
-    mission: Build and maintain regression/unit test coverage.
-    skills:
-      - none
-    owns:
-      - tests/test_core.py
-      - scripts/notebook_smoke_test.py
-    input_contract:
-      - core module public API
-      - notebook deterministic baseline
-    output_contract:
-      - failing tests for regressions
-      - green suite for accepted changes
-
-  - id: A5
-    name: ci-release-engineer
-    mission: Keep CI quality gates reliable and fast.
-    skills:
-      - none
-    owns:
-      - .github/workflows/quality.yml
-      - requirements.txt
-      - pyproject.toml
-      - .python-version
-    input_contract:
-      - reproducible python runtime
-    output_contract:
-      - PR gate runs unit + notebook smoke tests
-
-  - id: A6
-    name: docs-runbook-engineer
-    mission: Keep operational docs and troubleshooting current.
-    skills:
-      - doc
-    owns:
-      - README.md
-      - RUNBOOK.md
-      - TICKETS.md
-    input_contract:
-      - implemented behavior from code/tests
-    output_contract:
-      - setup/run/incident docs match actual system behavior
-
-  - id: A7
-    name: interface-audit-engineer
-    mission: Verify public contract drift and compatibility.
-    skills:
-      - openai-docs
-      - pdf
-    owns:
-      - contract notes in TICKETS.md
-      - optional generated compliance reports under output/
-    input_contract:
-      - summary schema v1
-      - input schema v1
-    output_contract:
-      - documented contract diffs before/after changes
-
-  - id: A8
-    name: collaboration-admin
-    mission: Maintain issue/PR hygiene templates and process guardrails.
-    skills:
-      - skill-creator
-      - skill-installer
-    owns:
-      - .github/ISSUE_TEMPLATE/*
-      - .github/pull_request_template.md
-      - agents/*
-    input_contract:
-      - team workflow requirements
-    output_contract:
-      - actionable issue template + PR checklist quality
-
-  - id: A9
-    name: frontend-engineer
-    mission: Harden frontend components, optimize bundles, and ensure PWA production readiness.
-    skills:
-      - frontend-engineer
-    owns:
-      - client/src/components/*
-      - client/src/pages/*
-      - vite.config.ts
-      - client/public/sw.js
-      - client/public/manifest.json
-    input_contract:
-      - UX specs from ux-designer
-      - component inventory from solution-architect
-    output_contract:
-      - component audit with a11y/states verification
-      - bundle optimization report with before/after sizes
-
-  - id: A10
-    name: backend-engineer
-    mission: Harden APIs, fix data patterns, and complete payment integration.
-    skills:
-      - backend-engineer
-    owns:
-      - server/routes.ts
-      - server/routes/*
-      - server/storage.ts
-      - server/stripe-routes.ts
-      - server/db.ts
-    input_contract:
-      - API contracts from solution-architect
-      - security requirements from security-engineer
-    output_contract:
-      - API audit with validation coverage
-      - Stripe webhook event matrix completion
-
-  - id: A11
-    name: devops-sre
-    mission: Automate CI/CD, containerize, and establish deployment infrastructure.
-    skills:
-      - devops-sre
-    owns:
-      - .github/workflows/*
-      - Dockerfile
-      - docker-compose.yml
-    input_contract:
-      - build/test commands from package.json
-      - health check specs from backend-engineer
-    output_contract:
-      - CI pipeline with JS + Python gates
-      - deployment runbook with rollback
-
-  - id: A12
-    name: security-engineer
-    mission: Enforce OWASP compliance and harden application security posture.
-    skills:
-      - security-engineer
-    owns:
-      - server/middleware/security.ts
-      - server/middleware/rateLimiter.ts
-      - server/crypto.ts
-    input_contract:
-      - API surface from backend-engineer
-      - component list from frontend-engineer
-    output_contract:
-      - OWASP compliance matrix
-      - secrets audit with rotation plan
-
-  - id: A13
-    name: data-analytics-engineer
-    mission: Build reliable analytics pipeline and enforce data privacy.
-    skills:
-      - data-analytics
-    owns:
-      - server/routes/analytics.ts
-      - output/analytics/*
-    input_contract:
-      - event tracking requirements from technical-pm
-      - query patterns from database-engineer
-    output_contract:
-      - event catalog with schema definitions
-      - data retention policy
-
-  - id: A14
-    name: performance-engineer
-    mission: Establish performance baselines and optimize for production load.
-    skills:
-      - performance-engineer
-    owns:
-      - output/performance/*
-    input_contract:
-      - bundle config from frontend-engineer
-      - query patterns from database-engineer
-    output_contract:
-      - performance budget document
-      - load test results with pass/fail
-
-  - id: A15
+    role_id: DBA
     name: database-engineer
-    mission: Optimize schema, indexes, migrations, and data integrity.
+    mission: Ensure data model, indexes, and migrations are production-safe.
     skills:
       - database-engineer
     owns:
+      - output/database/db-audit.md
+      - output/database/index-strategy.md
       - shared/schema.ts
       - drizzle.config.ts
-      - migrations/*
     input_contract:
-      - schema definition from shared/schema.ts
-      - query patterns from backend-engineer and analytics
+      - Query hotspots from BE and DATA
+      - Scale assumptions from ARCH and PERF
     output_contract:
-      - index strategy with SQL statements
-      - migration workflow specification
+      - Index strategy tied to real query paths
+      - Migration workflow with rollback strategy
 
-  - id: A16
+  - id: A5
+    role_id: SEC
+    name: security-engineer
+    mission: Harden app security posture and verify OWASP controls.
+    skills:
+      - security-engineer
+    owns:
+      - output/security/security-audit.md
+      - output/security/owasp-matrix.md
+      - server/middleware/security.ts
+      - server/middleware/rateLimiter.ts
+    input_contract:
+      - API and auth surfaces from BE
+      - Client attack surfaces from FE
+    output_contract:
+      - Risks prioritized by severity and exploitability
+      - Remediation plan and verification checks included
+
+  - id: A6
+    role_id: BE
+    name: backend-engineer
+    mission: Deliver resilient API and billing behavior with strong validation.
+    skills:
+      - backend-engineer
+    owns:
+      - output/backend/api-audit.md
+      - output/backend/stripe-event-matrix.md
+      - server/routes.ts
+      - server/routes/
+      - server/stripe-routes.ts
+      - server/storage.ts
+    input_contract:
+      - API contracts from ARCH
+      - Security controls from SEC
+      - Data constraints from DBA
+    output_contract:
+      - Endpoint validation + error taxonomy coverage
+      - Stripe lifecycle handling verified with tests
+
+  - id: A7
+    role_id: FE
+    name: frontend-engineer
+    mission: Implement robust, performant, and accessible user/admin experiences.
+    skills:
+      - frontend-engineer
+    owns:
+      - output/frontend/component-audit.md
+      - output/frontend/bundle-report.md
+      - client/src/components/
+      - client/src/pages/
+      - client/public/manifest.json
+      - client/public/sw.js
+    input_contract:
+      - UX specs from UX
+      - Interface contracts from ARCH + BE
+      - Security requirements from SEC
+    output_contract:
+      - Component behavior includes loading/error/empty states
+      - Bundle and route loading regressions tracked and bounded
+
+  - id: A8
+    role_id: DATA
+    name: data-analytics-engineer
+    mission: Keep analytics trustworthy, queryable, and privacy compliant.
+    skills:
+      - data-analytics
+    owns:
+      - output/analytics/event-audit.md
+      - output/analytics/retention-policy.md
+      - server/routes/analytics.ts
+      - client/src/lib/analytics.ts
+    input_contract:
+      - Event requirements from TPM
+      - Schema/index guidance from DBA
+    output_contract:
+      - Event taxonomy with clear naming and payload schema
+      - Retention policy aligned to compliance constraints
+
+  - id: A9
+    role_id: OPS
+    name: devops-sre
+    mission: Maintain reliable delivery pipelines and operational readiness.
+    skills:
+      - devops-sre
+    owns:
+      - output/devops/infra-audit.md
+      - output/devops/deployment-runbook.md
+      - .github/workflows/
+      - Dockerfile
+      - docker-compose.yml
+    input_contract:
+      - Build and runtime needs from FE/BE
+      - Gate requirements from QA, SEC, PERF
+    output_contract:
+      - CI/CD gates map to release criteria
+      - Runbook includes rollback and incident steps
+
+  - id: A10
+    role_id: PERF
+    name: performance-engineer
+    mission: Enforce performance budgets and load resilience.
+    skills:
+      - performance-engineer
+    owns:
+      - output/performance/perf-report.md
+      - output/performance/load-test-results.md
+    input_contract:
+      - Frontend bundle profile from FE
+      - API/query behavior from BE and DBA
+    output_contract:
+      - Measured baseline with pass/fail thresholds
+      - Bottleneck remediation plan and re-test evidence
+
+  - id: A11
+    role_id: QA
+    name: qa-e2e-engineer
+    mission: Guard end-to-end quality across user and admin workflows.
+    skills:
+      - qa-e2e
+    owns:
+      - output/qa/e2e-matrix.csv
+      - output/qa/release-gate-report.md
+      - tests/
+    input_contract:
+      - Acceptance criteria from TPM
+      - Environment stability from OPS
+    output_contract:
+      - Coverage includes auth, billing, media, publishing, admin analytics
+      - Release gate clearly states go/no-go with blocking defects
+
+  - id: A12
+    role_id: RM
     name: release-manager
-    mission: Coordinate cross-agent release readiness and rollback.
+    mission: Coordinate final launch decisions with objective gate evidence.
     skills:
       - release-manager
     owns:
-      - CHANGELOG.md
-      - output/releases/*
+      - output/releases/release-checklist.md
+      - output/releases/changelog.md
     input_contract:
-      - gate reports from all agents
+      - QA, SEC, PERF gate reports
+      - Deployment readiness from OPS
     output_contract:
-      - release checklist with go/no-go decision
-      - rollback playbook
+      - Consolidated go/no-go decision with explicit rollback criteria
+      - Versioned release packet and comms checklist

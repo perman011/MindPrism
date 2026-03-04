@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, GripVertical, BookOpen, Clock, Music, Play, Pause, Bold, Italic, Heading2, Heading3, List, ListOrdered, Quote, Minus, Highlighter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { FileUpload } from "@/components/admin/FileUpload";
+import { normalizeMediaUrl } from "@/lib/media-url";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Highlight from "@tiptap/extension-highlight";
@@ -188,6 +189,7 @@ function TipTapEditor({ content, onUpdate, chapterId }: TipTapEditorProps) {
 
 function ChapterAudioPreview({ audioUrl }: { audioUrl: string }) {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const normalizedAudioUrl = normalizeMediaUrl(audioUrl) ?? audioUrl;
   const [playing, setPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
 
@@ -205,7 +207,7 @@ function ChapterAudioPreview({ audioUrl }: { audioUrl: string }) {
     <div className="flex items-center gap-2 mt-2 p-2 bg-muted/30 rounded-lg" data-testid="audio-preview">
       <audio
         ref={audioRef}
-        src={audioUrl}
+        src={normalizedAudioUrl}
         onLoadedMetadata={() => {
           if (audioRef.current) setDuration(Math.round(audioRef.current.duration));
         }}

@@ -2,11 +2,13 @@ import { useAudio } from "@/lib/audio-context";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Play, Pause, SkipBack, SkipForward, ChevronDown, Headphones } from "lucide-react";
+import { normalizeMediaUrl } from "@/lib/media-url";
 
 export function FullScreenPlayer() {
   const { book, isPlaying, currentTime, duration, speed, isFullScreen, togglePlay, seek, skip, setSpeed, setFullScreen } = useAudio();
 
   if (!book || !isFullScreen) return null;
+  const coverUrl = normalizeMediaUrl(book.coverImage);
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
@@ -20,8 +22,8 @@ export function FullScreenPlayer() {
   return (
     <div className="fixed inset-0 z-[100] bg-background flex flex-col" data-testid="full-screen-player">
       <div className="absolute inset-0 z-0">
-        {book.coverImage && (
-          <img src={book.coverImage} alt="" className="w-full h-full object-cover opacity-20 blur-3xl scale-110" />
+        {coverUrl && (
+          <img src={coverUrl} alt="" className="w-full h-full object-cover opacity-20 blur-3xl scale-110" />
         )}
         <div className="absolute inset-0 bg-background/80" />
       </div>
@@ -42,8 +44,8 @@ export function FullScreenPlayer() {
 
         <div className="flex-1 flex flex-col items-center justify-center px-8">
           <div className="w-56 h-56 sm:w-64 sm:h-64 rounded-2xl overflow-hidden shadow-2xl mb-8">
-            {book.coverImage ? (
-              <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
+            {coverUrl ? (
+              <img src={coverUrl} alt={book.title} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-primary/30 to-primary/5 flex items-center justify-center">
                 <Headphones className="w-16 h-16 text-primary/30" />

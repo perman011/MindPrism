@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Headphones, Play, Pause, SkipBack, SkipForward } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
+import { normalizeMediaUrl } from "@/lib/media-url";
 
 interface AudioPlayerProps {
   title: string;
@@ -18,8 +19,9 @@ export function AudioPlayer({ title, audioUrl }: AudioPlayerProps) {
   const [hasAudio, setHasAudio] = useState(false);
 
   useEffect(() => {
-    if (audioUrl && audioUrl !== "placeholder") {
-      const audio = new Audio(audioUrl);
+    const resolvedAudioUrl = normalizeMediaUrl(audioUrl);
+    if (resolvedAudioUrl && resolvedAudioUrl !== "placeholder") {
+      const audio = new Audio(resolvedAudioUrl);
       audioRef.current = audio;
       setHasAudio(true);
 

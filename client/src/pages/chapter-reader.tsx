@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { normalizeMediaUrl } from "@/lib/media-url";
 
 const READER_BG = "#0F172A";
 const READER_TEXT = "#F5F0EB";
@@ -62,6 +63,7 @@ function ChapterContent({ html, fallbackCards }: { html: string | null; fallback
 
 function AudioPlayer({ audioUrl, accentColor }: { audioUrl: string; accentColor: string }) {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const resolvedAudioUrl = useMemo(() => normalizeMediaUrl(audioUrl) ?? audioUrl, [audioUrl]);
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -131,7 +133,7 @@ function AudioPlayer({ audioUrl, accentColor }: { audioUrl: string; accentColor:
     >
       <audio
         ref={audioRef}
-        src={audioUrl}
+        src={resolvedAudioUrl}
         onLoadedMetadata={() => {
           if (audioRef.current) {
             setDuration(audioRef.current.duration);
@@ -306,7 +308,8 @@ export default function ChapterReader() {
   });
 
   const currentChapter = chapters[chapterIndex];
-  const hasAudio = !!(currentChapter?.audioUrl);
+  const currentChapterAudioUrl = normalizeMediaUrl(currentChapter?.audioUrl);
+  const hasAudio = !!currentChapterAudioUrl;
 
   useEffect(() => {
     if (contentRef.current) {
@@ -464,8 +467,8 @@ export default function ChapterReader() {
       </div>
 
       <AnimatePresence>
-        {hasAudio && currentChapter?.audioUrl && (
-          <AudioPlayer audioUrl={currentChapter.audioUrl} accentColor={ACCENT} />
+        {hasAudio && currentChapterAudioUrl && (
+          <AudioPlayer audioUrl={currentChapterAudioUrl} accentColor={ACCENT} />
         )}
       </AnimatePresence>
 

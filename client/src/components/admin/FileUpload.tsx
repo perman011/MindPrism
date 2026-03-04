@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { normalizeMediaUrl } from "@/lib/media-url";
 
 interface FileUploadProps {
   accept: "image" | "audio" | "video" | "any";
@@ -49,12 +50,11 @@ function isImageUrl(url: string): boolean {
     lower.includes("/objects/uploads/");
 }
 
-function normalizeMediaUrl(url: string): string {
+function normalizeMediaInputUrl(url: string): string {
   const trimmed = url.trim();
   if (!trimmed) return "";
-  if (trimmed.startsWith("/uploads/")) return `/objects${trimmed}`;
-  if (trimmed.startsWith("uploads/")) return `/objects/${trimmed}`;
-  return trimmed;
+  const normalized = normalizeMediaUrl(trimmed);
+  return normalized ?? trimmed;
 }
 
 export function FileUpload({
@@ -77,7 +77,7 @@ export function FileUpload({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setDisplayUrl(normalizeMediaUrl(value || ""));
+    setDisplayUrl(normalizeMediaInputUrl(value || ""));
   }, [value]);
 
   useEffect(() => {
@@ -126,7 +126,7 @@ export function FileUpload({
       }
 
       const data = await response.json();
-      const normalizedUrl = normalizeMediaUrl(data.url || "");
+      const normalizedUrl = normalizeMediaInputUrl(data.url || "");
       setUploadProgress(100);
       setTimeout(() => {
         setDisplayUrl(normalizedUrl);
@@ -166,9 +166,9 @@ export function FileUpload({
 
   const handleUrlSubmit = useCallback(() => {
     if (urlInputValue.trim()) {
-      const url = normalizeMediaUrl(urlInputValue);
-      setDisplayUrl(url);
-      onChange(url);
+      const normalizedUrl = normalizeMediaInputUrl(urlInputValue);
+      setDisplayUrl(normalizedUrl);
+      onChange(normalizedUrl);
       setUrlInputValue("");
       setShowUrlInput(false);
     }

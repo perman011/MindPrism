@@ -19,6 +19,7 @@ import { useSearch, useLocation } from "wouter";
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import type { Short } from "@shared/schema";
 import { ShortsPlayer, ShortCard } from "@/components/shorts-player";
+import { normalizeMediaUrl } from "@/lib/media-url";
 
 const RECENT_SEARCHES_KEY = "mindprism_recent_searches";
 const MAX_RECENT_SEARCHES = 8;
@@ -326,29 +327,32 @@ export default function Discover() {
                   <div className="px-4 py-2">
                     <span className="text-xs font-medium text-muted-foreground">Books</span>
                   </div>
-                  {topSuggestions.map((book) => (
-                    <a
-                      key={book.id}
-                      href={`/book/${book.id}`}
-                      className="flex items-center gap-3 px-4 py-2.5 hover-elevate transition-colors"
-                      onClick={() => handleSearchSubmit(searchQuery)}
-                      data-testid={`suggestion-${book.id}`}
-                    >
-                      <div className="w-8 h-11 rounded-md overflow-hidden flex-shrink-0">
-                        {book.coverImage ? (
-                          <img src={book.coverImage} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                            <span className="text-[10px] font-bold text-primary/40">{book.title[0]}</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium truncate" dangerouslySetInnerHTML={{ __html: book.highlightedTitle }} />
-                        <p className="text-xs text-muted-foreground" dangerouslySetInnerHTML={{ __html: book.highlightedAuthor }} />
-                      </div>
-                    </a>
-                  ))}
+                  {topSuggestions.map((book) => {
+                    const coverUrl = normalizeMediaUrl(book.coverImage);
+                    return (
+                      <a
+                        key={book.id}
+                        href={`/book/${book.id}`}
+                        className="flex items-center gap-3 px-4 py-2.5 hover-elevate transition-colors"
+                        onClick={() => handleSearchSubmit(searchQuery)}
+                        data-testid={`suggestion-${book.id}`}
+                      >
+                        <div className="w-8 h-11 rounded-md overflow-hidden flex-shrink-0">
+                          {coverUrl ? (
+                            <img src={coverUrl} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                              <span className="text-[10px] font-bold text-primary/40">{book.title[0]}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate" dangerouslySetInnerHTML={{ __html: book.highlightedTitle }} />
+                          <p className="text-xs text-muted-foreground" dangerouslySetInnerHTML={{ __html: book.highlightedAuthor }} />
+                        </div>
+                      </a>
+                    );
+                  })}
                 </>
               )}
 
@@ -528,7 +532,9 @@ export default function Discover() {
               >
                 All Books
               </button>
-              {booksWithShorts.map((book) => (
+              {booksWithShorts.map((book) => {
+                const coverUrl = normalizeMediaUrl(book.coverImage);
+                return (
                 <button
                   key={book.id}
                   className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-2 transition-all ${
@@ -539,12 +545,13 @@ export default function Discover() {
                   onClick={() => setShortsBookFilter(shortsBookFilter === book.id ? null : book.id)}
                   data-testid={`shorts-filter-book-${book.id}`}
                 >
-                  {book.coverImage && (
-                    <img src={book.coverImage} alt="" className="w-4 h-5 rounded-[2px] object-cover" />
+                  {coverUrl && (
+                    <img src={coverUrl} alt="" className="w-4 h-5 rounded-[2px] object-cover" />
                   )}
                   <span className="max-w-[120px] truncate">{book.title}</span>
                 </button>
-              ))}
+                );
+              })}
             </div>
           )}
 

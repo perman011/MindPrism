@@ -22,11 +22,13 @@ import { Home } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { trackBookOpen } from "@/lib/analytics";
 import { ShareModal } from "@/components/share-modal";
+import { normalizeMediaUrl } from "@/lib/media-url";
 
 function hasValidAudioUrl(audioUrl: string | null | undefined): boolean {
-  if (!audioUrl) return false;
-  if (audioUrl === "placeholder") return false;
-  if (audioUrl.includes("placeholder")) return false;
+  const normalized = normalizeMediaUrl(audioUrl);
+  if (!normalized) return false;
+  if (normalized === "placeholder") return false;
+  if (normalized.includes("placeholder")) return false;
   return true;
 }
 
@@ -92,6 +94,7 @@ export default function BookDetail() {
   const cardProgress = progress?.currentCardIndex && progress?.totalCards
     ? Math.round((progress.currentCardIndex / progress.totalCards) * 100) : 0;
   const audioAvailable = hasValidAudioUrl(book?.audioUrl);
+  const normalizedCoverUrl = normalizeMediaUrl(book?.coverImage);
 
   const handleShare = useCallback(async () => {
     if (!book) return;
@@ -158,7 +161,7 @@ export default function BookDetail() {
         title={book?.title ? `${book.title} by ${book.author}` : "Book Detail"}
         description={book?.description || "Explore interactive book breakdowns with chapter summaries, mental models, and audio summaries."}
         ogType="article"
-        ogImage={book?.coverImage || undefined}
+        ogImage={normalizedCoverUrl || undefined}
         noIndex
         jsonLd={book ? {
           "@context": "https://schema.org",
@@ -166,7 +169,7 @@ export default function BookDetail() {
           name: book.title,
           author: { "@type": "Person", name: book.author },
           description: book.description || undefined,
-          image: book.coverImage || undefined,
+          image: normalizedCoverUrl || undefined,
           url: window.location.href,
           publisher: { "@type": "Organization", name: "MindPrism" },
         } : undefined}
@@ -216,8 +219,8 @@ export default function BookDetail() {
 
       <div className="flex flex-col items-center px-6 pt-2 pb-6">
         <div className="w-40 h-56 rounded-xl overflow-hidden shadow-lg mb-6" data-testid="img-book-cover">
-          {book.coverImage ? (
-            <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" loading="lazy" />
+          {normalizedCoverUrl ? (
+            <img src={normalizedCoverUrl} alt={book.title} className="w-full h-full object-cover" loading="lazy" />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center">
               <BookOpen className="w-10 h-10 text-primary/40" />

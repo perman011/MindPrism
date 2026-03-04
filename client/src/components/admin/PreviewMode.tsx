@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Monitor, Tablet, Smartphone, ArrowLeft, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Book } from "@shared/schema";
+import { normalizeMediaUrl } from "@/lib/media-url";
 
 interface PreviewModeProps {
   book: Book;
@@ -17,15 +18,16 @@ const VIEWPORTS = [
 ] as const;
 
 function PreviewBookDetail({ book }: { book: Book }) {
+  const coverUrl = normalizeMediaUrl(book.coverImage);
   return (
     <div className="min-h-full bg-[#F5F0EB] dark:bg-[#0F0A14]">
       <div className="relative">
         <div className="h-56 bg-gradient-to-b from-[#341539] via-[#2A1130] to-transparent" />
         <div className="absolute inset-0 flex items-end p-6">
           <div className="flex gap-4 items-end">
-            {book.coverImage && (
+            {coverUrl && (
               <div className="w-28 h-40 rounded-xl overflow-hidden shadow-xl flex-shrink-0 bg-muted">
-                <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
+                <img src={coverUrl} alt={book.title} className="w-full h-full object-cover" />
               </div>
             )}
             <div className="text-white pb-2">
