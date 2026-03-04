@@ -1,0 +1,14 @@
+# OWASP Top 10 (2021) Compliance Matrix -- MindPrism
+
+| ID | Category | Risk | MindPrism Status | Findings | Remediation |
+|----|----------|------|------------------|----------|-------------|
+| A01 | Broken Access Control | Critical | Partial | Admin routes protected via isAdmin middleware; verify all admin-routes.ts endpoints enforce it. Public API endpoints may expose resource IDs without ownership checks. | Audit every admin and user-scoped endpoint for authorization. Add row-level ownership checks on user resources. |
+| A02 | Cryptographic Failures | High | Partial | Journal encryption exists via server/crypto.ts. SESSION_SECRET uses default value "mindspark-default-key-change-in-prod". VAPID keys in .replit userenv.shared. | Rotate SESSION_SECRET to a strong random value. Move VAPID keys to secure env vars. Verify encryption algorithm and key length in crypto.ts. |
+| A03 | Injection | Medium | Good | Drizzle ORM parameterizes SQL queries. JSONB fields (chapter cards, mental model steps) accept unvalidated input. | Validate JSONB schema on write. Add server-side sanitization for all structured content fields. |
+| A04 | Insecure Design | Medium | Needs Review | No documented threat model. No abuse-case testing for subscription flows or admin uploads. | Create threat model for payment and admin flows. Add abuse-case test scenarios. |
+| A05 | Security Misconfiguration | High | Partial | CSP headers only applied in production (server/middleware/security.ts). Default session secret in use. No security headers in development. | Apply CSP in all environments. Rotate default secrets. Add Strict-Transport-Security, X-Content-Type-Options, X-Frame-Options. |
+| A06 | Vulnerable and Outdated Components | Medium | Needs Review | npm audit not integrated into CI. DOMPurify installed but dependency freshness unknown. | Run npm audit in CI pipeline. Set up Dependabot or Renovate for automated updates. |
+| A07 | Identification and Authentication Failures | Medium | Partial | authLimiter (5/min) exists. No account lockout policy. Session fixation risk with memorystore. | Add account lockout after N failed attempts. Regenerate session ID on login. Review session expiry settings. |
+| A08 | Software and Data Integrity Failures | Medium | Needs Review | No subresource integrity (SRI) on CDN scripts. No signature verification on Stripe webhooks beyond default. | Add SRI to CDN-loaded scripts. Verify Stripe webhook signatures with endpoint secret. |
+| A09 | Security Logging and Monitoring Failures | High | Gap | No structured security event logging. No alerting on auth failures or admin actions. | Add structured logging for auth events, admin actions, and rate limit hits. Set up alerting thresholds. |
+| A10 | Server-Side Request Forgery (SSRF) | Low | Good | No user-supplied URL fetching identified. Book cover images are admin-uploaded. | Monitor for any new endpoints that accept URLs. Validate and allowlist any future URL inputs. |
