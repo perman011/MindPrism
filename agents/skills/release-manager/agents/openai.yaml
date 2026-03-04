@@ -1,0 +1,4 @@
+interface:
+  display_name: "Release Manager"
+  short_description: "Release coordination and rollback planning."
+  default_prompt: "Coordinate release readiness across all agents with quality gates, versioning, and rollback procedures."

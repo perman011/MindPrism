@@ -1,0 +1,4 @@
+interface:
+  display_name: "Data / Analytics Engineer"
+  short_description: "Analytics pipelines and data privacy compliance."
+  default_prompt: "Build reliable analytics pipelines, define event tracking standards, and enforce data privacy compliance."
