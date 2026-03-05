@@ -24,6 +24,7 @@ import fs from "fs";
 import { randomUUID } from "crypto";
 import { ObjectStorageService, objectStorageClient, setObjectAclPolicy } from "./replit_integrations/object_storage";
 import { ensureManagedMediaExists } from "./media/managed-media";
+import { getUploadFolder, isAllowedUpload } from "./media/upload-validation";
 
 const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
   const user = req.user as any;
@@ -61,24 +62,11 @@ const requireRole = (minRole: "writer" | "editor" | "admin" | "super_admin") => 
   };
 };
 
-function getUploadFolder(mimetype: string): string {
-  if (mimetype.startsWith("image/")) return "images";
-  if (mimetype.startsWith("audio/")) return "audio";
-  if (mimetype.startsWith("video/")) return "video";
-  return "general";
-}
-
-const allowedMimeTypes: Record<string, boolean> = {
-  "image/png": true, "image/jpeg": true, "image/jpg": true, "image/webp": true, "image/gif": true, "image/avif": true,
-  "audio/mpeg": true, "audio/mp3": true, "audio/wav": true, "audio/x-wav": true, "audio/ogg": true, "audio/mp4": true, "audio/x-m4a": true, "audio/aac": true,
-  "video/mp4": true, "video/webm": true, "video/quicktime": true, "video/x-m4v": true,
-};
-
 const uploadFileFilter = (_req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  if (allowedMimeTypes[file.mimetype]) {
+  if (isAllowedUpload(file.mimetype, file.originalname)) {
     cb(null, true);
   } else {
-    cb(new Error(`File type ${file.mimetype} not allowed`));
+    cb(new Error(`File type ${file.mimetype || "unknown"} not allowed`));
   }
 };
 

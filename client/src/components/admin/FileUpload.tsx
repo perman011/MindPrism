@@ -18,17 +18,24 @@ interface FileUploadProps {
 }
 
 const ACCEPT_MAP: Record<string, string> = {
-  image: "image/png,image/jpeg,image/webp,image/gif,image/avif",
-  audio: "audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/ogg,audio/mp4,audio/x-m4a,audio/aac",
-  video: "video/mp4,video/webm,video/quicktime,video/x-m4v",
-  any: "image/png,image/jpeg,image/webp,image/gif,image/avif,audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/ogg,audio/mp4,audio/x-m4a,audio/aac,video/mp4,video/webm,video/quicktime,video/x-m4v",
+  image: "image/png,image/jpeg,image/webp,image/gif,image/avif,image/heic,image/heif",
+  audio: "audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/ogg,audio/mp4,audio/x-m4a,audio/aac,audio/webm,audio/flac",
+  video: "video/mp4,video/webm,video/quicktime,video/x-m4v,video/3gpp,video/3gpp2",
+  any: "image/png,image/jpeg,image/webp,image/gif,image/avif,image/heic,image/heif,audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/ogg,audio/mp4,audio/x-m4a,audio/aac,audio/webm,audio/flac,video/mp4,video/webm,video/quicktime,video/x-m4v,video/3gpp,video/3gpp2",
 };
 
 const FORMAT_LABELS: Record<string, string> = {
-  image: "PNG, JPG, WebP, GIF, AVIF",
-  audio: "MP3, WAV, OGG, M4A, AAC",
-  video: "MP4, WebM, MOV, M4V",
+  image: "PNG, JPG, WebP, GIF, AVIF, HEIC",
+  audio: "MP3, WAV, OGG, M4A, AAC, FLAC",
+  video: "MP4, WebM, MOV, M4V, 3GP",
   any: "Images, Audio, Video",
+};
+
+const EXTENSION_ALLOWLIST: Record<FileUploadProps["accept"], string[]> = {
+  image: [".png", ".jpg", ".jpeg", ".webp", ".gif", ".avif", ".heic", ".heif"],
+  audio: [".mp3", ".wav", ".ogg", ".m4a", ".aac", ".webm", ".flac"],
+  video: [".mp4", ".webm", ".mov", ".m4v", ".3gp", ".3g2"],
+  any: [".png", ".jpg", ".jpeg", ".webp", ".gif", ".avif", ".heic", ".heif", ".mp3", ".wav", ".ogg", ".m4a", ".aac", ".webm", ".flac", ".mp4", ".mov", ".m4v", ".3gp", ".3g2"],
 };
 
 function getFileIcon(accept: string) {
@@ -55,6 +62,12 @@ function normalizeMediaInputUrl(url: string): string {
   if (!trimmed) return "";
   const normalized = normalizeMediaUrl(trimmed);
   return normalized ?? trimmed;
+}
+
+function getFileExtension(filename: string): string {
+  const dotIndex = filename.lastIndexOf(".");
+  if (dotIndex < 0) return "";
+  return filename.slice(dotIndex).toLowerCase();
 }
 
 export function FileUpload({
@@ -96,7 +109,12 @@ export function FileUpload({
     }
 
     const acceptedTypes = ACCEPT_MAP[accept].split(",");
-    if (!acceptedTypes.includes(file.type)) {
+    const extension = getFileExtension(file.name);
+    const mimeAccepted = acceptedTypes.includes(file.type);
+    const extensionAccepted = EXTENSION_ALLOWLIST[accept].includes(extension);
+    const genericMime = file.type === "" || file.type === "application/octet-stream";
+
+    if (!mimeAccepted && !(genericMime && extensionAccepted)) {
       setError(`Invalid file type. Accepted: ${FORMAT_LABELS[accept]}`);
       return;
     }
