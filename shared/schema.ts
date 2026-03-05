@@ -174,6 +174,9 @@ export const savedHighlights = pgTable("saved_highlights", {
   bookId: varchar("book_id")
     .references(() => books.id)
     .notNull(),
+  chapterId: varchar("chapter_id").references(() => chapterSummaries.id, {
+    onDelete: "set null",
+  }),
   content: text("content").notNull(),
   type: text("type").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
@@ -335,6 +338,10 @@ export const savedHighlightsRelations = relations(
     book: one(books, {
       fields: [savedHighlights.bookId],
       references: [books.id],
+    }),
+    chapter: one(chapterSummaries, {
+      fields: [savedHighlights.chapterId],
+      references: [chapterSummaries.id],
     }),
   }),
 );

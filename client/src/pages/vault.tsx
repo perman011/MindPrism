@@ -2,14 +2,15 @@ import { SEOHead } from "@/components/SEOHead";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
-import type { UserStreak, JournalEntry, SavedHighlight, ChakraProgress, Book } from "@shared/schema";
+import type { UserStreak, JournalEntry, ChakraProgress, Book, ChapterSummary } from "@shared/schema";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PenLine, LogOut, Settings, Calendar, Bookmark, Sun, Moon, Monitor, Flame, Star, Shield, Zap, Trophy, Snowflake, BookOpen, Trash2, Send, Lightbulb } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -22,6 +23,7 @@ import { StreakChart } from "@/components/streak-chart";
 import { motion } from "framer-motion";
 import { openSubscriptionManagement } from "@/lib/billing";
 import { trackJournalWrite } from "@/lib/analytics";
+import { normalizeMediaUrl } from "@/lib/media-url";
 import { Link } from "wouter";
 
 interface VaultStats {
@@ -29,6 +31,78 @@ interface VaultStats {
   currentStreak: number;
   totalMinutesListened: number;
   monthlyActivity: { date: string; activities: number }[];
+}
+
+interface HighlightWithContext {
+  id: string;
+  userId: string;
+  bookId: string;
+  bookTitle: string;
+  bookAuthor: string | null;
+  bookCoverImage: string | null;
+  chapterId: string | null;
+  chapterNumber: number | null;
+  chapterTitle: string | null;
+  content: string;
+  type: string;
+  createdAt: string | Date | null;
+}
+
+interface HighlightBookGroup {
+  bookId: string;
+  bookTitle: string;
+  bookAuthor: string | null;
+  bookCoverImage: string | null;
+  latestCreatedAt: number;
+  highlights: HighlightWithContext[];
+}
+
+function toTimestamp(value: string | Date | null | undefined): number {
+  if (!value) return 0;
+  const ts = new Date(value).getTime();
+  return Number.isNaN(ts) ? 0 : ts;
+}
+
+function formatChapterLabel(highlight: HighlightWithContext): string {
+  if (typeof highlight.chapterNumber === "number" && highlight.chapterTitle) {
+    return `Ch. ${highlight.chapterNumber}: ${highlight.chapterTitle}`;
+  }
+  if (typeof highlight.chapterNumber === "number") {
+    return `Ch. ${highlight.chapterNumber}`;
+  }
+  if (highlight.chapterTitle) {
+    return highlight.chapterTitle;
+  }
+  return "Unknown chapter";
+}
+
+function groupHighlightsByBook(highlights: HighlightWithContext[]): HighlightBookGroup[] {
+  const grouped = new Map<string, HighlightBookGroup>();
+
+  for (const highlight of highlights) {
+    const existing = grouped.get(highlight.bookId);
+    if (existing) {
+      existing.highlights.push(highlight);
+      existing.latestCreatedAt = Math.max(existing.latestCreatedAt, toTimestamp(highlight.createdAt));
+      continue;
+    }
+
+    grouped.set(highlight.bookId, {
+      bookId: highlight.bookId,
+      bookTitle: highlight.bookTitle,
+      bookAuthor: highlight.bookAuthor,
+      bookCoverImage: highlight.bookCoverImage,
+      latestCreatedAt: toTimestamp(highlight.createdAt),
+      highlights: [highlight],
+    });
+  }
+
+  return Array.from(grouped.values())
+    .map((group) => ({
+      ...group,
+      highlights: group.highlights.sort((a, b) => toTimestamp(b.createdAt) - toTimestamp(a.createdAt)),
+    }))
+    .sort((a, b) => b.latestCreatedAt - a.latestCreatedAt);
 }
 
 function extractApiErrorMessage(error: unknown, fallback: string): string {
@@ -52,7 +126,9 @@ export default function Vault() {
   const [activeTab, setActiveTab] = useState<"journal" | "highlights" | "settings">("journal");
   const [journalDraft, setJournalDraft] = useState("");
   const [manualHighlightBookId, setManualHighlightBookId] = useState("");
+  const [manualHighlightChapterId, setManualHighlightChapterId] = useState("");
   const [manualHighlightContent, setManualHighlightContent] = useState("");
+  const [expandedHighlightBookId, setExpandedHighlightBookId] = useState("");
 
   const { data: streak } = useQuery<UserStreak | null>({
     queryKey: ["/api/streak"],
@@ -69,7 +145,7 @@ export default function Vault() {
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
-  const { data: highlights, isLoading: highlightsLoading } = useQuery<SavedHighlight[]>({
+  const { data: highlights, isLoading: highlightsLoading } = useQuery<HighlightWithContext[]>({
     queryKey: ["/api/highlights"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
@@ -85,6 +161,33 @@ export default function Vault() {
   });
 
   const selectedHighlightBookId = manualHighlightBookId || books?.[0]?.id || "";
+  const { data: selectedHighlightBookChapters } = useQuery<ChapterSummary[]>({
+    queryKey: ["/api/books", selectedHighlightBookId, "chapter-summaries"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: !!selectedHighlightBookId,
+  });
+
+  const groupedHighlights = useMemo(
+    () => groupHighlightsByBook(highlights ?? []),
+    [highlights],
+  );
+
+  useEffect(() => {
+    if (selectedHighlightBookChapters?.some((chapter) => chapter.id === manualHighlightChapterId)) {
+      return;
+    }
+    setManualHighlightChapterId("");
+  }, [manualHighlightBookId, manualHighlightChapterId, selectedHighlightBookChapters]);
+
+  useEffect(() => {
+    if (groupedHighlights.length === 0) {
+      setExpandedHighlightBookId("");
+      return;
+    }
+    if (!groupedHighlights.some((group) => group.bookId === expandedHighlightBookId)) {
+      setExpandedHighlightBookId(groupedHighlights[0].bookId);
+    }
+  }, [groupedHighlights, expandedHighlightBookId]);
 
   const [selectedChakra, setSelectedChakra] = useState<ChakraType | null>(null);
   const { toast } = useToast();
@@ -130,7 +233,7 @@ export default function Vault() {
   });
 
   const createHighlightMutation = useMutation({
-    mutationFn: async (payload: { bookId: string; content: string }) => {
+    mutationFn: async (payload: { bookId: string; chapterId?: string; content: string }) => {
       await apiRequest("POST", "/api/highlights", { ...payload, type: "manual" });
     },
     onSuccess: () => {
@@ -433,6 +536,20 @@ export default function Vault() {
                     </option>
                   ))}
                 </select>
+                <select
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  value={manualHighlightChapterId}
+                  onChange={(e) => setManualHighlightChapterId(e.target.value)}
+                  data-testid="select-highlight-chapter"
+                  disabled={!selectedHighlightBookId}
+                >
+                  <option value="">Unknown chapter (legacy/manual)</option>
+                  {(selectedHighlightBookChapters || []).map((chapter) => (
+                    <option key={chapter.id} value={chapter.id}>
+                      {`Ch. ${chapter.chapterNumber}: ${chapter.chapterTitle}`}
+                    </option>
+                  ))}
+                </select>
                 <Textarea
                   value={manualHighlightContent}
                   onChange={(e) => setManualHighlightContent(e.target.value.slice(0, 500))}
@@ -444,7 +561,13 @@ export default function Vault() {
                   <span className="text-[11px] text-muted-foreground">{manualHighlightContent.length}/500</span>
                   <Button
                     size="sm"
-                    onClick={() => createHighlightMutation.mutate({ bookId: selectedHighlightBookId, content: manualHighlightContent.trim() })}
+                    onClick={() =>
+                      createHighlightMutation.mutate({
+                        bookId: selectedHighlightBookId,
+                        chapterId: manualHighlightChapterId || undefined,
+                        content: manualHighlightContent.trim(),
+                      })
+                    }
                     disabled={!selectedHighlightBookId || manualHighlightContent.trim().length === 0 || createHighlightMutation.isPending}
                     data-testid="button-save-highlight-manual"
                   >
@@ -472,37 +595,94 @@ export default function Vault() {
                   <p className="text-xs text-muted-foreground mt-1.5 max-w-[240px] mx-auto leading-relaxed">Go to any chapter reader, select text, and save a highlight.</p>
                 </div>
               ) : (
-                highlights.map((h) => {
-                  const book = books?.find(b => b.id === h.bookId);
-                  return (
-                    <Card key={h.id} className="p-4" data-testid={`highlight-${h.id}`}>
-                      <div className="flex items-start gap-3">
-                        <p className="text-sm leading-relaxed flex-1">{h.content}</p>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                          onClick={() => deleteHighlightMutation.mutate(h.id)}
-                          disabled={deleteHighlightMutation.isPending}
-                          data-testid={`button-delete-highlight-${h.id}`}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                      <div className="flex items-center gap-2 mt-2.5 flex-wrap">
-                        {book && (
-                          <span className="flex items-center gap-1 text-[11px] text-primary font-medium" data-testid={`highlight-book-${h.id}`}>
-                            <BookOpen className="w-3 h-3" />
-                            {book.title}
-                          </span>
-                        )}
-                        <span className="text-[11px] text-muted-foreground font-medium">
-                          {h.createdAt ? new Date(h.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : ""}
-                        </span>
-                      </div>
-                    </Card>
-                  );
-                })
+                <Accordion
+                  type="single"
+                  collapsible
+                  value={expandedHighlightBookId}
+                  onValueChange={setExpandedHighlightBookId}
+                  className="space-y-3"
+                >
+                  {groupedHighlights.map((group) => {
+                    const coverImage = normalizeMediaUrl(group.bookCoverImage);
+                    return (
+                      <AccordionItem
+                        key={group.bookId}
+                        value={group.bookId}
+                        className="rounded-xl border border-border bg-card px-4"
+                        data-testid={`highlight-group-${group.bookId}`}
+                      >
+                        <AccordionTrigger className="py-3 hover:no-underline">
+                          <div className="flex items-center gap-3 text-left">
+                            <div className="h-14 w-10 overflow-hidden rounded-md border border-border bg-muted flex-shrink-0">
+                              {coverImage ? (
+                                <img src={coverImage} alt={group.bookTitle} className="h-full w-full object-cover" loading="lazy" />
+                              ) : (
+                                <div className="h-full w-full flex items-center justify-center text-muted-foreground">
+                                  <BookOpen className="w-3.5 h-3.5" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold truncate">{group.bookTitle}</p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {group.bookAuthor ? `by ${group.bookAuthor}` : "Unknown author"}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground mt-1">
+                                {group.highlights.length} {group.highlights.length === 1 ? "highlight" : "highlights"}
+                              </p>
+                            </div>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pb-3">
+                          <div className="space-y-2.5">
+                            {group.highlights.map((highlight) => (
+                              <div
+                                key={highlight.id}
+                                className="rounded-md border border-border p-3"
+                                data-testid={`highlight-${highlight.id}`}
+                              >
+                                <div className="flex items-start gap-3">
+                                  <p className="text-sm leading-relaxed flex-1">{highlight.content}</p>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                    onClick={() => deleteHighlightMutation.mutate(highlight.id)}
+                                    disabled={deleteHighlightMutation.isPending}
+                                    data-testid={`button-delete-highlight-${highlight.id}`}
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </Button>
+                                </div>
+                                <div className="flex items-center gap-2 mt-2.5 flex-wrap text-[11px] text-muted-foreground">
+                                  <span data-testid={`highlight-chapter-${highlight.id}`}>
+                                    {formatChapterLabel(highlight)}
+                                  </span>
+                                  <span>
+                                    {highlight.createdAt
+                                      ? new Date(highlight.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                                      : ""}
+                                  </span>
+                                  {highlight.chapterId ? (
+                                    <Link
+                                      href={`/book/${highlight.bookId}/read?chapter=${highlight.chapterId}`}
+                                      className="text-primary font-medium"
+                                      data-testid={`highlight-go-to-chapter-${highlight.id}`}
+                                    >
+                                      Go to Chapter
+                                    </Link>
+                                  ) : (
+                                    <span>No chapter link</span>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    );
+                  })}
+                </Accordion>
               )}
             </div>
           </motion.div>

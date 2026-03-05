@@ -12,11 +12,13 @@ test("parseHighlightInput normalizes payload and defaults type", () => {
   assert.deepEqual(
     parseHighlightInput({
       bookId: "  book-123  ",
+      chapterId: "  chapter-7  ",
       content: "  This   is   a key insight.  ",
       type: " chapter ",
     }),
     {
       bookId: "book-123",
+      chapterId: "chapter-7",
       content: "This is a key insight.",
       type: "chapter",
     },
@@ -39,4 +41,5 @@ test("parseHighlightInput rejects invalid content", () => {
   assert.equal(parseHighlightInput({ bookId: "", content: "text", type: "chapter" }), null);
   assert.equal(parseHighlightInput({ bookId: "book-1", content: "   ", type: "chapter" }), null);
   assert.equal(parseHighlightInput({ bookId: "book-1", content: "text", type: "   " }), null);
+  assert.equal(parseHighlightInput({ bookId: "book-1", chapterId: "   ", content: "text", type: "chapter" }), null);
 });

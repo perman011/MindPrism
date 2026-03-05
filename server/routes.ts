@@ -7,7 +7,7 @@ import { registerStripeRoutes } from "./stripe-routes";
 import { z } from "zod";
 import { encrypt, decrypt } from "./crypto";
 import { db } from "./db";
-import { userActivityLog, userProgress, books, categories, journalEntries, quizResults, chapterSummaries, shorts, shortViews, insertShortSchema } from "@shared/schema";
+import { userActivityLog, userProgress, books, categories, journalEntries, quizResults, chapterSummaries, savedHighlights, shorts, shortViews, insertShortSchema } from "@shared/schema";
 import { eq, and, sql as dsql, desc, gte, count, lte, asc } from "drizzle-orm";
 import { ensureManagedMediaExists } from "./media/managed-media";
 import {
@@ -489,7 +489,26 @@ export async function registerRoutes(
   app.get("/api/highlights", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const highlights = await storage.getSavedHighlights(userId);
+      const highlights = await db
+        .select({
+          id: savedHighlights.id,
+          userId: savedHighlights.userId,
+          bookId: savedHighlights.bookId,
+          bookTitle: books.title,
+          bookAuthor: books.author,
+          bookCoverImage: books.coverImage,
+          chapterId: savedHighlights.chapterId,
+          chapterNumber: chapterSummaries.chapterNumber,
+          chapterTitle: chapterSummaries.chapterTitle,
+          content: savedHighlights.content,
+          type: savedHighlights.type,
+          createdAt: savedHighlights.createdAt,
+        })
+        .from(savedHighlights)
+        .innerJoin(books, eq(savedHighlights.bookId, books.id))
+        .leftJoin(chapterSummaries, eq(savedHighlights.chapterId, chapterSummaries.id))
+        .where(eq(savedHighlights.userId, userId))
+        .orderBy(desc(savedHighlights.createdAt));
       res.json(highlights);
     } catch (error) {
       console.error("Error fetching highlights:", error);
@@ -506,6 +525,22 @@ export async function registerRoutes(
       const book = await storage.getBook(parsed.bookId);
       if (!book) {
         return res.status(400).json({ message: "Book not found for highlight" });
+      }
+
+      if (parsed.chapterId) {
+        const [chapter] = await db
+          .select({ id: chapterSummaries.id })
+          .from(chapterSummaries)
+          .where(
+            and(
+              eq(chapterSummaries.id, parsed.chapterId),
+              eq(chapterSummaries.bookId, parsed.bookId),
+            ),
+          )
+          .limit(1);
+        if (!chapter) {
+          return res.status(400).json({ message: "Chapter not found for highlight book" });
+        }
       }
 
       const result = await storage.createSavedHighlight({ userId, ...parsed });

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import type { Book, ChapterSummary } from "@shared/schema";
-import { useParams, useLocation } from "wouter";
+import { useParams, useLocation, useSearch } from "wouter";
 import DOMPurify from "dompurify";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -331,13 +331,19 @@ function TableOfContents({
 export default function ChapterReader() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
+  const searchString = useSearch();
   const { toast } = useToast();
   const [chapterIndex, setChapterIndex] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showToc, setShowToc] = useState(false);
   const [isChapterHydrating, setIsChapterHydrating] = useState(true);
   const [selectedHighlight, setSelectedHighlight] = useState("");
+  const [deepLinkApplied, setDeepLinkApplied] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const deepLinkedChapterId = useMemo(() => {
+    const value = new URLSearchParams(searchString).get("chapter");
+    return value?.trim() || null;
+  }, [searchString]);
 
   const { data: book, isError: bookError } = useQuery<Book>({
     queryKey: ["/api/books", id],
@@ -354,6 +360,21 @@ export default function ChapterReader() {
   const currentChapter = chapters[chapterIndex];
   const currentChapterAudioUrl = normalizeMediaUrl(currentChapter?.audioUrl);
   const hasAudio = !!currentChapterAudioUrl;
+
+  useEffect(() => {
+    setDeepLinkApplied(false);
+  }, [id, deepLinkedChapterId]);
+
+  useEffect(() => {
+    if (!deepLinkedChapterId || deepLinkApplied || chapters.length === 0) {
+      return;
+    }
+    const chapterIdx = chapters.findIndex((chapter) => chapter.id === deepLinkedChapterId);
+    if (chapterIdx >= 0) {
+      setChapterIndex(chapterIdx);
+    }
+    setDeepLinkApplied(true);
+  }, [chapters, deepLinkedChapterId, deepLinkApplied]);
 
   useEffect(() => {
     if (contentRef.current) {
@@ -388,7 +409,12 @@ export default function ChapterReader() {
       if (!id) {
         throw new Error("Missing book id");
       }
-      await apiRequest("POST", "/api/highlights", { bookId: id, content, type: "chapter" });
+      await apiRequest("POST", "/api/highlights", {
+        bookId: id,
+        chapterId: currentChapter?.id,
+        content,
+        type: "chapter",
+      });
     },
     onSuccess: () => {
       if (id) {
