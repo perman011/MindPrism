@@ -40,12 +40,14 @@ function ShortsEditor({ bookId, shorts }: { bookId: string; shorts: Short[] }) {
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [mediaType, setMediaType] = useState<"text" | "image" | "audio" | "video">("text");
   const [backgroundGradient, setBackgroundGradient] = useState("");
   const [status, setStatus] = useState("draft");
 
   const resetForm = () => {
     setTitle("");
     setContent("");
+    setMediaType("text");
     setBackgroundGradient("");
     setStatus("draft");
     setEditingId(null);
@@ -56,6 +58,7 @@ function ShortsEditor({ bookId, shorts }: { bookId: string; shorts: Short[] }) {
     setEditingId(s.id);
     setTitle(s.title);
     setContent(s.content);
+    setMediaType((s.mediaType as "text" | "image" | "audio" | "video") || "text");
     setBackgroundGradient(s.backgroundGradient || "");
     setStatus(s.status);
     setShowForm(true);
@@ -67,7 +70,7 @@ function ShortsEditor({ bookId, shorts }: { bookId: string; shorts: Short[] }) {
         bookId,
         title,
         content,
-        mediaType: "image",
+        mediaType: editingId ? mediaType : "text",
         backgroundGradient: backgroundGradient || null,
         status,
       };
@@ -151,6 +154,9 @@ function ShortsEditor({ bookId, shorts }: { bookId: string; shorts: Short[] }) {
               />
               <p className="text-xs text-muted-foreground mt-1">{content.length}/500</p>
             </div>
+            <p className="text-xs text-muted-foreground">
+              This inline editor is text-first. Use the dedicated Story Shorts page for image/audio/video uploads.
+            </p>
             <div>
               <Label className="text-sm font-medium mb-2 block">Background Gradient</Label>
               <div className="grid grid-cols-3 gap-2 mb-2">
