@@ -1,9 +1,9 @@
 import { Lock, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { getBillingProvider, startUpgrade } from "@/lib/billing";
 
 interface PremiumGateProps {
   children: React.ReactNode;
@@ -24,8 +24,19 @@ export function PremiumGate({ children, isPremium }: PremiumGateProps) {
   }
 
   const stripeConfigured = stripeStatus?.configured ?? true;
+  const billingProvider = getBillingProvider();
+  const canUseStripe = billingProvider === "web_stripe";
+  const canCheckout = canUseStripe ? stripeConfigured : false;
 
   const handleUpgrade = async () => {
+    if (!canUseStripe) {
+      toast({
+        title: "Store billing required",
+        description: "This build must use Apple/Google in-app purchases for subscription upgrades.",
+      });
+      return;
+    }
+
     if (!stripeConfigured) {
       toast({
         title: "Payments not available",
@@ -36,12 +47,13 @@ export function PremiumGate({ children, isPremium }: PremiumGateProps) {
 
     setLoading(true);
     try {
-      const res = await apiRequest("POST", "/api/stripe/create-checkout-session", { plan: "monthly" });
-      const data = await res.json();
+      const result = await startUpgrade("monthly");
+      if (result.redirectUrl) {
+        window.location.href = result.redirectUrl;
+        return;
+      }
 
-      if (data.url) {
-        window.location.href = data.url;
-      } else if (data.code === "STRIPE_NOT_CONFIGURED" || data.code === "STRIPE_PRICE_NOT_CONFIGURED") {
+      if (result.code === "STRIPE_NOT_CONFIGURED" || result.code === "STRIPE_PRICE_NOT_CONFIGURED") {
         toast({
           title: "Payments not available",
           description: "Premium subscriptions are not yet set up. Please check back later.",
@@ -49,7 +61,7 @@ export function PremiumGate({ children, isPremium }: PremiumGateProps) {
       } else {
         toast({
           title: "Upgrade",
-          description: data.message || "Unable to start checkout",
+          description: result.message || "Unable to start checkout",
           variant: "destructive",
         });
       }
@@ -84,14 +96,20 @@ export function PremiumGate({ children, isPremium }: PremiumGateProps) {
               <span>Payments coming soon</span>
             </div>
           )}
+          {!canUseStripe && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground" data-testid="text-native-billing-required">
+              <AlertCircle className="w-3.5 h-3.5" />
+              <span>Use in-app purchase in native app build</span>
+            </div>
+          )}
           <Button
             onClick={handleUpgrade}
-            disabled={loading || !stripeConfigured}
+            disabled={loading || !canCheckout}
             className="bg-gradient-to-r from-blue-500 to-blue-600 text-white gap-2"
             data-testid="button-upgrade-premium"
           >
             <Lock className="w-4 h-4" />
-            {loading ? "Loading..." : !stripeConfigured ? "Coming Soon" : "Upgrade — $9.99/mo"}
+            {loading ? "Loading..." : !canCheckout ? "Coming Soon" : "Upgrade — $9.99/mo"}
           </Button>
         </div>
       </div>

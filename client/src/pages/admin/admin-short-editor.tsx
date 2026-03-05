@@ -9,11 +9,32 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Save, Trash2, Image, Headphones, Video, Check } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Image, Headphones, Video, Check, FileText } from "lucide-react";
 import { Link, useLocation, useParams } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { FileUpload } from "@/components/admin/FileUpload";
+
+function extractApiErrorMessage(error: unknown, fallback: string): string {
+  if (!(error instanceof Error)) return fallback;
+  const raw = error.message.replace(/^\d+:\s*/, "").trim();
+  if (!raw) return fallback;
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed.validationErrors) && parsed.validationErrors.length > 0) {
+      return parsed.validationErrors.join(", ");
+    }
+    if (Array.isArray(parsed.errors) && parsed.errors.length > 0) {
+      return parsed.errors.join(", ");
+    }
+    if (typeof parsed.message === "string" && parsed.message.trim().length > 0) {
+      return parsed.message;
+    }
+  } catch {
+    // Fall back to raw message
+  }
+  return raw;
+}
 
 export default function AdminShortEditor() {
   const { id } = useParams<{ id: string }>();
@@ -24,7 +45,7 @@ export default function AdminShortEditor() {
   const [bookId, setBookId] = useState("");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [mediaType, setMediaType] = useState("image");
+  const [mediaType, setMediaType] = useState<"text" | "image" | "audio" | "video">("image");
   const [mediaUrl, setMediaUrl] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [isMediaUploading, setIsMediaUploading] = useState(false);
@@ -52,7 +73,7 @@ export default function AdminShortEditor() {
       setBookId(existing.bookId);
       setTitle(existing.title);
       setContent(existing.content);
-      setMediaType(existing.mediaType);
+      setMediaType((existing.mediaType as "text" | "image" | "audio" | "video") || "image");
       setMediaUrl(existing.mediaUrl || "");
       setThumbnailUrl(existing.thumbnailUrl || "");
       setBackgroundGradient(existing.backgroundGradient || "");
@@ -88,8 +109,11 @@ export default function AdminShortEditor() {
       navigate("/admin/shorts");
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message.replace(/^\d+:\s*/, "") : "Failed to save short";
-      toast({ title: "Error", description: message, variant: "destructive" });
+      toast({
+        title: "Error",
+        description: extractApiErrorMessage(error, "Failed to save short"),
+        variant: "destructive",
+      });
     },
   });
 
@@ -119,12 +143,13 @@ export default function AdminShortEditor() {
   const hasMedia = mediaUrl.trim().length > 0;
   const hasThumbnail = thumbnailUrl.trim().length > 0;
   const needsThumbnail = mediaType === "audio" || mediaType === "video";
+  const requiresMedia = mediaType === "audio" || mediaType === "video";
   const canSave = !!(
     bookId &&
     title.trim() &&
     content.trim() &&
     mediaType &&
-    hasMedia &&
+    (!requiresMedia || hasMedia) &&
     (!needsThumbnail || hasThumbnail) &&
     !isMediaUploading &&
     !isThumbnailUploading
@@ -261,6 +286,7 @@ export default function AdminShortEditor() {
                 <Label className="text-sm font-medium mb-3 block">Media Type *</Label>
                 <div className="flex gap-3">
                   {[
+                    { value: "text", label: "Text", icon: FileText },
                     { value: "image", label: "Image", icon: Image },
                     { value: "audio", label: "Audio", icon: Headphones },
                     { value: "video", label: "Video", icon: Video },
@@ -268,7 +294,7 @@ export default function AdminShortEditor() {
                     <button
                       key={value}
                       type="button"
-                      onClick={() => setMediaType(value)}
+                      onClick={() => setMediaType(value as "text" | "image" | "audio" | "video")}
                       className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border transition-all ${
                         mediaType === value
                           ? "border-primary bg-primary/10 text-primary"
@@ -283,37 +309,46 @@ export default function AdminShortEditor() {
                 </div>
               </div>
 
-              <div>
-                <FileUpload
-                  accept={mediaType as "image" | "audio" | "video"}
-                  value={mediaUrl}
-                  onChange={(url) => setMediaUrl(url)}
-                  onUploadStateChange={setIsMediaUploading}
-                  maxSize={mediaType === "video" ? 50 : mediaType === "audio" ? 50 : 5}
-                  label={`${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} File`}
-                  required
-                  placeholder={`Drop ${mediaType} file here or click to browse`}
-                />
-                {!hasMedia && (
-                  <p className="text-xs text-purple-700 mt-1">Required before saving/publishing</p>
-                )}
-              </div>
+              {mediaType !== "text" && (
+                <div>
+                  <FileUpload
+                    accept={mediaType as "image" | "audio" | "video"}
+                    value={mediaUrl}
+                    onChange={(url) => setMediaUrl(url)}
+                    onUploadStateChange={setIsMediaUploading}
+                    uploadContext={!isNew && id ? { shortId: id, shortField: "mediaUrl" } : undefined}
+                    maxSize={mediaType === "video" ? 50 : mediaType === "audio" ? 50 : 5}
+                    label={`${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} File${requiresMedia ? " *" : ""}`}
+                    required={requiresMedia}
+                    placeholder={`Drop ${mediaType} file here or click to browse`}
+                  />
+                  {requiresMedia && !hasMedia && (
+                    <p className="text-xs text-purple-700 mt-1">Required for audio/video publish</p>
+                  )}
+                  {mediaType === "image" && !hasMedia && (
+                    <p className="text-xs text-muted-foreground mt-1">Optional for image shorts. Gradient/text-only image shorts are supported.</p>
+                  )}
+                </div>
+              )}
 
-              <div>
-                <FileUpload
-                  accept="image"
-                  value={thumbnailUrl}
-                  onChange={(url) => setThumbnailUrl(url)}
-                  onUploadStateChange={setIsThumbnailUploading}
-                  maxSize={5}
-                  label={`Thumbnail Image${needsThumbnail ? " *" : ""}`}
-                  required={needsThumbnail}
-                  placeholder="Drop a thumbnail image or click to browse"
-                />
-                {needsThumbnail && (
-                  <p className="text-xs text-purple-700 mt-1">Required for audio/video shorts</p>
-                )}
-              </div>
+              {mediaType !== "text" && (
+                <div>
+                  <FileUpload
+                    accept="image"
+                    value={thumbnailUrl}
+                    onChange={(url) => setThumbnailUrl(url)}
+                    onUploadStateChange={setIsThumbnailUploading}
+                    uploadContext={!isNew && id ? { shortId: id, shortField: "thumbnailUrl" } : undefined}
+                    maxSize={5}
+                    label={`Thumbnail Image${needsThumbnail ? " *" : ""}`}
+                    required={needsThumbnail}
+                    placeholder="Drop a thumbnail image or click to browse"
+                  />
+                  {needsThumbnail && (
+                    <p className="text-xs text-purple-700 mt-1">Required for audio/video shorts</p>
+                  )}
+                </div>
+              )}
 
               <div>
                 <Label className="text-sm font-medium mb-3 block">Background Gradient</Label>

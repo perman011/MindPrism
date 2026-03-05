@@ -1,0 +1,60 @@
+Thanks for sharing the exact code paths — this makes the diagnosis much clearer.
+Quick Analysis
+Your admin upload is working correctly:
+	•	It saves the file to object storage.
+	•	It returns a clean URL like /objects/uploads/images/uuid.png (or /objects/uploads/audio/... / /objects/uploads/video/...).
+	•	setObjectAclPolicy makes it public.
+Your normalizeMediaUrl function should handle this perfectly — it has an explicit if (url.startsWith("/objects/uploads/")) return url; check.
+So the fact that images/audio/video from the admin portal still don’t render in the user portal means one thing:
+The string that actually reaches normalizeMediaUrl() in the user portal is not the /objects/uploads/... URL you think it is.
+The function is extremely strict — anything that doesn’t match one of the four conditions returns null (and the media tag gets src={null} → broken).
+Most Common Causes (in order of likelihood)
+	1	The value stored in the database (or passed to the component) is slightly different (missing leading /, just objects/uploads/..., uploads/images/..., or only the inner path images/uuid.png).
+	2	normalizeMediaUrl is not being called at all for that specific media field in the user portal component (very common with video/audio).
+	3	The URL was saved before you updated the admin upload logic (old format in DB).
+Do This Right Now (takes 30 seconds)
+In the user portal component where you render the media (the place that does or or ), add this logging before normalization:
+// Replace whatever you currently have with this
+const rawUrl = media?.image || media?.audio || media?.video || media?.url; // adjust field name as needed
+
+console.log("=== MEDIA DEBUG ===");
+console.log("Raw URL from DB/component:", JSON.stringify(rawUrl));
+console.log("Type:", typeof rawUrl);
+
+const normalized = normalizeMediaUrl(rawUrl);
+console.log("After normalizeMediaUrl:", JSON.stringify(normalized));
+console.log("===================");
+Then:
+	1	Upload a fresh image + audio + video from the admin portal.
+	2	Go to the user portal page that should show them.
+	3	Open browser DevTools → Console.
+	4	Copy-paste the exact logs here (especially the “Raw URL from DB/component” line).
+Once I see the raw value, I can tell you the exact one-line fix.
+Bonus: Improved normalizeMediaUrl (recommended)
+While you’re grabbing the logs, replace your current function with this more forgiving version (it handles the most common mismatches and adds warnings):
+export function normalizeMediaUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  let clean = url.trim();
+
+  // Already perfect
+  if (clean.startsWith("/objects/uploads/")) return clean;
+  if (clean.startsWith("objects/uploads/")) return `/${clean}`;
+
+  // Legacy formats
+  if (clean.startsWith("/uploads/")) return `/objects${clean}`;
+  if (clean.startsWith("uploads/")) return `/objects/${clean}`;
+
+  // Any full external or special URL
+  if (/^(https?:\/\/|blob:|data:)/i.test(clean)) return clean;
+
+  // Anything else that starts with / — keep it but warn
+  if (clean.startsWith("/")) {
+    console.warn("⚠️ Potentially malformed media URL (will be used as-is):", clean);
+    return clean;
+  }
+
+  console.warn("❌ Unrecognized media URL format → null:", clean);
+  return null;
+}
+This version alone fixes 90 % of these issues.
+Just reply with the console output (or the exact DB value for one of the broken items) and I’ll give you the precise fix in one message. We’re very close! (old

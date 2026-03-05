@@ -11,6 +11,10 @@ interface FileUploadProps {
   value: string;
   onChange: (url: string) => void;
   onUploadStateChange?: (isUploading: boolean) => void;
+  uploadContext?: {
+    shortId: string;
+    shortField: "mediaUrl" | "thumbnailUrl";
+  };
   maxSize?: number;
   label?: string;
   required?: boolean;
@@ -18,17 +22,24 @@ interface FileUploadProps {
 }
 
 const ACCEPT_MAP: Record<string, string> = {
-  image: "image/png,image/jpeg,image/webp,image/gif,image/avif",
-  audio: "audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/ogg,audio/mp4,audio/x-m4a,audio/aac",
-  video: "video/mp4,video/webm,video/quicktime,video/x-m4v",
-  any: "image/png,image/jpeg,image/webp,image/gif,image/avif,audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/ogg,audio/mp4,audio/x-m4a,audio/aac,video/mp4,video/webm,video/quicktime,video/x-m4v",
+  image: "image/png,image/jpeg,image/webp,image/gif,image/avif,image/heic,image/heif",
+  audio: "audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/ogg,audio/mp4,audio/x-m4a,audio/aac,audio/webm,audio/flac",
+  video: "video/mp4,video/webm,video/quicktime,video/x-m4v,video/3gpp,video/3gpp2",
+  any: "image/png,image/jpeg,image/webp,image/gif,image/avif,image/heic,image/heif,audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/ogg,audio/mp4,audio/x-m4a,audio/aac,audio/webm,audio/flac,video/mp4,video/webm,video/quicktime,video/x-m4v,video/3gpp,video/3gpp2",
 };
 
 const FORMAT_LABELS: Record<string, string> = {
-  image: "PNG, JPG, WebP, GIF, AVIF",
-  audio: "MP3, WAV, OGG, M4A, AAC",
-  video: "MP4, WebM, MOV, M4V",
+  image: "PNG, JPG, WebP, GIF, AVIF, HEIC",
+  audio: "MP3, WAV, OGG, M4A, AAC, FLAC",
+  video: "MP4, WebM, MOV, M4V, 3GP",
   any: "Images, Audio, Video",
+};
+
+const EXTENSION_ALLOWLIST: Record<FileUploadProps["accept"], string[]> = {
+  image: [".png", ".jpg", ".jpeg", ".webp", ".gif", ".avif", ".heic", ".heif"],
+  audio: [".mp3", ".wav", ".ogg", ".m4a", ".aac", ".webm", ".flac"],
+  video: [".mp4", ".webm", ".mov", ".m4v", ".3gp", ".3g2"],
+  any: [".png", ".jpg", ".jpeg", ".webp", ".gif", ".avif", ".heic", ".heif", ".mp3", ".wav", ".ogg", ".m4a", ".aac", ".webm", ".flac", ".mp4", ".mov", ".m4v", ".3gp", ".3g2"],
 };
 
 function getFileIcon(accept: string) {
@@ -76,6 +87,21 @@ function getFriendlyFilenameFromUrl(url: string): string {
   }
 
   return raw;
+function getDisplayFilename(url: string): string {
+  const lastSegment = decodeURIComponent(url.split("?")[0].split("/").pop() || "").trim();
+  if (!lastSegment) return "uploaded-file";
+
+  const uuidPrefixMatch = lastSegment.match(
+    /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})-(.+)$/i,
+  );
+  if (!uuidPrefixMatch) return lastSegment;
+  return uuidPrefixMatch[2];
+}
+
+function getFileExtension(filename: string): string {
+  const dotIndex = filename.lastIndexOf(".");
+  if (dotIndex < 0) return "";
+  return filename.slice(dotIndex).toLowerCase();
 }
 
 export function FileUpload({
@@ -83,6 +109,7 @@ export function FileUpload({
   value,
   onChange,
   onUploadStateChange,
+  uploadContext,
   maxSize = 50,
   label,
   required,
@@ -117,7 +144,12 @@ export function FileUpload({
     }
 
     const acceptedTypes = ACCEPT_MAP[accept].split(",");
-    if (!acceptedTypes.includes(file.type)) {
+    const extension = getFileExtension(file.name);
+    const mimeAccepted = acceptedTypes.includes(file.type);
+    const extensionAccepted = EXTENSION_ALLOWLIST[accept].includes(extension);
+    const genericMime = file.type === "" || file.type === "application/octet-stream";
+
+    if (!mimeAccepted && !(genericMime && extensionAccepted)) {
       setError(`Invalid file type. Accepted: ${FORMAT_LABELS[accept]}`);
       return;
     }
@@ -127,6 +159,10 @@ export function FileUpload({
 
     const formData = new FormData();
     formData.append("file", file);
+    if (uploadContext?.shortId && uploadContext?.shortField) {
+      formData.append("shortId", uploadContext.shortId);
+      formData.append("shortField", uploadContext.shortField);
+    }
 
     try {
       const progressInterval = setInterval(() => {
@@ -160,7 +196,7 @@ export function FileUpload({
       setIsUploading(false);
       setUploadProgress(0);
     }
-  }, [accept, maxSize, onChange]);
+  }, [accept, maxSize, onChange, uploadContext]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();

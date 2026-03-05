@@ -139,6 +139,15 @@ export const userInterests = pgTable("user_interests", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const stripeWebhookEvents = pgTable("stripe_webhook_events", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  eventType: text("event_type").notNull(),
+  processedAt: timestamp("processed_at").notNull().defaultNow(),
+}, (table) => ({
+  processedAtIdx: index("stripe_webhook_events_processed_idx").on(table.processedAt),
+  eventTypeIdx: index("stripe_webhook_events_type_idx").on(table.eventType),
+}));
+
 export const userStreaks = pgTable("user_streaks", {
   id: varchar("id")
     .primaryKey()

@@ -1,5 +1,12 @@
 id,journey,priority,preconditions,steps,expected_result,status
-E2E-001,Create project,P1,Test account + seeded data,Define step-by-step actions,Journey completes without error,Not Run
-E2E-002,Estimate tasks,P1,Test account + seeded data,Define step-by-step actions,Journey completes without error,Not Run
-E2E-003,Log actuals,P1,Test account + seeded data,Define step-by-step actions,Journey completes without error,Not Run
-E2E-004,Review variance dashboard,P1,Test account + seeded data,Define step-by-step actions,Journey completes without error,Not Run
+E2E-01,Dashboard brand lockup,P0,Authenticated user,Open dashboard in light mode,Transparent icon and lowercase wordmark render,Planned
+E2E-04,Short video render,P0,Admin plus published video short with thumbnail,Open short player and play video,Video or poster renders without broken state,Planned
+E2E-05,Short audio render,P0,Admin plus published audio short with thumbnail,Open short player and play audio,Audio controls mount and play,Planned
+E2E-08,Byte-range seek,P0,Published audio or video media,Seek forward and back repeatedly,Seek succeeds without reload failure,Planned
+E2E-13,Billing checkout lifecycle,P0,Free user in Stripe test mode,Complete checkout and return to app,Plan updates to Premium and persists,Planned
+E2E-14,Billing cancellation lifecycle,P0,Premium user with active subscription,Cancel in Stripe portal and process webhook,Plan downgrades to Free at expected boundary,Planned
+E2E-15,Billing failed payment lifecycle,P0,Premium user with forced payment failure,Trigger invoice.payment_failed webhook,Entitlement is revoked with deterministic state,Planned
+E2E-16,Webhook idempotency replay,P0,Existing processed Stripe event,Replay same Stripe event id,No duplicate side effects and duplicate-safe response,Planned
+E2E-19,Restricted deep-link users,P0,Writer account,Open /admin/users directly,Access denied screen shown,Planned
+E2E-20,Restricted deep-link analytics,P0,Writer account,Open /admin/analytics directly,Access denied screen shown,Planned
+E2E-21,Admin API RBAC matrix,P0,Multiple role personas,Call restricted admin endpoints,Unauthorized and forbidden responses are correct per role,Planned

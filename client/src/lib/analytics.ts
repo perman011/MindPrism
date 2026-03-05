@@ -24,12 +24,11 @@ function isDuplicate(eventType: string, eventData?: Record<string, unknown>): bo
   recentEvents.set(key, now);
 
   if (recentEvents.size > 100) {
-    const entries = [...recentEvents.entries()];
-    for (const [k, v] of entries) {
-      if (now - v > DEBOUNCE_MS * 5) {
-        recentEvents.delete(k);
+    recentEvents.forEach((value, mapKey) => {
+      if (now - value > DEBOUNCE_MS * 5) {
+        recentEvents.delete(mapKey);
       }
-    }
+    });
   }
 
   return false;

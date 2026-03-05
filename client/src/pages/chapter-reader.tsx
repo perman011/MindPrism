@@ -1,17 +1,19 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { getQueryFn } from "@/lib/queryClient";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import type { Book, ChapterSummary } from "@shared/schema";
 import { useParams, useLocation } from "wouter";
 import DOMPurify from "dompurify";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, ChevronLeft, ChevronRight, BookOpen,
-  Play, Pause, Clock, List, X,
+  Play, Pause, Clock, List, X, BookmarkPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { normalizeMediaUrl } from "@/lib/media-url";
+import { useToast } from "@/hooks/use-toast";
+import { trackHighlightSave } from "@/lib/analytics";
 
 const READER_BG = "#0F172A";
 const READER_TEXT = "#F5F0EB";
@@ -26,6 +28,21 @@ function formatTime(seconds: number): string {
 
 const ALLOWED_TAGS = ["p", "h2", "h3", "strong", "em", "mark", "blockquote", "ul", "ol", "li", "hr", "br"];
 const ALLOWED_ATTR: string[] = [];
+
+function extractApiErrorMessage(error: unknown, fallback: string): string {
+  if (!(error instanceof Error)) return fallback;
+  const raw = error.message.replace(/^\d+:\s*/, "").trim();
+  if (!raw) return fallback;
+  try {
+    const parsed = JSON.parse(raw);
+    if (typeof parsed.message === "string" && parsed.message.trim().length > 0) {
+      return parsed.message;
+    }
+  } catch {
+    // fall through
+  }
+  return raw;
+}
 
 function ChapterContent({ html, fallbackCards }: { html: string | null; fallbackCards: any[] | null }) {
   const sanitizedHtml = useMemo(() => {
@@ -65,6 +82,8 @@ function AudioPlayer({ audioUrl, accentColor }: { audioUrl: string; accentColor:
   const audioRef = useRef<HTMLAudioElement>(null);
   const resolvedAudioUrl = useMemo(() => normalizeMediaUrl(audioUrl) ?? audioUrl, [audioUrl]);
   const [playing, setPlaying] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [speed, setSpeed] = useState(1);
@@ -75,6 +94,8 @@ function AudioPlayer({ audioUrl, accentColor }: { audioUrl: string; accentColor:
 
   useEffect(() => {
     setPlaying(false);
+    setIsBuffering(false);
+    setLoadError(null);
     setCurrentTime(0);
     if (audioRef.current) {
       audioRef.current.pause();
@@ -100,7 +121,11 @@ function AudioPlayer({ audioUrl, accentColor }: { audioUrl: string; accentColor:
     if (playing) {
       audioRef.current.pause();
     } else {
-      audioRef.current.play().catch(() => setPlaying(false));
+      setLoadError(null);
+      audioRef.current.play().catch(() => {
+        setPlaying(false);
+        setLoadError("Playback failed. The audio file may be unavailable.");
+      });
     }
   }, [playing]);
 
@@ -138,11 +163,22 @@ function AudioPlayer({ audioUrl, accentColor }: { audioUrl: string; accentColor:
           if (audioRef.current) {
             setDuration(audioRef.current.duration);
             audioRef.current.playbackRate = speed;
+            setLoadError(null);
           }
         }}
-        onPlay={() => setPlaying(true)}
+        onPlay={() => {
+          setPlaying(true);
+          setIsBuffering(false);
+        }}
         onPause={() => setPlaying(false)}
         onEnded={() => setPlaying(false)}
+        onWaiting={() => setIsBuffering(true)}
+        onCanPlay={() => setIsBuffering(false)}
+        onPlaying={() => setIsBuffering(false)}
+        onError={() => {
+          setIsBuffering(false);
+          setLoadError("Audio failed to load. Re-upload this chapter audio in Admin.");
+        }}
       />
 
       <div
@@ -178,6 +214,11 @@ function AudioPlayer({ audioUrl, accentColor }: { audioUrl: string; accentColor:
             <span>{formatTime(currentTime)}</span>
             <span>{duration > 0 ? formatTime(duration) : "--:--"}</span>
           </div>
+          {(isBuffering || loadError) && (
+            <p className="text-[11px] mt-1" style={{ color: loadError ? "#FCA5A5" : "rgba(245,240,235,0.65)" }}>
+              {loadError || "Buffering audio..."}
+            </p>
+          )}
         </div>
 
         <div className="relative">
@@ -290,9 +331,12 @@ function TableOfContents({
 export default function ChapterReader() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
+  const { toast } = useToast();
   const [chapterIndex, setChapterIndex] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showToc, setShowToc] = useState(false);
+  const [isChapterHydrating, setIsChapterHydrating] = useState(true);
+  const [selectedHighlight, setSelectedHighlight] = useState("");
   const contentRef = useRef<HTMLDivElement>(null);
 
   const { data: book, isError: bookError } = useQuery<Book>({
@@ -318,6 +362,12 @@ export default function ChapterReader() {
     setScrollProgress(0);
   }, [chapterIndex]);
 
+  useEffect(() => {
+    setIsChapterHydrating(true);
+    const frameId = requestAnimationFrame(() => setIsChapterHydrating(false));
+    return () => cancelAnimationFrame(frameId);
+  }, [currentChapter?.id]);
+
   const handleScroll = useCallback(() => {
     if (!contentRef.current) return;
     const { scrollTop, scrollHeight, clientHeight } = contentRef.current;
@@ -332,6 +382,82 @@ export default function ChapterReader() {
       setChapterIndex(idx);
     }
   }, [chapters.length]);
+
+  const saveHighlightMutation = useMutation({
+    mutationFn: async (content: string) => {
+      if (!id) {
+        throw new Error("Missing book id");
+      }
+      await apiRequest("POST", "/api/highlights", { bookId: id, content, type: "chapter" });
+    },
+    onSuccess: () => {
+      if (id) {
+        trackHighlightSave(id);
+      }
+      queryClient.invalidateQueries({ queryKey: ["/api/highlights"] });
+      setSelectedHighlight("");
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      toast({ title: "Saved", description: "Highlight added to your vault." });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: extractApiErrorMessage(error, "Failed to save highlight."),
+        variant: "destructive",
+      });
+    },
+  });
+
+  const saveManualHighlight = useCallback(() => {
+    const text = window.prompt("Save a highlight from this chapter:", "");
+    if (!text) return;
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    saveHighlightMutation.mutate(trimmed.slice(0, 400));
+  }, [saveHighlightMutation]);
+
+  useEffect(() => {
+    const readSelection = () => {
+      const container = contentRef.current;
+      if (!container) return;
+
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) {
+        setSelectedHighlight("");
+        return;
+      }
+
+      const anchorNode = selection.anchorNode;
+      const focusNode = selection.focusNode;
+      if (!anchorNode || !focusNode) {
+        setSelectedHighlight("");
+        return;
+      }
+
+      const containsAnchor = container.contains(anchorNode);
+      const containsFocus = container.contains(focusNode);
+      if (!containsAnchor || !containsFocus) {
+        setSelectedHighlight("");
+        return;
+      }
+
+      const text = selection.toString().replace(/\s+/g, " ").trim();
+      setSelectedHighlight(text.slice(0, 400));
+    };
+
+    const container = contentRef.current;
+    if (!container) return;
+
+    container.addEventListener("mouseup", readSelection);
+    container.addEventListener("keyup", readSelection);
+    container.addEventListener("touchend", readSelection);
+    return () => {
+      container.removeEventListener("mouseup", readSelection);
+      container.removeEventListener("keyup", readSelection);
+      container.removeEventListener("touchend", readSelection);
+    };
+  }, [currentChapter?.id]);
 
   if (isLoading) {
     return (
@@ -419,7 +545,7 @@ export default function ChapterReader() {
             )}
 
             {currentChapter?.estimatedReadTime && (
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2 mb-4 flex-wrap">
                 <Badge
                   className="text-[10px] gap-1 border-0"
                   style={{ background: "rgba(245,240,235,0.08)", color: "rgba(245,240,235,0.5)" }}
@@ -427,13 +553,59 @@ export default function ChapterReader() {
                   <Clock className="w-3 h-3" />
                   {currentChapter.estimatedReadTime} min read
                 </Badge>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="gap-1 text-xs px-2.5 h-7"
+                  style={{ color: READER_TEXT, border: "1px solid rgba(245,240,235,0.15)" }}
+                  onClick={saveManualHighlight}
+                  disabled={saveHighlightMutation.isPending}
+                  data-testid="button-save-highlight-manual-reader"
+                >
+                  <BookmarkPlus className="w-3.5 h-3.5" />
+                  Save Insight
+                </Button>
               </div>
             )}
 
             <ChapterContent
-              html={currentChapter?.content || null}
-              fallbackCards={currentChapter?.cards as any[] || null}
+              html={isChapterHydrating ? null : (currentChapter?.content || null)}
+              fallbackCards={isChapterHydrating ? null : (currentChapter?.cards as any[] || null)}
             />
+
+            {selectedHighlight && (
+              <div
+                className="rounded-lg px-4 py-3 mb-4 mt-2"
+                style={{ background: "rgba(245,240,235,0.06)", border: "1px solid rgba(245,240,235,0.16)" }}
+                data-testid="highlight-capture-panel"
+              >
+                <p className="text-xs mb-2" style={{ color: "rgba(245,240,235,0.65)" }}>
+                  Selected text
+                </p>
+                <p className="text-sm mb-3 line-clamp-3" style={{ color: READER_TEXT }}>
+                  "{selectedHighlight}"
+                </p>
+                <Button
+                  size="sm"
+                  className="gap-1"
+                  style={{ background: ACCENT, color: READER_TEXT }}
+                  onClick={() => saveHighlightMutation.mutate(selectedHighlight)}
+                  disabled={saveHighlightMutation.isPending}
+                  data-testid="button-save-highlight"
+                >
+                  <BookmarkPlus className="w-4 h-4" />
+                  {saveHighlightMutation.isPending ? "Saving..." : "Save Highlight"}
+                </Button>
+              </div>
+            )}
+
+            {isChapterHydrating && (
+              <div className="space-y-3 animate-pulse">
+                <div className="h-4 rounded" style={{ background: "rgba(245,240,235,0.12)" }} />
+                <div className="h-4 rounded" style={{ background: "rgba(245,240,235,0.08)" }} />
+                <div className="h-4 rounded w-4/5" style={{ background: "rgba(245,240,235,0.08)" }} />
+              </div>
+            )}
 
             <div className="flex items-center justify-between mt-12 pt-6" style={{ borderTop: "1px solid rgba(245,240,235,0.08)" }}>
               <Button

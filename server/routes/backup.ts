@@ -40,7 +40,11 @@ router.post("/", async (_req: Request, res: Response) => {
 
 router.delete("/:filename", async (req: Request, res: Response) => {
   try {
-    const deleted = await deleteBackup(req.params.filename);
+    const filename = Array.isArray(req.params.filename) ? req.params.filename[0] : req.params.filename;
+    if (!filename) {
+      return res.status(400).json({ message: "Filename is required" });
+    }
+    const deleted = await deleteBackup(filename);
     if (!deleted) {
       return res.status(404).json({ message: "Backup not found" });
     }
@@ -52,11 +56,15 @@ router.delete("/:filename", async (req: Request, res: Response) => {
 
 router.get("/:filename/download", async (req: Request, res: Response) => {
   try {
-    const filepath = await getBackupPath(req.params.filename);
+    const filename = Array.isArray(req.params.filename) ? req.params.filename[0] : req.params.filename;
+    if (!filename) {
+      return res.status(400).json({ message: "Filename is required" });
+    }
+    const filepath = await getBackupPath(filename);
     if (!filepath) {
       return res.status(404).json({ message: "Backup not found" });
     }
-    res.download(filepath, req.params.filename);
+    res.download(filepath, filename);
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }

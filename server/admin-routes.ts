@@ -23,6 +23,8 @@ import path from "path";
 import fs from "fs";
 import { randomUUID } from "crypto";
 import { ObjectStorageService, objectStorageClient, setObjectAclPolicy } from "./replit_integrations/object_storage";
+import { ensureManagedMediaExists } from "./media/managed-media";
+import { getUploadFolder, isAllowedUpload, sanitizeUploadBaseName } from "./media/upload-validation";
 
 const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
   const user = req.user as any;
@@ -85,10 +87,10 @@ const allowedMimeTypes: Record<string, boolean> = {
 };
 
 const uploadFileFilter = (_req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  if (allowedMimeTypes[file.mimetype]) {
+  if (isAllowedUpload(file.mimetype, file.originalname)) {
     cb(null, true);
   } else {
-    cb(new Error(`File type ${file.mimetype} not allowed`));
+    cb(new Error(`File type ${file.mimetype || "unknown"} not allowed`));
   }
 };
 
@@ -100,11 +102,33 @@ const upload = multer({
 
 const objectStorageService = new ObjectStorageService();
 
+async function validateManagedMediaForPublish(
+  validationErrors: string[],
+  mediaUrl: string | null | undefined,
+  label: string,
+) {
+  const trimmed = typeof mediaUrl === "string" ? mediaUrl.trim() : "";
+  if (!trimmed) return;
+
+  try {
+    const exists = await ensureManagedMediaExists(trimmed);
+    if (!exists) {
+      validationErrors.push(`${label} file is missing from object storage. Re-upload media before publishing.`);
+    }
+  } catch (error) {
+    console.error(`[Admin Publish] Failed to verify ${label}:`, error);
+    validationErrors.push(`${label} could not be validated. Retry publishing after storage is healthy.`);
+  }
+}
+
 export function registerAdminRoutes(app: Express) {
   app.get("/objects/{*objectPath}", async (req, res) => {
     try {
-      const objectPath = (req.params as any).objectPath;
+      const rawParam = (req.params as any).objectPath;
+      const objectPath = Array.isArray(rawParam) ? rawParam.join("/") : String(rawParam || "");
+      console.log(`[objects] GET /objects/${objectPath}`);
       if (!objectPath.startsWith("uploads/")) {
+        console.warn(`[objects] Access denied for path: ${objectPath}`);
         return res.status(403).json({ error: "Access denied" });
       }
       const objectFile = await objectStorageService.getObjectEntityFile(`/objects/${objectPath}`);
@@ -116,9 +140,10 @@ export function registerAdminRoutes(app: Express) {
       );
     } catch (error: any) {
       if (error?.name === "ObjectNotFoundError") {
+        console.warn(`[objects] File not found: /objects/${(Array.isArray((req.params as any).objectPath) ? (req.params as any).objectPath.join("/") : (req.params as any).objectPath)}`);
         return res.status(404).json({ error: "File not found" });
       }
-      console.error("Error serving object:", error);
+      console.error("[objects] Error serving object:", error);
       return res.status(500).json({ error: "Failed to serve file" });
     }
   });
@@ -161,6 +186,8 @@ export function registerAdminRoutes(app: Express) {
       const bucket = objectStorageClient.bucket(bucketName);
       const file = bucket.file(objectPath);
 
+      console.log(`[upload] Saving file to bucket=${bucketName} path=${objectPath} (${req.file.mimetype}, ${req.file.size} bytes)`);
+
       await file.save(req.file.buffer, {
         contentType: req.file.mimetype,
         metadata: {
@@ -170,6 +197,13 @@ export function registerAdminRoutes(app: Express) {
         },
       });
 
+      const [exists] = await file.exists();
+      if (!exists) {
+        console.error(`[upload] File save appeared to succeed but file not found: ${objectPath}`);
+        return res.status(500).json({ error: "File upload verification failed" });
+      }
+      console.log(`[upload] File verified: ${objectPath}`);
+
       const userId = (req.user as any)?.claims?.sub || "admin";
       await setObjectAclPolicy(file, {
         owner: userId,
@@ -178,6 +212,16 @@ export function registerAdminRoutes(app: Express) {
 
       const entityId = `uploads/${objectName}`;
       const url = `/objects/${entityId}`;
+
+      const shortId = typeof req.body?.shortId === "string" ? req.body.shortId.trim() : "";
+      const shortField = req.body?.shortField;
+      if (shortId && (shortField === "mediaUrl" || shortField === "thumbnailUrl")) {
+        const existingShort = await storage.getShort(shortId);
+        if (!existingShort) {
+          return res.status(404).json({ error: "Short not found for media attachment" });
+        }
+        await storage.updateShort(shortId, { [shortField]: url });
+      }
 
       res.json({
         success: true,
@@ -212,6 +256,7 @@ export function registerAdminRoutes(app: Express) {
           const filename = pathParts[pathParts.length - 1];
           const fileMeta = f.metadata?.metadata || f.metadata || {};
           const topMeta = f.metadata || {};
+          const displayName = String(fileMeta.originalName || filename || "");
           return {
             url: `/objects/uploads/${relativePath}`,
             filename,
@@ -234,17 +279,18 @@ export function registerAdminRoutes(app: Express) {
 
   app.delete("/api/admin/media/:type/:filename", isAuthenticated, isSuperAdmin, async (req, res) => {
     try {
-      const { type, filename } = req.params;
+      const typeParam = Array.isArray(req.params.type) ? req.params.type[0] : req.params.type;
+      const filenameParam = Array.isArray(req.params.filename) ? req.params.filename[0] : req.params.filename;
       const validTypes = ["images", "audio", "video", "thumbnails", "general"];
-      if (!validTypes.includes(type)) {
+      if (!typeParam || !validTypes.includes(typeParam)) {
         return res.status(400).json({ error: "Invalid file type" });
       }
-      if (filename.includes("..") || filename.includes("/")) {
+      if (!filenameParam || filenameParam.includes("..") || filenameParam.includes("/")) {
         return res.status(400).json({ error: "Invalid filename" });
       }
 
       const privateDir = objectStorageService.getPrivateObjectDir();
-      const fullPath = `${privateDir}/uploads/${type}/${filename}`;
+      const fullPath = `${privateDir}/uploads/${typeParam}/${filenameParam}`;
       const parts = fullPath.startsWith("/") ? fullPath.slice(1).split("/") : fullPath.split("/");
       const bucketName = parts[0];
       const objectPath = parts.slice(1).join("/");
@@ -352,6 +398,9 @@ export function registerAdminRoutes(app: Express) {
       if (!book.categoryId || book.categoryId.trim().length === 0) {
         validationErrors.push("Category must be assigned");
       }
+
+      await validateManagedMediaForPublish(validationErrors, book.coverImage, "Cover image");
+      await validateManagedMediaForPublish(validationErrors, book.audioUrl, "Book audio");
 
       if (validationErrors.length > 0) {
         return res.status(400).json({ message: "Publishing validation failed", validationErrors });
@@ -495,6 +544,9 @@ export function registerAdminRoutes(app: Express) {
       if (!mergedBook.categoryId || mergedBook.categoryId.trim().length === 0) {
         validationErrors.push("Category must be assigned");
       }
+
+      await validateManagedMediaForPublish(validationErrors, mergedBook.coverImage, "Cover image");
+      await validateManagedMediaForPublish(validationErrors, mergedBook.audioUrl, "Book audio");
 
       if (validationErrors.length > 0) {
         return res.status(400).json({ message: "Publishing validation failed", validationErrors });
@@ -684,6 +736,8 @@ export function registerAdminRoutes(app: Express) {
               if (!book.description) errors.push("Book description is required");
               if (!book.coverImage) errors.push("Cover image is required");
               if (!book.categoryId) errors.push("Category must be assigned");
+              await validateManagedMediaForPublish(errors, book.coverImage, "Cover image");
+              await validateManagedMediaForPublish(errors, book.audioUrl, "Book audio");
               if (errors.length > 0) {
                 return { bookId, success: false, title: book.title, error: errors.join("; ") };
               }
