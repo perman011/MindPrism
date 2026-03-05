@@ -9,6 +9,7 @@ import { encrypt, decrypt } from "./crypto";
 import { db } from "./db";
 import { userActivityLog, userProgress, books, categories, journalEntries, quizResults, chapterSummaries, shorts, shortViews, insertShortSchema } from "@shared/schema";
 import { eq, and, sql as dsql, desc, gte, count, lte, asc } from "drizzle-orm";
+import { ensureManagedMediaExists } from "./media/managed-media";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -960,8 +961,8 @@ export async function registerRoutes(
     return trimmed;
   };
 
-  const normalizeShortPayload = <T extends Record<string, any>>(data: T): T => {
-    const normalized = { ...data };
+  const normalizeShortPayload = (data: Record<string, any>): Record<string, any> => {
+    const normalized: Record<string, any> = { ...data };
     normalized.mediaUrl = normalizeStoredMediaPath(normalized.mediaUrl);
     normalized.thumbnailUrl = normalizeStoredMediaPath(normalized.thumbnailUrl);
     if (typeof normalized.backgroundGradient === "string") {
@@ -1002,6 +1003,33 @@ export async function registerRoutes(
     return null;
   };
 
+  const getMissingManagedMediaValidationError = async (data: {
+    status?: string | null;
+    mediaType?: string | null;
+    mediaUrl?: string | null;
+    thumbnailUrl?: string | null;
+  }): Promise<string | null> => {
+    const status = data.status ?? "draft";
+    if (status !== "published") return null;
+
+    if (typeof data.mediaUrl === "string" && data.mediaUrl.trim().length > 0) {
+      const mediaExists = await ensureManagedMediaExists(data.mediaUrl);
+      if (!mediaExists) {
+        return "Published short media file is missing from object storage. Re-upload the media.";
+      }
+    }
+
+    const needsThumbnail = data.mediaType === "audio" || data.mediaType === "video";
+    if (needsThumbnail && typeof data.thumbnailUrl === "string" && data.thumbnailUrl.trim().length > 0) {
+      const thumbnailExists = await ensureManagedMediaExists(data.thumbnailUrl);
+      if (!thumbnailExists) {
+        return "Published short thumbnail is missing from object storage. Re-upload the thumbnail.";
+      }
+    }
+
+    return null;
+  };
+
   app.get("/api/admin/shorts", isAuthenticated, requireAdminRole, async (req: any, res) => {
     try {
       const allShorts = await db.select().from(shorts).orderBy(desc(shorts.createdAt));
@@ -1026,6 +1054,11 @@ export async function registerRoutes(
       const mediaValidationError = getPublishedMediaValidationError(parsed.data);
       if (mediaValidationError) {
         return res.status(400).json({ message: mediaValidationError });
+      }
+
+      const missingMediaError = await getMissingManagedMediaValidationError(parsed.data);
+      if (missingMediaError) {
+        return res.status(400).json({ message: missingMediaError });
       }
 
       const result = await storage.createShort(parsed.data);
@@ -1056,6 +1089,11 @@ export async function registerRoutes(
       const mediaValidationError = getPublishedMediaValidationError(merged);
       if (mediaValidationError) {
         return res.status(400).json({ message: mediaValidationError });
+      }
+
+      const missingMediaError = await getMissingManagedMediaValidationError(merged);
+      if (missingMediaError) {
+        return res.status(400).json({ message: missingMediaError });
       }
 
       const result = await storage.updateShort(req.params.id, parsed.data);

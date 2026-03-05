@@ -1,12 +1,12 @@
-import cron from "node-cron";
+import cron, { type ScheduledTask } from "node-cron";
 import { db } from "../db";
 import { notificationPreferences, users, userStreaks, books, userProgress } from "@shared/schema";
 import { eq, and, isNotNull, sql, count } from "drizzle-orm";
 import { sendPushToUser } from "../routes/notifications";
 
-let dailyReminderJob: cron.ScheduledTask | null = null;
-let streakRiskJob: cron.ScheduledTask | null = null;
-let weeklySummaryJob: cron.ScheduledTask | null = null;
+let dailyReminderJob: ScheduledTask | null = null;
+let streakRiskJob: ScheduledTask | null = null;
+let weeklySummaryJob: ScheduledTask | null = null;
 
 export function startNotificationScheduler() {
   dailyReminderJob = cron.schedule("0 * * * *", async () => {
@@ -59,7 +59,8 @@ export function startNotificationScheduler() {
           .from(userStreaks)
           .where(eq(userStreaks.userId, pref.userId));
 
-        if (streak && streak.currentStreak > 0) {
+        const currentStreak = streak?.currentStreak ?? 0;
+        if (streak && currentStreak > 0) {
           const lastActive = streak.lastActiveDate ? new Date(streak.lastActiveDate) : null;
           const today = new Date();
           today.setUTCHours(0, 0, 0, 0);
@@ -67,7 +68,7 @@ export function startNotificationScheduler() {
           if (lastActive && lastActive < today) {
             await sendPushToUser(pref.userId, {
               title: "MindPrism",
-              body: `Your ${streak.currentStreak}-day streak is at risk! Open MindPrism to keep it going`,
+              body: `Your ${currentStreak}-day streak is at risk! Open MindPrism to keep it going`,
               tag: "streak-risk",
               url: "/",
             });

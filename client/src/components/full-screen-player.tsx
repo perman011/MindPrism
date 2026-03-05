@@ -5,7 +5,7 @@ import { Play, Pause, SkipBack, SkipForward, ChevronDown, Headphones } from "luc
 import { normalizeMediaUrl } from "@/lib/media-url";
 
 export function FullScreenPlayer() {
-  const { book, isPlaying, currentTime, duration, speed, isFullScreen, togglePlay, seek, skip, setSpeed, setFullScreen } = useAudio();
+  const { book, isPlaying, currentTime, duration, speed, isFullScreen, error, togglePlay, seek, skip, setSpeed, setFullScreen } = useAudio();
 
   if (!book || !isFullScreen) return null;
   const coverUrl = normalizeMediaUrl(book.coverImage);
@@ -55,6 +55,11 @@ export function FullScreenPlayer() {
 
           <h2 className="text-xl font-bold text-center mb-1" data-testid="text-player-title">{book.title}</h2>
           <p className="text-sm text-muted-foreground mb-8">{book.author}</p>
+          {error && (
+            <p className="text-xs text-destructive text-center mb-4" data-testid="text-player-error">
+              {error}
+            </p>
+          )}
         </div>
 
         <div className="px-8 pb-10">

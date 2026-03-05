@@ -3,7 +3,7 @@ import { Play, Pause, X } from "lucide-react";
 import { normalizeMediaUrl } from "@/lib/media-url";
 
 export function MiniPlayer() {
-  const { book, isPlaying, currentTime, duration, togglePlay, setFullScreen, close } = useAudio();
+  const { book, isPlaying, currentTime, duration, error, togglePlay, setFullScreen, close } = useAudio();
 
   if (!book) return null;
   const coverUrl = normalizeMediaUrl(book.coverImage);
@@ -32,7 +32,7 @@ export function MiniPlayer() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">{book.title}</p>
-            <p className="text-xs text-muted-foreground truncate">{book.author}</p>
+            <p className="text-xs text-muted-foreground truncate">{error || book.author}</p>
           </div>
           <button
             onClick={(e) => { e.stopPropagation(); togglePlay(); }}

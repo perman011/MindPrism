@@ -2,8 +2,10 @@ import type { Express, Request, Response } from "express";
 import { isAuthenticated } from "./replit_integrations/auth";
 import { authStorage } from "./replit_integrations/auth/storage";
 import { users } from "@shared/models/auth";
+import { stripeWebhookEvents } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
+import { deriveEntitlementDecision } from "./lib/stripe-entitlements";
 
 function getStripeKey(): string | null {
   return process.env.STRIPE_SECRET_KEY || null;
@@ -15,6 +17,39 @@ function getStripeWebhookSecret(): string | null {
 
 function isStripeConfigured(): boolean {
   return !!(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET);
+}
+
+const fallbackProcessedStripeEvents = new Set<string>();
+
+function logStripeWebhook(message: string, metadata?: Record<string, unknown>) {
+  if (metadata) {
+    console.log(`[Stripe][Webhook] ${message}`, metadata);
+    return;
+  }
+  console.log(`[Stripe][Webhook] ${message}`);
+}
+
+async function hasProcessedStripeEvent(eventId: string): Promise<boolean> {
+  try {
+    const existing = await db.select({ id: stripeWebhookEvents.id })
+      .from(stripeWebhookEvents)
+      .where(eq(stripeWebhookEvents.id, eventId))
+      .limit(1);
+    return existing.length > 0;
+  } catch {
+    return fallbackProcessedStripeEvents.has(eventId);
+  }
+}
+
+async function markStripeEventProcessed(eventId: string, eventType: string): Promise<void> {
+  try {
+    await db.insert(stripeWebhookEvents).values({
+      id: eventId,
+      eventType,
+    }).onConflictDoNothing();
+  } catch {
+    fallbackProcessedStripeEvents.add(eventId);
+  }
 }
 
 export function registerStripeRoutes(app: Express) {
@@ -38,6 +73,32 @@ export function registerStripeRoutes(app: Express) {
       message: configured
         ? "Stripe is configured and ready."
         : "Stripe is not configured. Set STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET environment variables to enable payments.",
+    });
+  });
+
+  app.get("/api/mobile/billing/status", (_req: Request, res: Response) => {
+    const appleEnabled = process.env.APPLE_IAP_ENABLED === "true";
+    const googleEnabled = process.env.GOOGLE_IAP_ENABLED === "true";
+    res.json({
+      configured: appleEnabled || googleEnabled,
+      ios: appleEnabled,
+      android: googleEnabled,
+      message: appleEnabled || googleEnabled
+        ? "Native store billing is enabled."
+        : "Native store billing is not enabled yet. Configure APPLE_IAP_ENABLED / GOOGLE_IAP_ENABLED.",
+    });
+  });
+
+  app.get("/api/mobile/billing/entitlement", isAuthenticated, async (req: any, res: Response) => {
+    const userId = req.user.claims.sub;
+    const dbUser = await authStorage.getUser(userId);
+    if (!dbUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json({
+      isPremium: !!dbUser.isPremium,
+      currentPeriodEnd: dbUser.currentPeriodEnd ?? null,
+      stripeSubscriptionId: dbUser.stripeSubscriptionId ?? null,
     });
   });
 
@@ -158,43 +219,44 @@ export function registerStripeRoutes(app: Express) {
         webhookSecret,
       );
 
-      switch (event.type) {
-        case "checkout.session.completed": {
-          const session = event.data.object as any;
-          const userId = session.metadata?.userId;
-          if (userId) {
-            await db.update(users).set({
-              isPremium: true,
-              stripeCustomerId: session.customer as string,
-              stripeSubscriptionId: session.subscription as string,
-              updatedAt: new Date(),
-            }).where(eq(users.id, userId));
-          }
-          break;
-        }
-        case "customer.subscription.deleted": {
-          const subscription = event.data.object as any;
-          const customerId = subscription.customer as string;
-          await db.update(users).set({
-            isPremium: false,
-            stripeSubscriptionId: null,
-            currentPeriodEnd: null,
-            updatedAt: new Date(),
-          }).where(eq(users.stripeCustomerId, customerId));
-          break;
-        }
-        case "customer.subscription.updated": {
-          const subscription = event.data.object as any;
-          const customerId = subscription.customer as string;
-          await db.update(users).set({
-            currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-            updatedAt: new Date(),
-          }).where(eq(users.stripeCustomerId, customerId));
-          break;
-        }
+      if (await hasProcessedStripeEvent(event.id)) {
+        logStripeWebhook("Duplicate event skipped", {
+          eventId: event.id,
+          eventType: event.type,
+        });
+        return res.json({ received: true, duplicate: true });
       }
 
-      console.log(`[Stripe] Successfully processed webhook event: ${event.type}`);
+      const decision = deriveEntitlementDecision(event.type, event.data.object as any);
+      if (!decision.patch || !decision.matchBy || !decision.matchValue) {
+        await markStripeEventProcessed(event.id, event.type);
+        logStripeWebhook("Event ignored (no entitlement action)", {
+          eventId: event.id,
+          eventType: event.type,
+        });
+        return res.json({ received: true, ignored: true });
+      }
+
+      const normalizedPatch = Object.fromEntries(
+        Object.entries(decision.patch).filter(([, value]) => value !== undefined),
+      );
+      const updatePayload = {
+        ...normalizedPatch,
+        updatedAt: new Date(),
+      };
+
+      if (decision.matchBy === "userId") {
+        await db.update(users).set(updatePayload).where(eq(users.id, decision.matchValue));
+      } else {
+        await db.update(users).set(updatePayload).where(eq(users.stripeCustomerId, decision.matchValue));
+      }
+
+      await markStripeEventProcessed(event.id, event.type);
+      logStripeWebhook("Event processed", {
+        eventId: event.id,
+        eventType: event.type,
+        matchBy: decision.matchBy,
+      });
       res.json({ received: true });
     } catch (error: any) {
       if (error.type === "StripeSignatureVerificationError") {

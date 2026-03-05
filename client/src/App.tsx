@@ -15,7 +15,7 @@ import { PageTransition } from "@/components/page-transition";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { getQueryFn } from "@/lib/queryClient";
 import type { UserInterest } from "@shared/schema";
-import { hasMinRole } from "@shared/models/auth";
+import { canAccessAdminRoute } from "@shared/admin-rbac";
 import { NotificationPrompt } from "@/components/notification-prompt";
 import { OfflineBanner } from "@/components/offline-banner";
 import { InstallPrompt } from "@/components/install-prompt";
@@ -151,7 +151,7 @@ function AppRouter() {
   }
 
   if (location.startsWith("/admin")) {
-    if (!hasMinRole(user.role, "writer")) {
+    if (!canAccessAdminRoute(user.role, location)) {
       return <Suspense fallback={<LazyFallback />}><AdminAccessDenied /></Suspense>;
     }
     return (
