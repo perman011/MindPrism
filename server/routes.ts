@@ -965,6 +965,14 @@ export async function registerRoutes(
     const normalized: Record<string, any> = { ...data };
     normalized.mediaUrl = normalizeStoredMediaPath(normalized.mediaUrl);
     normalized.thumbnailUrl = normalizeStoredMediaPath(normalized.thumbnailUrl);
+    // If an image short only has a thumbnail, use it as the image media source.
+    if (normalized.mediaType === "image") {
+      const mediaUrl = typeof normalized.mediaUrl === "string" ? normalized.mediaUrl.trim() : "";
+      const thumbnailUrl = typeof normalized.thumbnailUrl === "string" ? normalized.thumbnailUrl.trim() : "";
+      if (!mediaUrl && thumbnailUrl) {
+        normalized.mediaUrl = thumbnailUrl;
+      }
+    }
     if (typeof normalized.backgroundGradient === "string") {
       normalized.backgroundGradient = normalized.backgroundGradient.trim() || null;
     }
@@ -987,10 +995,10 @@ export async function registerRoutes(
     if (status !== "published") return null;
 
     const mediaType = data.mediaType;
-    const requiresMedia = mediaType === "image" || mediaType === "audio" || mediaType === "video";
+    const requiresMedia = mediaType === "audio" || mediaType === "video";
     const mediaUrl = typeof data.mediaUrl === "string" ? data.mediaUrl.trim() : "";
     if (requiresMedia && !mediaUrl) {
-      return "Published image/audio/video shorts require an uploaded media file.";
+      return "Published audio/video shorts require an uploaded media file.";
     }
 
     if (mediaType === "audio" || mediaType === "video") {
@@ -1012,7 +1020,8 @@ export async function registerRoutes(
     const status = data.status ?? "draft";
     if (status !== "published") return null;
 
-    if (typeof data.mediaUrl === "string" && data.mediaUrl.trim().length > 0) {
+    const requiresManagedMediaValidation = data.mediaType === "audio" || data.mediaType === "video";
+    if (requiresManagedMediaValidation && typeof data.mediaUrl === "string" && data.mediaUrl.trim().length > 0) {
       const mediaExists = await ensureManagedMediaExists(data.mediaUrl);
       if (!mediaExists) {
         return "Published short media file is missing from object storage. Re-upload the media.";

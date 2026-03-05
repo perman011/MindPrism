@@ -31,11 +31,28 @@ interface VaultStats {
   monthlyActivity: { date: string; activities: number }[];
 }
 
+function extractApiErrorMessage(error: unknown, fallback: string): string {
+  if (!(error instanceof Error)) return fallback;
+  const raw = error.message.replace(/^\d+:\s*/, "").trim();
+  if (!raw) return fallback;
+  try {
+    const parsed = JSON.parse(raw);
+    if (typeof parsed.message === "string" && parsed.message.trim().length > 0) {
+      return parsed.message;
+    }
+  } catch {
+    // Fall through to raw message
+  }
+  return raw;
+}
+
 export default function Vault() {
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<"journal" | "highlights" | "settings">("journal");
   const [journalDraft, setJournalDraft] = useState("");
+  const [manualHighlightBookId, setManualHighlightBookId] = useState("");
+  const [manualHighlightContent, setManualHighlightContent] = useState("");
 
   const { data: streak } = useQuery<UserStreak | null>({
     queryKey: ["/api/streak"],
@@ -66,6 +83,8 @@ export default function Vault() {
     queryKey: ["/api/books"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
+
+  const selectedHighlightBookId = manualHighlightBookId || books?.[0]?.id || "";
 
   const [selectedChakra, setSelectedChakra] = useState<ChakraType | null>(null);
   const { toast } = useToast();
@@ -101,8 +120,30 @@ export default function Vault() {
       queryClient.invalidateQueries({ queryKey: ["/api/user/stats"] });
       toast({ title: "Saved", description: "Journal entry added to your vault." });
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to save journal entry.", variant: "destructive" });
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: extractApiErrorMessage(error, "Failed to save journal entry."),
+        variant: "destructive",
+      });
+    },
+  });
+
+  const createHighlightMutation = useMutation({
+    mutationFn: async (payload: { bookId: string; content: string }) => {
+      await apiRequest("POST", "/api/highlights", { ...payload, type: "manual" });
+    },
+    onSuccess: () => {
+      setManualHighlightContent("");
+      queryClient.invalidateQueries({ queryKey: ["/api/highlights"] });
+      toast({ title: "Saved", description: "Highlight added." });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: extractApiErrorMessage(error, "Failed to save highlight."),
+        variant: "destructive",
+      });
     },
   });
 
@@ -374,6 +415,41 @@ export default function Vault() {
                       Open Discover
                     </Button>
                   </Link>
+                </div>
+              </div>
+            </Card>
+            <Card className="p-4 mb-4" data-testid="highlights-manual-add">
+              <p className="text-sm font-semibold mb-2">Add Highlight Manually</p>
+              <div className="space-y-3">
+                <select
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  value={selectedHighlightBookId}
+                  onChange={(e) => setManualHighlightBookId(e.target.value)}
+                  data-testid="select-highlight-book"
+                >
+                  {(books || []).map((book) => (
+                    <option key={book.id} value={book.id}>
+                      {book.title}
+                    </option>
+                  ))}
+                </select>
+                <Textarea
+                  value={manualHighlightContent}
+                  onChange={(e) => setManualHighlightContent(e.target.value.slice(0, 500))}
+                  rows={3}
+                  placeholder="Paste the insight you want to remember..."
+                  data-testid="input-highlight-content"
+                />
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-muted-foreground">{manualHighlightContent.length}/500</span>
+                  <Button
+                    size="sm"
+                    onClick={() => createHighlightMutation.mutate({ bookId: selectedHighlightBookId, content: manualHighlightContent.trim() })}
+                    disabled={!selectedHighlightBookId || manualHighlightContent.trim().length === 0 || createHighlightMutation.isPending}
+                    data-testid="button-save-highlight-manual"
+                  >
+                    {createHighlightMutation.isPending ? "Saving..." : "Save Highlight"}
+                  </Button>
                 </div>
               </div>
             </Card>
