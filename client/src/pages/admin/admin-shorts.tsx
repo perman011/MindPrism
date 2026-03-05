@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Film, Edit, Trash2, Eye, EyeOff, ExternalLink, BookOpen, Users, BarChart3, ArrowLeft, Image, Headphones, Video, Sun, Moon } from "lucide-react";
+import { Plus, Film, Edit, Trash2, Eye, EyeOff, ExternalLink, BookOpen, Users, BarChart3, ArrowLeft, Image, Headphones, Video, Sun, Moon, AlertTriangle } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/components/theme-provider";
@@ -49,6 +49,32 @@ function extractApiErrorMessage(error: unknown, fallback: string): string {
 function getDisplayMediaType(short: { mediaType: string; mediaUrl?: string | null }): string {
   if (!short.mediaUrl) return "text";
   return short.mediaType;
+}
+
+type PublishReadiness = {
+  canPublish: boolean;
+  reason?: string;
+};
+
+function getPublishReadiness(short: {
+  mediaType: string;
+  mediaUrl?: string | null;
+  thumbnailUrl?: string | null;
+}): PublishReadiness {
+  const mediaType = short.mediaType;
+  const requiresMedia = mediaType === "image" || mediaType === "audio" || mediaType === "video";
+  const hasMedia = typeof short.mediaUrl === "string" && short.mediaUrl.trim().length > 0;
+  if (requiresMedia && !hasMedia) {
+    return { canPublish: false, reason: "Add a media file before publishing." };
+  }
+
+  const needsThumbnail = mediaType === "audio" || mediaType === "video";
+  const hasThumbnail = typeof short.thumbnailUrl === "string" && short.thumbnailUrl.trim().length > 0;
+  if (needsThumbnail && !hasThumbnail) {
+    return { canPublish: false, reason: "Audio/video shorts need a thumbnail before publishing." };
+  }
+
+  return { canPublish: true };
 }
 
 function resolveMediaUrl(url: string | null | undefined): string | null {
@@ -114,19 +140,6 @@ export default function AdminShorts() {
   const toggleStatusMutation = useMutation({
     mutationFn: async (short: Short) => {
       const newStatus = short.status === "published" ? "draft" : "published";
-
-      if (newStatus === "published") {
-        const hasMedia = !!short.mediaUrl?.trim();
-        if (!hasMedia) {
-          throw new Error(JSON.stringify({ message: "Published shorts require an uploaded media file." }));
-        }
-        const needsThumbnail = short.mediaType === "audio" || short.mediaType === "video";
-        const hasThumbnail = !!short.thumbnailUrl?.trim();
-        if (needsThumbnail && !hasThumbnail) {
-          throw new Error(JSON.stringify({ message: "Published audio/video shorts require a thumbnail image." }));
-        }
-      }
-
       await apiRequest("PUT", `/api/admin/shorts/${short.id}`, { status: newStatus });
     },
     onSuccess: () => {
@@ -227,6 +240,8 @@ export default function AdminShorts() {
             {filtered.map((short) => {
               const MediaIcon = MEDIA_ICONS[getDisplayMediaType(short)] || Film;
               const thumbnailUrl = resolveMediaUrl(short.thumbnailUrl);
+              const publishReadiness = getPublishReadiness(short);
+              const needsFixBeforePublish = short.status !== "published" && !publishReadiness.canPublish;
               return (
                 <Card key={short.id} className="p-4 hover:shadow-lg transition-shadow" data-testid={`card-short-${short.id}`}>
                   <div className="flex items-center gap-4">
@@ -250,6 +265,12 @@ export default function AdminShorts() {
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold truncate" data-testid={`text-short-title-${short.id}`}>{short.title}</h3>
                       <p className="text-sm text-muted-foreground truncate">{getBookTitle(short.bookId)}</p>
+                      {needsFixBeforePublish && (
+                        <p className="text-xs text-amber-600 mt-1 flex items-center gap-1" data-testid={`short-warning-${short.id}`}>
+                          <AlertTriangle className="w-3 h-3" />
+                          {publishReadiness.reason}
+                        </p>
+                      )}
                     </div>
 
                     {(() => {
@@ -275,12 +296,24 @@ export default function AdminShorts() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => toggleStatusMutation.mutate(short)}
+                        onClick={() => {
+                          if (short.status !== "published" && !publishReadiness.canPublish) {
+                            toast({
+                              title: "Cannot publish yet",
+                              description: publishReadiness.reason ?? "Add required media before publishing.",
+                              variant: "destructive",
+                            });
+                            navigate(`/admin/shorts/${short.id}/edit`);
+                            return;
+                          }
+                          toggleStatusMutation.mutate(short);
+                        }}
                         className="gap-1"
+                        disabled={toggleStatusMutation.isPending}
                         data-testid={`button-toggle-${short.id}`}
                       >
                         {short.status === "published" ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        {short.status === "published" ? "Unpublish" : "Publish"}
+                        {short.status === "published" ? "Unpublish" : needsFixBeforePublish ? "Fix Media" : "Publish"}
                       </Button>
                       <Link href={`/admin/shorts/${short.id}/edit`}>
                         <Button variant="ghost" size="sm" data-testid={`button-edit-${short.id}`}>

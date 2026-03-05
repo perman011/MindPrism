@@ -6,8 +6,9 @@ import type { UserStreak, JournalEntry, SavedHighlight, ChakraProgress, Book } f
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PenLine, LogOut, Settings, Calendar, Bookmark, Sun, Moon, Monitor, Flame, Star, Shield, Zap, Trophy, Snowflake, BookOpen } from "lucide-react";
+import { PenLine, LogOut, Settings, Calendar, Bookmark, Sun, Moon, Monitor, Flame, Star, Shield, Zap, Trophy, Snowflake, BookOpen, Trash2, Send, Lightbulb } from "lucide-react";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -20,6 +21,8 @@ import { SummaryStats } from "@/components/summary-stats";
 import { StreakChart } from "@/components/streak-chart";
 import { motion } from "framer-motion";
 import { openSubscriptionManagement } from "@/lib/billing";
+import { trackJournalWrite } from "@/lib/analytics";
+import { Link } from "wouter";
 
 interface VaultStats {
   booksStarted: number;
@@ -32,6 +35,7 @@ export default function Vault() {
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<"journal" | "highlights" | "settings">("journal");
+  const [journalDraft, setJournalDraft] = useState("");
 
   const { data: streak } = useQuery<UserStreak | null>({
     queryKey: ["/api/streak"],
@@ -82,6 +86,36 @@ export default function Vault() {
     },
     onError: () => {
       toast({ title: "Cannot Freeze", description: "Streak freeze is not available.", variant: "destructive" });
+    },
+  });
+
+  const journalMutation = useMutation({
+    mutationFn: async (content: string) => {
+      await apiRequest("POST", "/api/journal", { content });
+    },
+    onSuccess: () => {
+      trackJournalWrite();
+      setJournalDraft("");
+      queryClient.invalidateQueries({ queryKey: ["/api/journal"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/streak"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/stats"] });
+      toast({ title: "Saved", description: "Journal entry added to your vault." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save journal entry.", variant: "destructive" });
+    },
+  });
+
+  const deleteHighlightMutation = useMutation({
+    mutationFn: async (highlightId: string) => {
+      await apiRequest("DELETE", `/api/highlights/${highlightId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/highlights"] });
+      toast({ title: "Removed", description: "Highlight deleted." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete highlight.", variant: "destructive" });
     },
   });
 
@@ -260,7 +294,31 @@ export default function Vault() {
             data-testid="journal-list"
           >
             <h2 className="text-lg font-bold mb-1">Journal Entries</h2>
-            <p className="text-xs text-muted-foreground mb-4">Your reflections and exercise responses</p>
+            <p className="text-xs text-muted-foreground mb-4">Capture what clicked today, before it fades.</p>
+            <Card className="p-4 mb-4" data-testid="journal-composer">
+              <p className="text-sm font-semibold mb-1">Quick Journal</p>
+              <p className="text-xs text-muted-foreground mb-3">Prompt: What changed in your thinking after today’s reading?</p>
+              <Textarea
+                value={journalDraft}
+                onChange={(e) => setJournalDraft(e.target.value.slice(0, 1200))}
+                rows={4}
+                placeholder="Write your reflection..."
+                data-testid="input-journal-content"
+              />
+              <div className="flex items-center justify-between mt-3">
+                <span className="text-[11px] text-muted-foreground">{journalDraft.length}/1200</span>
+                <Button
+                  size="sm"
+                  className="gap-1"
+                  onClick={() => journalMutation.mutate(journalDraft.trim())}
+                  disabled={journalMutation.isPending || journalDraft.trim().length === 0}
+                  data-testid="button-save-journal"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  {journalMutation.isPending ? "Saving..." : "Save Entry"}
+                </Button>
+              </div>
+            </Card>
             <div className="space-y-3">
               {journalLoading ? (
                 Array.from({ length: 3 }).map((_, i) => (
@@ -277,7 +335,7 @@ export default function Vault() {
                 <div className="text-center py-14">
                   <PenLine className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
                   <p className="text-sm font-medium text-foreground">No journal entries yet</p>
-                  <p className="text-xs text-muted-foreground mt-1.5 max-w-[240px] mx-auto leading-relaxed">Complete exercises while reading to see your reflections here. Your growth journey starts with the first book.</p>
+                  <p className="text-xs text-muted-foreground mt-1.5 max-w-[240px] mx-auto leading-relaxed">Use the Quick Journal box above to log your first reflection.</p>
                 </div>
               ) : (
                 journalEntries.map((entry) => (
@@ -305,6 +363,20 @@ export default function Vault() {
           >
             <h2 className="text-lg font-bold mb-1">Saved Highlights</h2>
             <p className="text-xs text-muted-foreground mb-4">Bookmarked insights and key passages</p>
+            <Card className="p-4 mb-4" data-testid="highlights-howto">
+              <div className="flex items-start gap-3">
+                <Lightbulb className="w-4 h-4 text-amber-500 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold">How highlights work</p>
+                  <p className="text-xs text-muted-foreground mt-1">Open a chapter, select a line, then tap “Save Highlight.” It will show up here instantly.</p>
+                  <Link href="/discover">
+                    <Button variant="outline" size="sm" className="mt-3" data-testid="button-go-discover">
+                      Open Discover
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </Card>
             <div className="space-y-3">
               {highlightsLoading ? (
                 Array.from({ length: 3 }).map((_, i) => (
@@ -321,14 +393,26 @@ export default function Vault() {
                 <div className="text-center py-14">
                   <Bookmark className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
                   <p className="text-sm font-medium text-foreground">No saved highlights yet</p>
-                  <p className="text-xs text-muted-foreground mt-1.5 max-w-[240px] mx-auto leading-relaxed">Start highlighting text while reading to see your key insights collected here.</p>
+                  <p className="text-xs text-muted-foreground mt-1.5 max-w-[240px] mx-auto leading-relaxed">Go to any chapter reader, select text, and save a highlight.</p>
                 </div>
               ) : (
                 highlights.map((h) => {
                   const book = books?.find(b => b.id === h.bookId);
                   return (
                     <Card key={h.id} className="p-4" data-testid={`highlight-${h.id}`}>
-                      <p className="text-sm leading-relaxed">{h.content}</p>
+                      <div className="flex items-start gap-3">
+                        <p className="text-sm leading-relaxed flex-1">{h.content}</p>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                          onClick={() => deleteHighlightMutation.mutate(h.id)}
+                          disabled={deleteHighlightMutation.isPending}
+                          data-testid={`button-delete-highlight-${h.id}`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
                       <div className="flex items-center gap-2 mt-2.5 flex-wrap">
                         {book && (
                           <span className="flex items-center gap-1 text-[11px] text-primary font-medium" data-testid={`highlight-book-${h.id}`}>

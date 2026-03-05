@@ -1,17 +1,19 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { getQueryFn } from "@/lib/queryClient";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import type { Book, ChapterSummary } from "@shared/schema";
 import { useParams, useLocation } from "wouter";
 import DOMPurify from "dompurify";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, ChevronLeft, ChevronRight, BookOpen,
-  Play, Pause, Clock, List, X,
+  Play, Pause, Clock, List, X, BookmarkPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { normalizeMediaUrl } from "@/lib/media-url";
+import { useToast } from "@/hooks/use-toast";
+import { trackHighlightSave } from "@/lib/analytics";
 
 const READER_BG = "#0F172A";
 const READER_TEXT = "#F5F0EB";
@@ -314,10 +316,12 @@ function TableOfContents({
 export default function ChapterReader() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
+  const { toast } = useToast();
   const [chapterIndex, setChapterIndex] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showToc, setShowToc] = useState(false);
   const [isChapterHydrating, setIsChapterHydrating] = useState(true);
+  const [selectedHighlight, setSelectedHighlight] = useState("");
   const contentRef = useRef<HTMLDivElement>(null);
 
   const { data: book, isError: bookError } = useQuery<Book>({
@@ -363,6 +367,70 @@ export default function ChapterReader() {
       setChapterIndex(idx);
     }
   }, [chapters.length]);
+
+  const saveHighlightMutation = useMutation({
+    mutationFn: async (content: string) => {
+      if (!id) {
+        throw new Error("Missing book id");
+      }
+      await apiRequest("POST", "/api/highlights", { bookId: id, content, type: "chapter" });
+    },
+    onSuccess: () => {
+      if (id) {
+        trackHighlightSave(id);
+      }
+      queryClient.invalidateQueries({ queryKey: ["/api/highlights"] });
+      setSelectedHighlight("");
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      toast({ title: "Saved", description: "Highlight added to your vault." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save highlight.", variant: "destructive" });
+    },
+  });
+
+  useEffect(() => {
+    const readSelection = () => {
+      const container = contentRef.current;
+      if (!container) return;
+
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) {
+        setSelectedHighlight("");
+        return;
+      }
+
+      const anchorNode = selection.anchorNode;
+      const focusNode = selection.focusNode;
+      if (!anchorNode || !focusNode) {
+        setSelectedHighlight("");
+        return;
+      }
+
+      const containsAnchor = container.contains(anchorNode);
+      const containsFocus = container.contains(focusNode);
+      if (!containsAnchor || !containsFocus) {
+        setSelectedHighlight("");
+        return;
+      }
+
+      const text = selection.toString().replace(/\s+/g, " ").trim();
+      setSelectedHighlight(text.slice(0, 400));
+    };
+
+    const container = contentRef.current;
+    if (!container) return;
+
+    container.addEventListener("mouseup", readSelection);
+    container.addEventListener("keyup", readSelection);
+    container.addEventListener("touchend", readSelection);
+    return () => {
+      container.removeEventListener("mouseup", readSelection);
+      container.removeEventListener("keyup", readSelection);
+      container.removeEventListener("touchend", readSelection);
+    };
+  }, [currentChapter?.id]);
 
   if (isLoading) {
     return (
@@ -465,6 +533,32 @@ export default function ChapterReader() {
               html={isChapterHydrating ? null : (currentChapter?.content || null)}
               fallbackCards={isChapterHydrating ? null : (currentChapter?.cards as any[] || null)}
             />
+
+            {selectedHighlight && (
+              <div
+                className="rounded-lg px-4 py-3 mb-4 mt-2"
+                style={{ background: "rgba(245,240,235,0.06)", border: "1px solid rgba(245,240,235,0.16)" }}
+                data-testid="highlight-capture-panel"
+              >
+                <p className="text-xs mb-2" style={{ color: "rgba(245,240,235,0.65)" }}>
+                  Selected text
+                </p>
+                <p className="text-sm mb-3 line-clamp-3" style={{ color: READER_TEXT }}>
+                  "{selectedHighlight}"
+                </p>
+                <Button
+                  size="sm"
+                  className="gap-1"
+                  style={{ background: ACCENT, color: READER_TEXT }}
+                  onClick={() => saveHighlightMutation.mutate(selectedHighlight)}
+                  disabled={saveHighlightMutation.isPending}
+                  data-testid="button-save-highlight"
+                >
+                  <BookmarkPlus className="w-4 h-4" />
+                  {saveHighlightMutation.isPending ? "Saving..." : "Save Highlight"}
+                </Button>
+              </div>
+            )}
 
             {isChapterHydrating && (
               <div className="space-y-3 animate-pulse">
