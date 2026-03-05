@@ -15,7 +15,8 @@ import { FileUpload } from "@/components/admin/FileUpload";
 interface MediaFile {
   url: string;
   filename: string;
-  displayName?: string;
+  originalName?: string | null;
+  displayName?: string | null;
   type: string;
   size: number;
   createdAt: string;
@@ -163,8 +164,8 @@ export default function AdminMediaLibrary() {
                     </div>
                   )}
                   <div className="p-3">
-                    <p className="text-xs font-medium truncate dark:text-gray-200" title={file.displayName || file.filename}>
-                      {file.displayName || file.filename}
+                    <p className="text-xs font-medium truncate dark:text-gray-200" title={file.filename}>
+                      {file.displayName || file.originalName || file.filename}
                     </p>
                     <div className="flex items-center justify-between mt-1.5">
                       <div className="flex items-center gap-1.5">
