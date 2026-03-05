@@ -94,7 +94,9 @@ export function registerAdminRoutes(app: Express) {
     try {
       const rawParam = (req.params as any).objectPath;
       const objectPath = Array.isArray(rawParam) ? rawParam.join("/") : String(rawParam || "");
+      console.log(`[objects] GET /objects/${objectPath}`);
       if (!objectPath.startsWith("uploads/")) {
+        console.warn(`[objects] Access denied for path: ${objectPath}`);
         return res.status(403).json({ error: "Access denied" });
       }
       const objectFile = await objectStorageService.getObjectEntityFile(`/objects/${objectPath}`);
@@ -106,9 +108,10 @@ export function registerAdminRoutes(app: Express) {
       );
     } catch (error: any) {
       if (error?.name === "ObjectNotFoundError") {
+        console.warn(`[objects] File not found: /objects/${(Array.isArray((req.params as any).objectPath) ? (req.params as any).objectPath.join("/") : (req.params as any).objectPath)}`);
         return res.status(404).json({ error: "File not found" });
       }
-      console.error("Error serving object:", error);
+      console.error("[objects] Error serving object:", error);
       return res.status(500).json({ error: "Failed to serve file" });
     }
   });
@@ -150,6 +153,8 @@ export function registerAdminRoutes(app: Express) {
       const bucket = objectStorageClient.bucket(bucketName);
       const file = bucket.file(objectPath);
 
+      console.log(`[upload] Saving file to bucket=${bucketName} path=${objectPath} (${req.file.mimetype}, ${req.file.size} bytes)`);
+
       await file.save(req.file.buffer, {
         contentType: req.file.mimetype,
         metadata: {
@@ -158,6 +163,13 @@ export function registerAdminRoutes(app: Express) {
           folder,
         },
       });
+
+      const [exists] = await file.exists();
+      if (!exists) {
+        console.error(`[upload] File save appeared to succeed but file not found: ${objectPath}`);
+        return res.status(500).json({ error: "File upload verification failed" });
+      }
+      console.log(`[upload] File verified: ${objectPath}`);
 
       const userId = (req.user as any)?.claims?.sub || "admin";
       await setObjectAclPolicy(file, {
