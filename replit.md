@@ -58,7 +58,7 @@ The content is organized into a hierarchical "Psychological Taxonomy." The appli
 
 ### Admin Portal
 - **Persistent Sidebar Navigation** — collapsible left sidebar with Books, Shorts, Users, Analytics, Media nav items; replaces distributed header buttons
-- **File Upload System** — multer memory + Replit Object Storage upload API (`POST /api/admin/upload`), drag-and-drop FileUpload component with progress bar, URL fallback, image/audio/video preview; files stored persistently in Object Storage (survive deployments); served via `/objects/uploads/...` URLs; integrated in Book Setup Editor and Shorts Creator
+- **File Upload System** — multer memory + Replit Object Storage upload API (`POST /api/admin/upload`), drag-and-drop FileUpload component with progress bar, URL fallback, image/audio/video preview; files stored persistently in Object Storage (survive deployments); served via `/objects/uploads/...` URLs; integrated in Book Setup Editor and Shorts Creator. **Note:** Express 5 `{*param}` wildcard returns arrays — the `/objects/` route joins array params before path resolution. `normalizeMediaUrl` handles `/objects/uploads/...`, `/uploads/...`, `objects/uploads/...`, and absolute URLs with console warnings for unrecognized formats.
 - **Media Library** — `/admin/media` page listing all uploaded files from Object Storage with type filters, copy URL, and delete (super_admin only)
 - **Admin Preview Mode** — full-screen preview from book editor with Desktop/Tablet/Mobile viewport switching, preview warning banner, and book detail simulation
 - Draft workflow for content editing with publish cycle

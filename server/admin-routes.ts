@@ -92,7 +92,8 @@ const objectStorageService = new ObjectStorageService();
 export function registerAdminRoutes(app: Express) {
   app.get("/objects/{*objectPath}", async (req, res) => {
     try {
-      const objectPath = (req.params as any).objectPath;
+      const rawParam = (req.params as any).objectPath;
+      const objectPath = Array.isArray(rawParam) ? rawParam.join("/") : String(rawParam || "");
       if (!objectPath.startsWith("uploads/")) {
         return res.status(403).json({ error: "Access denied" });
       }

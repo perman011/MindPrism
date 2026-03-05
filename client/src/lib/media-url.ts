@@ -1,25 +1,20 @@
 export function normalizeMediaUrl(url: string | null | undefined): string | null {
-  if (typeof url !== "string") return null;
+  if (!url || typeof url !== "string") return null;
+  let clean = url.trim();
+  if (!clean) return null;
 
-  const trimmed = url.trim();
-  if (!trimmed) return null;
+  if (clean.startsWith("/objects/uploads/")) return clean;
+  if (clean.startsWith("objects/uploads/")) return `/${clean}`;
 
-  if (trimmed.startsWith("/uploads/")) {
-    return `/objects${trimmed}`;
+  if (clean.startsWith("/uploads/")) return `/objects${clean}`;
+  if (clean.startsWith("uploads/")) return `/objects/${clean}`;
+
+  if (/^(https?:\/\/|blob:|data:)/i.test(clean)) return clean;
+
+  if (clean.startsWith("/")) {
+    return clean;
   }
 
-  if (trimmed.startsWith("uploads/")) {
-    return `/objects/${trimmed}`;
-  }
-
-  if (trimmed.startsWith("/objects/uploads/")) {
-    return trimmed;
-  }
-
-  if (/^(https?:\/\/|\/|blob:|data:)/.test(trimmed)) {
-    return trimmed;
-  }
-
+  console.warn("[normalizeMediaUrl] Unrecognized media URL format:", clean);
   return null;
 }
-
