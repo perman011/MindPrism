@@ -15,6 +15,27 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { FileUpload } from "@/components/admin/FileUpload";
 
+function extractApiErrorMessage(error: unknown, fallback: string): string {
+  if (!(error instanceof Error)) return fallback;
+  const raw = error.message.replace(/^\d+:\s*/, "").trim();
+  if (!raw) return fallback;
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed.validationErrors) && parsed.validationErrors.length > 0) {
+      return parsed.validationErrors.join(", ");
+    }
+    if (Array.isArray(parsed.errors) && parsed.errors.length > 0) {
+      return parsed.errors.join(", ");
+    }
+    if (typeof parsed.message === "string" && parsed.message.trim().length > 0) {
+      return parsed.message;
+    }
+  } catch {
+    // Fall back to raw message
+  }
+  return raw;
+}
+
 export default function AdminShortEditor() {
   const { id } = useParams<{ id: string }>();
   const isNew = !id || id === "new";
@@ -88,8 +109,11 @@ export default function AdminShortEditor() {
       navigate("/admin/shorts");
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message.replace(/^\d+:\s*/, "") : "Failed to save short";
-      toast({ title: "Error", description: message, variant: "destructive" });
+      toast({
+        title: "Error",
+        description: extractApiErrorMessage(error, "Failed to save short"),
+        variant: "destructive",
+      });
     },
   });
 
