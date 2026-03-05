@@ -22,6 +22,30 @@ const MEDIA_ICONS: Record<string, any> = {
   video: Video,
 };
 
+function extractApiErrorMessage(error: unknown, fallback: string): string {
+  if (!(error instanceof Error)) return fallback;
+
+  const raw = error.message.replace(/^\d+:\s*/, "").trim();
+  if (!raw) return fallback;
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed.validationErrors) && parsed.validationErrors.length > 0) {
+      return parsed.validationErrors.join(", ");
+    }
+    if (Array.isArray(parsed.errors) && parsed.errors.length > 0) {
+      return parsed.errors.join(", ");
+    }
+    if (typeof parsed.message === "string" && parsed.message.trim().length > 0) {
+      return parsed.message;
+    }
+  } catch {
+    // Keep raw fallback below
+  }
+
+  return raw;
+}
+
 function getDisplayMediaType(short: { mediaType: string; mediaUrl?: string | null }): string {
   if (!short.mediaUrl) return "text";
   return short.mediaType;
@@ -88,17 +112,34 @@ export default function AdminShorts() {
   });
 
   const toggleStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const newStatus = status === "published" ? "draft" : "published";
-      await apiRequest("PUT", `/api/admin/shorts/${id}`, { status: newStatus });
+    mutationFn: async (short: Short) => {
+      const newStatus = short.status === "published" ? "draft" : "published";
+
+      if (newStatus === "published") {
+        const hasMedia = !!short.mediaUrl?.trim();
+        if (!hasMedia) {
+          throw new Error(JSON.stringify({ message: "Published shorts require an uploaded media file." }));
+        }
+        const needsThumbnail = short.mediaType === "audio" || short.mediaType === "video";
+        const hasThumbnail = !!short.thumbnailUrl?.trim();
+        if (needsThumbnail && !hasThumbnail) {
+          throw new Error(JSON.stringify({ message: "Published audio/video shorts require a thumbnail image." }));
+        }
+      }
+
+      await apiRequest("PUT", `/api/admin/shorts/${short.id}`, { status: newStatus });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/shorts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/shorts"] });
       toast({ title: "Updated", description: "Short status changed" });
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to update status", variant: "destructive" });
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: extractApiErrorMessage(error, "Failed to update status"),
+        variant: "destructive",
+      });
     },
   });
 
@@ -234,7 +275,7 @@ export default function AdminShorts() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => toggleStatusMutation.mutate({ id: short.id, status: short.status })}
+                        onClick={() => toggleStatusMutation.mutate(short)}
                         className="gap-1"
                         data-testid={`button-toggle-${short.id}`}
                       >
