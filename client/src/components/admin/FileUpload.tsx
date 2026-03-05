@@ -64,6 +64,17 @@ function normalizeMediaInputUrl(url: string): string {
   return normalized ?? trimmed;
 }
 
+function getDisplayFilename(url: string): string {
+  const lastSegment = decodeURIComponent(url.split("?")[0].split("/").pop() || "").trim();
+  if (!lastSegment) return "uploaded-file";
+
+  const uuidPrefixMatch = lastSegment.match(
+    /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})-(.+)$/i,
+  );
+  if (!uuidPrefixMatch) return lastSegment;
+  return uuidPrefixMatch[2];
+}
+
 function getFileExtension(filename: string): string {
   const dotIndex = filename.lastIndexOf(".");
   if (dotIndex < 0) return "";
@@ -238,7 +249,7 @@ export function FileUpload({
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate dark:text-gray-200">{displayUrl.split("/").pop()}</p>
+              <p className="text-sm font-medium truncate dark:text-gray-200">{getDisplayFilename(displayUrl)}</p>
               <p className="text-xs text-muted-foreground truncate">{displayUrl}</p>
             </div>
             <div className="flex gap-1 flex-shrink-0">

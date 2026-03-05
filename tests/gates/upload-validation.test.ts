@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { getUploadFolder, isAllowedUpload } from "../../server/media/upload-validation";
+import { getUploadFolder, isAllowedUpload, sanitizeUploadBaseName } from "../../server/media/upload-validation";
 
 test("getUploadFolder maps media mime types", () => {
   assert.equal(getUploadFolder("image/heic"), "images");
@@ -26,4 +26,9 @@ test("isAllowedUpload rejects unknown types and unsafe generic extensions", () =
   assert.equal(isAllowedUpload("application/pdf", "file.pdf"), false);
   assert.equal(isAllowedUpload("application/octet-stream", "archive.zip"), false);
   assert.equal(isAllowedUpload("", "script.sh"), false);
+});
+
+test("sanitizeUploadBaseName keeps human readable slug names", () => {
+  assert.equal(sanitizeUploadBaseName("My Launch Video Final.MOV"), "my-launch-video-final");
+  assert.equal(sanitizeUploadBaseName("   $$$$.mp4"), "file");
 });

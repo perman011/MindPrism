@@ -50,6 +50,11 @@ function normalizeExtension(filename: string | undefined | null): string {
   return path.extname(filename || "").toLowerCase();
 }
 
+function basenameWithoutExtension(filename: string | undefined | null): string {
+  const raw = path.basename(filename || "", path.extname(filename || ""));
+  return raw.trim();
+}
+
 export function getUploadFolder(mimeType: string): string {
   const normalized = normalizeMimeType(mimeType);
   if (normalized.startsWith("image/")) return "images";
@@ -72,4 +77,17 @@ export function isAllowedUpload(mimeType: string | undefined | null, filename: s
   }
 
   return false;
+}
+
+export function sanitizeUploadBaseName(filename: string | undefined | null): string {
+  const base = basenameWithoutExtension(filename);
+  if (!base) return "file";
+
+  const sanitized = base
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 64);
+
+  return sanitized || "file";
 }

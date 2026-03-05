@@ -24,7 +24,7 @@ import fs from "fs";
 import { randomUUID } from "crypto";
 import { ObjectStorageService, objectStorageClient, setObjectAclPolicy } from "./replit_integrations/object_storage";
 import { ensureManagedMediaExists } from "./media/managed-media";
-import { getUploadFolder, isAllowedUpload } from "./media/upload-validation";
+import { getUploadFolder, isAllowedUpload, sanitizeUploadBaseName } from "./media/upload-validation";
 
 const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
   const user = req.user as any;
@@ -145,7 +145,8 @@ export function registerAdminRoutes(app: Express) {
     try {
       const folder = getUploadFolder(req.file.mimetype);
       const ext = path.extname(req.file.originalname);
-      const objectId = `${randomUUID()}${ext}`;
+      const safeBaseName = sanitizeUploadBaseName(req.file.originalname);
+      const objectId = `${randomUUID()}-${safeBaseName}${ext}`;
       const objectName = `${folder}/${objectId}`;
 
       const privateDir = objectStorageService.getPrivateObjectDir();
@@ -208,9 +209,11 @@ export function registerAdminRoutes(app: Express) {
           const filename = pathParts[pathParts.length - 1];
           const fileMeta = f.metadata?.metadata || f.metadata || {};
           const topMeta = f.metadata || {};
+          const displayName = String(fileMeta.originalName || filename || "");
           return {
             url: `/objects/uploads/${relativePath}`,
             filename,
+            displayName,
             type,
             size: Number(topMeta.size || fileMeta.size || 0),
             createdAt: topMeta.timeCreated || topMeta.updated || fileMeta.uploadedAt || new Date().toISOString(),
