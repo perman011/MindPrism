@@ -48,6 +48,21 @@ function resolveMediaUrl(url: string | null | undefined): string | null {
   return null;
 }
 
+function extractApiErrorMessage(error: unknown, fallback: string): string {
+  if (!(error instanceof Error)) return fallback;
+  const raw = error.message.replace(/^\d+:\s*/, "").trim();
+  if (!raw) return fallback;
+  try {
+    const parsed = JSON.parse(raw);
+    if (typeof parsed.message === "string" && parsed.message.trim().length > 0) {
+      return parsed.message;
+    }
+  } catch {
+    // fall through
+  }
+  return raw;
+}
+
 export default function AdminShorts() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -97,8 +112,12 @@ export default function AdminShorts() {
       queryClient.invalidateQueries({ queryKey: ["/api/shorts"] });
       toast({ title: "Updated", description: "Short status changed" });
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to update status", variant: "destructive" });
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: extractApiErrorMessage(error, "Failed to update status"),
+        variant: "destructive",
+      });
     },
   });
 

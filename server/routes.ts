@@ -1043,22 +1043,30 @@ export async function registerRoutes(
         return res.status(404).json({ message: "Short not found" });
       }
 
-      const normalized = normalizeShortPayload(req.body ?? {});
-      const parsed = shortPayloadSchema.partial().safeParse(normalized);
-      if (!parsed.success) {
+      const normalizedPatch = normalizeShortPayload(req.body ?? {});
+      const patchParsed = shortPayloadSchema.partial().safeParse(normalizedPatch);
+      if (!patchParsed.success) {
         return res.status(400).json({
           message: "Invalid short payload",
-          errors: parsed.error.issues.map((i) => i.message),
+          errors: patchParsed.error.issues.map((i) => i.message),
         });
       }
 
-      const merged = { ...existing, ...parsed.data };
-      const mediaValidationError = getPublishedMediaValidationError(merged);
+      const normalizedMerged = normalizeShortPayload({ ...existing, ...patchParsed.data });
+      const mergedParsed = shortPayloadSchema.safeParse(normalizedMerged);
+      if (!mergedParsed.success) {
+        return res.status(400).json({
+          message: "Invalid merged short payload",
+          errors: mergedParsed.error.issues.map((i) => i.message),
+        });
+      }
+
+      const mediaValidationError = getPublishedMediaValidationError(mergedParsed.data);
       if (mediaValidationError) {
         return res.status(400).json({ message: mediaValidationError });
       }
 
-      const result = await storage.updateShort(req.params.id, parsed.data);
+      const result = await storage.updateShort(req.params.id, patchParsed.data);
       res.json(result);
     } catch (error) {
       console.error("Error updating short:", error);

@@ -57,6 +57,27 @@ function normalizeMediaInputUrl(url: string): string {
   return normalized ?? trimmed;
 }
 
+function getFriendlyFilenameFromUrl(url: string): string {
+  const raw = decodeURIComponent(url.split("/").pop() || "").split("?")[0];
+  if (!raw) return "uploaded-file";
+
+  const prefixed = raw.match(
+    /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})-(.+)$/i,
+  );
+  if (prefixed) {
+    return prefixed[2];
+  }
+
+  const uuidOnly = raw.match(
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(\.[a-z0-9]+)$/i,
+  );
+  if (uuidOnly) {
+    return `uploaded-file${uuidOnly[1]}`;
+  }
+
+  return raw;
+}
+
 export function FileUpload({
   accept,
   value,
@@ -220,7 +241,7 @@ export function FileUpload({
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate dark:text-gray-200">{displayUrl.split("/").pop()}</p>
+              <p className="text-sm font-medium truncate dark:text-gray-200">{getFriendlyFilenameFromUrl(displayUrl)}</p>
               <p className="text-xs text-muted-foreground truncate">{displayUrl}</p>
             </div>
             <div className="flex gap-1 flex-shrink-0">

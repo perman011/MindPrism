@@ -67,6 +67,17 @@ function getUploadFolder(mimetype: string): string {
   return "general";
 }
 
+function sanitizeUploadBaseName(filename: string): string {
+  const ext = path.extname(filename);
+  const base = path.basename(filename, ext);
+  const cleaned = base
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+  return cleaned || "file";
+}
+
 const allowedMimeTypes: Record<string, boolean> = {
   "image/png": true, "image/jpeg": true, "image/jpg": true, "image/webp": true, "image/gif": true, "image/avif": true,
   "audio/mpeg": true, "audio/mp3": true, "audio/wav": true, "audio/x-wav": true, "audio/ogg": true, "audio/mp4": true, "audio/x-m4a": true, "audio/aac": true,
@@ -136,8 +147,9 @@ export function registerAdminRoutes(app: Express) {
     }
     try {
       const folder = getUploadFolder(req.file.mimetype);
-      const ext = path.extname(req.file.originalname);
-      const objectId = `${randomUUID()}${ext}`;
+      const ext = path.extname(req.file.originalname).toLowerCase();
+      const readableBase = sanitizeUploadBaseName(req.file.originalname);
+      const objectId = `${randomUUID()}-${readableBase}${ext}`;
       const objectName = `${folder}/${objectId}`;
 
       const privateDir = objectStorageService.getPrivateObjectDir();
@@ -203,6 +215,8 @@ export function registerAdminRoutes(app: Express) {
           return {
             url: `/objects/uploads/${relativePath}`,
             filename,
+            originalName: fileMeta.originalName || null,
+            displayName: fileMeta.originalName || filename,
             type,
             size: Number(topMeta.size || fileMeta.size || 0),
             createdAt: topMeta.timeCreated || topMeta.updated || fileMeta.uploadedAt || new Date().toISOString(),
