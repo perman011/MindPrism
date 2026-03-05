@@ -10,6 +10,7 @@ interface AudioState {
   duration: number;
   speed: number;
   isFullScreen: boolean;
+  error: string | null;
 }
 
 interface AudioContextType extends AudioState {
@@ -48,6 +49,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     duration: 0,
     speed: 1,
     isFullScreen: false,
+    error: null,
   });
 
   useEffect(() => {
@@ -88,7 +90,11 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     };
 
     const onError = () => {
-      setState((prev) => ({ ...prev, isPlaying: false }));
+      setState((prev) => ({
+        ...prev,
+        isPlaying: false,
+        error: "Audio is unavailable right now. Re-upload media in Admin if this keeps happening.",
+      }));
     };
 
     audio.addEventListener("loadedmetadata", onLoadedMetadata);
@@ -157,10 +163,15 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       isFullScreen: true,
       currentTime: sourceChanged ? 0 : audio.currentTime,
       duration: sourceChanged ? fallbackDuration : prev.duration,
+      error: null,
     }));
 
     audio.play().catch(() => {
-      setState((prev) => ({ ...prev, isPlaying: false }));
+      setState((prev) => ({
+        ...prev,
+        isPlaying: false,
+        error: "Playback was blocked. Tap play again to continue.",
+      }));
       toast({
         title: "Playback blocked",
         description: "Tap play again to start audio.",
@@ -174,7 +185,11 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
     if (audio.paused) {
       audio.play().catch(() => {
-        setState((prev) => ({ ...prev, isPlaying: false }));
+        setState((prev) => ({
+          ...prev,
+          isPlaying: false,
+          error: "Playback could not start. Check the audio file and try again.",
+        }));
       });
     } else {
       audio.pause();
@@ -232,6 +247,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       currentTime: 0,
       duration: 0,
       isFullScreen: false,
+      error: null,
     }));
   }, []);
 

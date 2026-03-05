@@ -23,6 +23,7 @@ import path from "path";
 import fs from "fs";
 import { randomUUID } from "crypto";
 import { ObjectStorageService, objectStorageClient, setObjectAclPolicy } from "./replit_integrations/object_storage";
+import { ensureManagedMediaExists } from "./media/managed-media";
 
 const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
   const user = req.user as any;
@@ -88,6 +89,25 @@ const upload = multer({
 });
 
 const objectStorageService = new ObjectStorageService();
+
+async function validateManagedMediaForPublish(
+  validationErrors: string[],
+  mediaUrl: string | null | undefined,
+  label: string,
+) {
+  const trimmed = typeof mediaUrl === "string" ? mediaUrl.trim() : "";
+  if (!trimmed) return;
+
+  try {
+    const exists = await ensureManagedMediaExists(trimmed);
+    if (!exists) {
+      validationErrors.push(`${label} file is missing from object storage. Re-upload media before publishing.`);
+    }
+  } catch (error) {
+    console.error(`[Admin Publish] Failed to verify ${label}:`, error);
+    validationErrors.push(`${label} could not be validated. Retry publishing after storage is healthy.`);
+  }
+}
 
 export function registerAdminRoutes(app: Express) {
   app.get("/objects/{*objectPath}", async (req, res) => {
@@ -233,17 +253,18 @@ export function registerAdminRoutes(app: Express) {
 
   app.delete("/api/admin/media/:type/:filename", isAuthenticated, isSuperAdmin, async (req, res) => {
     try {
-      const { type, filename } = req.params;
+      const typeParam = Array.isArray(req.params.type) ? req.params.type[0] : req.params.type;
+      const filenameParam = Array.isArray(req.params.filename) ? req.params.filename[0] : req.params.filename;
       const validTypes = ["images", "audio", "video", "thumbnails", "general"];
-      if (!validTypes.includes(type)) {
+      if (!typeParam || !validTypes.includes(typeParam)) {
         return res.status(400).json({ error: "Invalid file type" });
       }
-      if (filename.includes("..") || filename.includes("/")) {
+      if (!filenameParam || filenameParam.includes("..") || filenameParam.includes("/")) {
         return res.status(400).json({ error: "Invalid filename" });
       }
 
       const privateDir = objectStorageService.getPrivateObjectDir();
-      const fullPath = `${privateDir}/uploads/${type}/${filename}`;
+      const fullPath = `${privateDir}/uploads/${typeParam}/${filenameParam}`;
       const parts = fullPath.startsWith("/") ? fullPath.slice(1).split("/") : fullPath.split("/");
       const bucketName = parts[0];
       const objectPath = parts.slice(1).join("/");
@@ -351,6 +372,9 @@ export function registerAdminRoutes(app: Express) {
       if (!book.categoryId || book.categoryId.trim().length === 0) {
         validationErrors.push("Category must be assigned");
       }
+
+      await validateManagedMediaForPublish(validationErrors, book.coverImage, "Cover image");
+      await validateManagedMediaForPublish(validationErrors, book.audioUrl, "Book audio");
 
       if (validationErrors.length > 0) {
         return res.status(400).json({ message: "Publishing validation failed", validationErrors });
@@ -494,6 +518,9 @@ export function registerAdminRoutes(app: Express) {
       if (!mergedBook.categoryId || mergedBook.categoryId.trim().length === 0) {
         validationErrors.push("Category must be assigned");
       }
+
+      await validateManagedMediaForPublish(validationErrors, mergedBook.coverImage, "Cover image");
+      await validateManagedMediaForPublish(validationErrors, mergedBook.audioUrl, "Book audio");
 
       if (validationErrors.length > 0) {
         return res.status(400).json({ message: "Publishing validation failed", validationErrors });
@@ -683,6 +710,8 @@ export function registerAdminRoutes(app: Express) {
               if (!book.description) errors.push("Book description is required");
               if (!book.coverImage) errors.push("Cover image is required");
               if (!book.categoryId) errors.push("Category must be assigned");
+              await validateManagedMediaForPublish(errors, book.coverImage, "Cover image");
+              await validateManagedMediaForPublish(errors, book.audioUrl, "Book audio");
               if (errors.length > 0) {
                 return { bookId, success: false, title: book.title, error: errors.join("; ") };
               }

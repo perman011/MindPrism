@@ -19,6 +19,7 @@ import { NotificationSettings } from "@/components/notification-settings";
 import { SummaryStats } from "@/components/summary-stats";
 import { StreakChart } from "@/components/streak-chart";
 import { motion } from "framer-motion";
+import { openSubscriptionManagement } from "@/lib/billing";
 
 interface VaultStats {
   booksStarted: number;
@@ -407,28 +408,21 @@ export default function Vault() {
                 <Button
                   variant="outline"
                   className="w-full gap-2"
-                  onClick={() => {
-                    fetch("/api/stripe/create-portal-session", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      credentials: "include",
-                    }).then((res) => {
-                      if (res.ok) {
-                        return res.json().then((data: any) => {
-                          if (data.url) {
-                            window.location.href = data.url;
-                          } else {
-                            window.alert("Subscription portal is not available right now.");
-                            toast({ title: "Not Available", description: "Subscription management is not available yet. Please contact support." });
-                          }
-                        });
+                  onClick={async () => {
+                    try {
+                      const result = await openSubscriptionManagement();
+                      if (result.redirectUrl) {
+                        window.location.href = result.redirectUrl;
+                        return;
                       }
-                      window.alert("Subscription management is not available yet. Please contact support.");
-                      toast({ title: "Not Available", description: "Subscription management is not available yet. Please contact support." });
-                    }).catch(() => {
-                      window.alert("Could not connect to subscription service. Please try again later.");
-                      toast({ title: "Error", description: "Could not connect to subscription service.", variant: "destructive" });
-                    });
+
+                      toast({
+                        title: "Not Available",
+                        description: result.message || "Subscription management is not available yet. Please contact support.",
+                      });
+                    } catch {
+                      toast({ title: "Error", description: "Could not connect to subscription service. Please try again later.", variant: "destructive" });
+                    }
                   }}
                   data-testid="button-manage-subscription"
                 >

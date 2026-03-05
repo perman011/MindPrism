@@ -65,6 +65,8 @@ function AudioPlayer({ audioUrl, accentColor }: { audioUrl: string; accentColor:
   const audioRef = useRef<HTMLAudioElement>(null);
   const resolvedAudioUrl = useMemo(() => normalizeMediaUrl(audioUrl) ?? audioUrl, [audioUrl]);
   const [playing, setPlaying] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [speed, setSpeed] = useState(1);
@@ -75,6 +77,8 @@ function AudioPlayer({ audioUrl, accentColor }: { audioUrl: string; accentColor:
 
   useEffect(() => {
     setPlaying(false);
+    setIsBuffering(false);
+    setLoadError(null);
     setCurrentTime(0);
     if (audioRef.current) {
       audioRef.current.pause();
@@ -100,7 +104,11 @@ function AudioPlayer({ audioUrl, accentColor }: { audioUrl: string; accentColor:
     if (playing) {
       audioRef.current.pause();
     } else {
-      audioRef.current.play().catch(() => setPlaying(false));
+      setLoadError(null);
+      audioRef.current.play().catch(() => {
+        setPlaying(false);
+        setLoadError("Playback failed. The audio file may be unavailable.");
+      });
     }
   }, [playing]);
 
@@ -138,11 +146,22 @@ function AudioPlayer({ audioUrl, accentColor }: { audioUrl: string; accentColor:
           if (audioRef.current) {
             setDuration(audioRef.current.duration);
             audioRef.current.playbackRate = speed;
+            setLoadError(null);
           }
         }}
-        onPlay={() => setPlaying(true)}
+        onPlay={() => {
+          setPlaying(true);
+          setIsBuffering(false);
+        }}
         onPause={() => setPlaying(false)}
         onEnded={() => setPlaying(false)}
+        onWaiting={() => setIsBuffering(true)}
+        onCanPlay={() => setIsBuffering(false)}
+        onPlaying={() => setIsBuffering(false)}
+        onError={() => {
+          setIsBuffering(false);
+          setLoadError("Audio failed to load. Re-upload this chapter audio in Admin.");
+        }}
       />
 
       <div
@@ -178,6 +197,11 @@ function AudioPlayer({ audioUrl, accentColor }: { audioUrl: string; accentColor:
             <span>{formatTime(currentTime)}</span>
             <span>{duration > 0 ? formatTime(duration) : "--:--"}</span>
           </div>
+          {(isBuffering || loadError) && (
+            <p className="text-[11px] mt-1" style={{ color: loadError ? "#FCA5A5" : "rgba(245,240,235,0.65)" }}>
+              {loadError || "Buffering audio..."}
+            </p>
+          )}
         </div>
 
         <div className="relative">
@@ -293,6 +317,7 @@ export default function ChapterReader() {
   const [chapterIndex, setChapterIndex] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showToc, setShowToc] = useState(false);
+  const [isChapterHydrating, setIsChapterHydrating] = useState(true);
   const contentRef = useRef<HTMLDivElement>(null);
 
   const { data: book, isError: bookError } = useQuery<Book>({
@@ -317,6 +342,12 @@ export default function ChapterReader() {
     }
     setScrollProgress(0);
   }, [chapterIndex]);
+
+  useEffect(() => {
+    setIsChapterHydrating(true);
+    const frameId = requestAnimationFrame(() => setIsChapterHydrating(false));
+    return () => cancelAnimationFrame(frameId);
+  }, [currentChapter?.id]);
 
   const handleScroll = useCallback(() => {
     if (!contentRef.current) return;
@@ -431,9 +462,17 @@ export default function ChapterReader() {
             )}
 
             <ChapterContent
-              html={currentChapter?.content || null}
-              fallbackCards={currentChapter?.cards as any[] || null}
+              html={isChapterHydrating ? null : (currentChapter?.content || null)}
+              fallbackCards={isChapterHydrating ? null : (currentChapter?.cards as any[] || null)}
             />
+
+            {isChapterHydrating && (
+              <div className="space-y-3 animate-pulse">
+                <div className="h-4 rounded" style={{ background: "rgba(245,240,235,0.12)" }} />
+                <div className="h-4 rounded" style={{ background: "rgba(245,240,235,0.08)" }} />
+                <div className="h-4 rounded w-4/5" style={{ background: "rgba(245,240,235,0.08)" }} />
+              </div>
+            )}
 
             <div className="flex items-center justify-between mt-12 pt-6" style={{ borderTop: "1px solid rgba(245,240,235,0.08)" }}>
               <Button
