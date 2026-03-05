@@ -189,6 +189,16 @@ export function registerAdminRoutes(app: Express) {
       const entityId = `uploads/${objectName}`;
       const url = `/objects/${entityId}`;
 
+      const shortId = typeof req.body?.shortId === "string" ? req.body.shortId.trim() : "";
+      const shortField = req.body?.shortField;
+      if (shortId && (shortField === "mediaUrl" || shortField === "thumbnailUrl")) {
+        const existingShort = await storage.getShort(shortId);
+        if (!existingShort) {
+          return res.status(404).json({ error: "Short not found for media attachment" });
+        }
+        await storage.updateShort(shortId, { [shortField]: url });
+      }
+
       res.json({
         success: true,
         url,

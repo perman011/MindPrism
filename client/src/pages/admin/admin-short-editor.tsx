@@ -316,6 +316,7 @@ export default function AdminShortEditor() {
                     value={mediaUrl}
                     onChange={(url) => setMediaUrl(url)}
                     onUploadStateChange={setIsMediaUploading}
+                    uploadContext={!isNew && id ? { shortId: id, shortField: "mediaUrl" } : undefined}
                     maxSize={mediaType === "video" ? 50 : mediaType === "audio" ? 50 : 5}
                     label={`${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} File${requiresMedia ? " *" : ""}`}
                     required={requiresMedia}
@@ -337,6 +338,7 @@ export default function AdminShortEditor() {
                     value={thumbnailUrl}
                     onChange={(url) => setThumbnailUrl(url)}
                     onUploadStateChange={setIsThumbnailUploading}
+                    uploadContext={!isNew && id ? { shortId: id, shortField: "thumbnailUrl" } : undefined}
                     maxSize={5}
                     label={`Thumbnail Image${needsThumbnail ? " *" : ""}`}
                     required={needsThumbnail}

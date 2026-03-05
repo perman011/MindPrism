@@ -11,6 +11,10 @@ interface FileUploadProps {
   value: string;
   onChange: (url: string) => void;
   onUploadStateChange?: (isUploading: boolean) => void;
+  uploadContext?: {
+    shortId: string;
+    shortField: "mediaUrl" | "thumbnailUrl";
+  };
   maxSize?: number;
   label?: string;
   required?: boolean;
@@ -86,6 +90,7 @@ export function FileUpload({
   value,
   onChange,
   onUploadStateChange,
+  uploadContext,
   maxSize = 50,
   label,
   required,
@@ -135,6 +140,10 @@ export function FileUpload({
 
     const formData = new FormData();
     formData.append("file", file);
+    if (uploadContext?.shortId && uploadContext?.shortField) {
+      formData.append("shortId", uploadContext.shortId);
+      formData.append("shortField", uploadContext.shortField);
+    }
 
     try {
       const progressInterval = setInterval(() => {
@@ -168,7 +177,7 @@ export function FileUpload({
       setIsUploading(false);
       setUploadProgress(0);
     }
-  }, [accept, maxSize, onChange]);
+  }, [accept, maxSize, onChange, uploadContext]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
