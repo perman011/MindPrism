@@ -98,6 +98,18 @@ function resolveMediaUrl(url: string | null | undefined): string | null {
   return null;
 }
 
+function getDisplayFilename(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const lastSegment = decodeURIComponent(url.split("?")[0].split("/").pop() || "").trim();
+  if (!lastSegment) return null;
+
+  const uuidPrefixMatch = lastSegment.match(
+    /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})-(.+)$/i,
+  );
+  if (!uuidPrefixMatch) return lastSegment;
+  return uuidPrefixMatch[2];
+}
+
 export default function AdminShorts() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -242,6 +254,8 @@ export default function AdminShorts() {
               const thumbnailUrl = resolveMediaUrl(short.thumbnailUrl);
               const publishReadiness = getPublishReadiness(short);
               const needsFixBeforePublish = short.status !== "published" && !publishReadiness.canPublish;
+              const mediaName = getDisplayFilename(short.mediaUrl);
+              const thumbnailName = getDisplayFilename(short.thumbnailUrl);
               return (
                 <Card key={short.id} className="p-4 hover:shadow-lg transition-shadow" data-testid={`card-short-${short.id}`}>
                   <div className="flex items-center gap-4">
@@ -265,6 +279,16 @@ export default function AdminShorts() {
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold truncate" data-testid={`text-short-title-${short.id}`}>{short.title}</h3>
                       <p className="text-sm text-muted-foreground truncate">{getBookTitle(short.bookId)}</p>
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                        <span data-testid={`short-media-file-${short.id}`}>
+                          Media: {mediaName || "Not attached"}
+                        </span>
+                        {(short.mediaType === "audio" || short.mediaType === "video") && (
+                          <span data-testid={`short-thumbnail-file-${short.id}`}>
+                            Thumbnail: {thumbnailName || "Not attached"}
+                          </span>
+                        )}
+                      </div>
                       {needsFixBeforePublish && (
                         <p className="text-xs text-amber-600 mt-1 flex items-center gap-1" data-testid={`short-warning-${short.id}`}>
                           <AlertTriangle className="w-3 h-3" />

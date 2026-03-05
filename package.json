@@ -18,8 +18,9 @@
     "test:gate:rbac": "tsx --test tests/gates/rbac.test.ts",
     "test:gate:shorts": "tsx --test tests/gates/shorts-publish.test.ts",
     "test:gate:user-content": "tsx --test tests/gates/user-content.test.ts",
+    "test:gate:uploads": "tsx --test tests/gates/upload-validation.test.ts",
     "test:gate:mobile": "tsx --test tests/gates/mobile-billing.test.ts",
-    "test:gates": "npm run test:gate:billing && npm run test:gate:audio && npm run test:gate:rbac && npm run test:gate:shorts && npm run test:gate:user-content && npm run test:gate:mobile"
+    "test:gates": "npm run test:gate:billing && npm run test:gate:audio && npm run test:gate:rbac && npm run test:gate:shorts && npm run test:gate:user-content && npm run test:gate:uploads && npm run test:gate:mobile"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",
