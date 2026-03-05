@@ -62,7 +62,7 @@ function getPublishReadiness(short: {
   thumbnailUrl?: string | null;
 }): PublishReadiness {
   const mediaType = short.mediaType;
-  const requiresMedia = mediaType === "image" || mediaType === "audio" || mediaType === "video";
+  const requiresMedia = mediaType === "audio" || mediaType === "video";
   const hasMedia = typeof short.mediaUrl === "string" && short.mediaUrl.trim().length > 0;
   if (requiresMedia && !hasMedia) {
     return { canPublish: false, reason: "Add a media file before publishing." };

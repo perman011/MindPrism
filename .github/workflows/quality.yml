@@ -87,6 +87,44 @@ jobs:
       - name: RBAC gate
         run: npm run test:gate:rbac
 
+  gate-shorts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Shorts publish gate
+        run: npm run test:gate:shorts
+
+  gate-user-content:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: User content gate
+        run: npm run test:gate:user-content
+
   gate-mobile:
     runs-on: ubuntu-latest
 

@@ -29,6 +29,21 @@ function formatTime(seconds: number): string {
 const ALLOWED_TAGS = ["p", "h2", "h3", "strong", "em", "mark", "blockquote", "ul", "ol", "li", "hr", "br"];
 const ALLOWED_ATTR: string[] = [];
 
+function extractApiErrorMessage(error: unknown, fallback: string): string {
+  if (!(error instanceof Error)) return fallback;
+  const raw = error.message.replace(/^\d+:\s*/, "").trim();
+  if (!raw) return fallback;
+  try {
+    const parsed = JSON.parse(raw);
+    if (typeof parsed.message === "string" && parsed.message.trim().length > 0) {
+      return parsed.message;
+    }
+  } catch {
+    // fall through
+  }
+  return raw;
+}
+
 function ChapterContent({ html, fallbackCards }: { html: string | null; fallbackCards: any[] | null }) {
   const sanitizedHtml = useMemo(() => {
     if (!html) return null;
@@ -385,10 +400,22 @@ export default function ChapterReader() {
       selection?.removeAllRanges();
       toast({ title: "Saved", description: "Highlight added to your vault." });
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to save highlight.", variant: "destructive" });
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: extractApiErrorMessage(error, "Failed to save highlight."),
+        variant: "destructive",
+      });
     },
   });
+
+  const saveManualHighlight = useCallback(() => {
+    const text = window.prompt("Save a highlight from this chapter:", "");
+    if (!text) return;
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    saveHighlightMutation.mutate(trimmed.slice(0, 400));
+  }, [saveHighlightMutation]);
 
   useEffect(() => {
     const readSelection = () => {
@@ -518,7 +545,7 @@ export default function ChapterReader() {
             )}
 
             {currentChapter?.estimatedReadTime && (
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2 mb-4 flex-wrap">
                 <Badge
                   className="text-[10px] gap-1 border-0"
                   style={{ background: "rgba(245,240,235,0.08)", color: "rgba(245,240,235,0.5)" }}
@@ -526,6 +553,18 @@ export default function ChapterReader() {
                   <Clock className="w-3 h-3" />
                   {currentChapter.estimatedReadTime} min read
                 </Badge>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="gap-1 text-xs px-2.5 h-7"
+                  style={{ color: READER_TEXT, border: "1px solid rgba(245,240,235,0.15)" }}
+                  onClick={saveManualHighlight}
+                  disabled={saveHighlightMutation.isPending}
+                  data-testid="button-save-highlight-manual-reader"
+                >
+                  <BookmarkPlus className="w-3.5 h-3.5" />
+                  Save Insight
+                </Button>
               </div>
             )}
 

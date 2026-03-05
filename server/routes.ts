@@ -10,6 +10,13 @@ import { db } from "./db";
 import { userActivityLog, userProgress, books, categories, journalEntries, quizResults, chapterSummaries, shorts, shortViews, insertShortSchema } from "@shared/schema";
 import { eq, and, sql as dsql, desc, gte, count, lte, asc } from "drizzle-orm";
 import { ensureManagedMediaExists } from "./media/managed-media";
+import {
+  normalizeShortPayload,
+  getPublishedMediaValidationError,
+  getManagedMediaValidationTargets,
+  type ShortPublishValidationInput,
+} from "./shorts/publish-validation";
+import { parseJournalInput, parseHighlightInput } from "./user-content/validation";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -370,14 +377,11 @@ export async function registerRoutes(
   app.post("/api/journal", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const journalSchema = z.object({
-        content: z.string().min(1),
-      });
-      const parsed = journalSchema.safeParse(req.body);
-      if (!parsed.success) {
+      const parsed = parseJournalInput(req.body);
+      if (!parsed) {
         return res.status(400).json({ message: "content is required" });
       }
-      const { content } = parsed.data;
+      const { content } = parsed;
       const encryptedContent = encrypt(content);
       const entry = await storage.createJournalEntry({ userId, content: encryptedContent });
       await storage.updateUserStreak(userId);
@@ -496,14 +500,15 @@ export async function registerRoutes(
   app.post("/api/highlights", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const schema = z.object({
-        bookId: z.string().min(1),
-        content: z.string().min(1),
-        type: z.string().min(1),
-      });
-      const parsed = schema.safeParse(req.body);
-      if (!parsed.success) return res.status(400).json({ message: "Invalid highlight data" });
-      const result = await storage.createSavedHighlight({ userId, ...parsed.data });
+      const parsed = parseHighlightInput(req.body);
+      if (!parsed) return res.status(400).json({ message: "Invalid highlight data" });
+
+      const book = await storage.getBook(parsed.bookId);
+      if (!book) {
+        return res.status(400).json({ message: "Book not found for highlight" });
+      }
+
+      const result = await storage.createSavedHighlight({ userId, ...parsed });
       res.json(result);
     } catch (error) {
       console.error("Error saving highlight:", error);
@@ -952,76 +957,20 @@ export async function registerRoutes(
     status: z.enum(["draft", "published"]).optional(),
   });
 
-  const normalizeStoredMediaPath = (value: unknown): unknown => {
-    if (typeof value !== "string") return value;
-    const trimmed = value.trim();
-    if (!trimmed) return null;
-    if (trimmed.startsWith("/uploads/")) return `/objects${trimmed}`;
-    if (trimmed.startsWith("uploads/")) return `/objects/${trimmed}`;
-    return trimmed;
-  };
+  const getMissingManagedMediaValidationError = async (
+    data: ShortPublishValidationInput,
+  ): Promise<string | null> => {
+    const targets = getManagedMediaValidationTargets(data);
 
-  const normalizeShortPayload = (data: Record<string, any>): Record<string, any> => {
-    const normalized: Record<string, any> = { ...data };
-    normalized.mediaUrl = normalizeStoredMediaPath(normalized.mediaUrl);
-    normalized.thumbnailUrl = normalizeStoredMediaPath(normalized.thumbnailUrl);
-    if (typeof normalized.backgroundGradient === "string") {
-      normalized.backgroundGradient = normalized.backgroundGradient.trim() || null;
-    }
-    if (typeof normalized.title === "string") {
-      normalized.title = normalized.title.trim();
-    }
-    if (typeof normalized.content === "string") {
-      normalized.content = normalized.content.trim();
-    }
-    return normalized;
-  };
-
-  const getPublishedMediaValidationError = (data: {
-    status?: string | null;
-    mediaType?: string | null;
-    mediaUrl?: string | null;
-    thumbnailUrl?: string | null;
-  }): string | null => {
-    const status = data.status ?? "draft";
-    if (status !== "published") return null;
-
-    const mediaType = data.mediaType;
-    const requiresMedia = mediaType === "image" || mediaType === "audio" || mediaType === "video";
-    const mediaUrl = typeof data.mediaUrl === "string" ? data.mediaUrl.trim() : "";
-    if (requiresMedia && !mediaUrl) {
-      return "Published image/audio/video shorts require an uploaded media file.";
-    }
-
-    if (mediaType === "audio" || mediaType === "video") {
-      const thumbnailUrl = typeof data.thumbnailUrl === "string" ? data.thumbnailUrl.trim() : "";
-      if (!thumbnailUrl) {
-        return "Published audio/video shorts require a thumbnail image.";
-      }
-    }
-
-    return null;
-  };
-
-  const getMissingManagedMediaValidationError = async (data: {
-    status?: string | null;
-    mediaType?: string | null;
-    mediaUrl?: string | null;
-    thumbnailUrl?: string | null;
-  }): Promise<string | null> => {
-    const status = data.status ?? "draft";
-    if (status !== "published") return null;
-
-    if (typeof data.mediaUrl === "string" && data.mediaUrl.trim().length > 0) {
-      const mediaExists = await ensureManagedMediaExists(data.mediaUrl);
+    if (targets.mediaUrl) {
+      const mediaExists = await ensureManagedMediaExists(targets.mediaUrl);
       if (!mediaExists) {
         return "Published short media file is missing from object storage. Re-upload the media.";
       }
     }
 
-    const needsThumbnail = data.mediaType === "audio" || data.mediaType === "video";
-    if (needsThumbnail && typeof data.thumbnailUrl === "string" && data.thumbnailUrl.trim().length > 0) {
-      const thumbnailExists = await ensureManagedMediaExists(data.thumbnailUrl);
+    if (targets.thumbnailUrl) {
+      const thumbnailExists = await ensureManagedMediaExists(targets.thumbnailUrl);
       if (!thumbnailExists) {
         return "Published short thumbnail is missing from object storage. Re-upload the thumbnail.";
       }
