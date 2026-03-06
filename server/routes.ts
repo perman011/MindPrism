@@ -8,7 +8,8 @@ import { registerRecallRoutes } from "./recall-routes";
 import { z } from "zod";
 import { encrypt, decrypt } from "./crypto";
 import { db } from "./db";
-import { userActivityLog, userProgress, books, categories, journalEntries, quizResults, chapterSummaries, shorts, shortViews, insertShortSchema } from "@shared/schema";
+import { userActivityLog, userProgress, books, categories, journalEntries, quizResults, chapterSummaries, shorts, shortViews, insertShortSchema, chakraProgress, savedHighlights, userStreaks, userInterests, notificationPreferences } from "@shared/schema";
+import { users } from "@shared/models/auth";
 import { eq, and, sql as dsql, desc, gte, count, lte, asc } from "drizzle-orm";
 import { ensureManagedMediaExists } from "./media/managed-media";
 import { publicLimiter } from "./middleware/rateLimiter";
@@ -1147,6 +1148,32 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error deleting short:", error);
       res.status(500).json({ message: "Failed to delete short" });
+    }
+  });
+
+  app.delete("/api/account", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      console.log(`[account-deletion] Starting deletion for user: ${userId}`);
+
+      // Delete in order respecting FK constraints
+      await db.delete(quizResults).where(eq(quizResults.userId, userId));
+      await db.delete(userProgress).where(eq(userProgress.userId, userId));
+      await db.delete(chakraProgress).where(eq(chakraProgress.userId, userId));
+      await db.delete(savedHighlights).where(eq(savedHighlights.userId, userId));
+      await db.delete(journalEntries).where(eq(journalEntries.userId, userId));
+      await db.delete(notificationPreferences).where(eq(notificationPreferences.userId, userId));
+      await db.delete(userInterests).where(eq(userInterests.userId, userId));
+      await db.delete(userStreaks).where(eq(userStreaks.userId, userId));
+      await db.delete(shortViews).where(eq(shortViews.userId, userId));
+      await db.delete(userActivityLog).where(eq(userActivityLog.userId, userId));
+      await db.delete(users).where(eq(users.id, userId));
+
+      console.log(`[account-deletion] Successfully deleted account for user: ${userId}`);
+      res.json({ message: "Account deleted" });
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      res.status(500).json({ message: "Failed to delete account" });
     }
   });
 

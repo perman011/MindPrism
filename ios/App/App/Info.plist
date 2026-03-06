@@ -47,5 +47,13 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>MindPrism uses the camera to capture profile photos</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>MindPrism accesses your photo library to set profile images</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>MindPrism uses the microphone for audio features</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

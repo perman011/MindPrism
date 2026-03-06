@@ -228,6 +228,15 @@ export default function LandingPage() {
         </Button>
       </div>
 
+      <div className="relative z-10 py-4 text-center">
+        <a
+          href="/privacy"
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
+        >
+          Privacy Policy
+        </a>
+      </div>
+
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-primary/5 to-transparent pointer-events-none" />
     </div>
   );
