@@ -38,6 +38,23 @@ export async function seedDatabase() {
   const catEmotions = await storage.createCategory({ name: "Emotions", slug: "emotions", icon: "lightbulb", color: "rose" });
   const catMeaning = await storage.createCategory({ name: "Purpose", slug: "meaning", icon: "sparkles", color: "indigo" });
 
+  // Expanded categories for all book types
+  const catBusiness = await storage.createCategory({ name: "Business", slug: "business", icon: "briefcase", color: "blue" });
+  const catLeadership = await storage.createCategory({ name: "Leadership", slug: "leadership", icon: "crown", color: "gold" });
+  const catProductivity = await storage.createCategory({ name: "Productivity", slug: "productivity", icon: "zap", color: "orange" });
+  const catScience = await storage.createCategory({ name: "Science", slug: "science", icon: "flask", color: "cyan" });
+  const catHistory = await storage.createCategory({ name: "History", slug: "history", icon: "scroll", color: "brown" });
+  const catHealth = await storage.createCategory({ name: "Health & Fitness", slug: "health-fitness", icon: "heart-pulse", color: "red" });
+  const catRelationships = await storage.createCategory({ name: "Relationships", slug: "relationships", icon: "users", color: "pink" });
+  const catFinance = await storage.createCategory({ name: "Money & Finance", slug: "money-finance", icon: "wallet", color: "emerald" });
+  const catCreativity = await storage.createCategory({ name: "Creativity", slug: "creativity", icon: "palette", color: "violet" });
+  const catPhilosophy = await storage.createCategory({ name: "Philosophy", slug: "philosophy", icon: "book-open", color: "slate" });
+  const catParenting = await storage.createCategory({ name: "Parenting", slug: "parenting", icon: "baby", color: "sky" });
+  const catSpirituality = await storage.createCategory({ name: "Spirituality", slug: "spirituality", icon: "sun", color: "yellow" });
+  const catCommunication = await storage.createCategory({ name: "Communication", slug: "communication", icon: "message-circle", color: "lime" });
+  const catTechnology = await storage.createCategory({ name: "Technology", slug: "technology", icon: "cpu", color: "zinc" });
+  const catBiography = await storage.createCategory({ name: "Biography", slug: "biography", icon: "user", color: "stone" });
+
   const book1 = await storage.createBook({
     title: "Atomic Habits",
     author: "James Clear",

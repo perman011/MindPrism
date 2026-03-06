@@ -12,6 +12,7 @@ import {
   books,
   userProgress,
   analyticsEvents,
+  categories,
 } from "@shared/schema";
 import { hasMinRole } from "@shared/models/auth";
 import { users } from "@shared/models/auth";
@@ -1040,6 +1041,50 @@ export function registerAdminRoutes(app: Express) {
     } catch (error) {
       console.error("Error fetching subscription stats:", error);
       res.status(500).json({ message: "Failed to fetch subscription stats" });
+    }
+  });
+
+  // Category management
+  app.get("/api/admin/categories", isAuthenticated, isAdmin, async (_req, res) => {
+    try {
+      const allCategories = await db.select().from(categories).orderBy(categories.name);
+      res.json(allCategories);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+
+  app.post("/api/admin/categories", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { name, slug, icon, color } = req.body;
+      if (!name || !slug || !icon || !color) {
+        return res.status(400).json({ message: "name, slug, icon, and color are required" });
+      }
+      const [created] = await db.insert(categories).values({ name, slug, icon, color }).returning();
+      res.status(201).json(created);
+    } catch (error: any) {
+      if (error.code === "23505") {
+        return res.status(409).json({ message: "Category with this slug already exists" });
+      }
+      console.error("Error creating category:", error);
+      res.status(500).json({ message: "Failed to create category" });
+    }
+  });
+
+  app.delete("/api/admin/categories/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      // Check if any books use this category
+      const booksWithCategory = await db.select({ id: books.id }).from(books).where(eq(books.categoryId, id)).limit(1);
+      if (booksWithCategory.length > 0) {
+        return res.status(409).json({ message: "Cannot delete category that has books assigned to it" });
+      }
+      await db.delete(categories).where(eq(categories.id, id));
+      res.json({ message: "Category deleted" });
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      res.status(500).json({ message: "Failed to delete category" });
     }
   });
 }
