@@ -42,39 +42,3 @@ jobs:
 
           git commit -m "Daily update $(date -u +'%Y-%m-%d')"
           git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main
-
-  sync-to-drive:
-    needs: append-date
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-          fetch-depth: 0
-
-      - name: Install rclone
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y rclone
-
-      - name: Write service account key
-        run: |
-          printf '%s' '${{ secrets.GDRIVE_SA_JSON }}' > /home/runner/gdrive-sa.json
-          mkdir -p /home/runner/.config/rclone
-
-      - name: Create rclone config
-        env:
-          FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
-        run: |
-          printf "[gdrive]\ntype = drive\nscope = drive\nservice_account_file = /home/runner/gdrive-sa.json\nroot_folder_id = %s\n" "${FOLDER_ID}" > /home/runner/.config/rclone/rclone.conf
-
-      - name: Sync repo to Google Drive folder
-        run: |
-          rclone sync . gdrive: \
-            --exclude ".git/**" \
-            --exclude "node_modules/**" \
-            --exclude "**/.DS_Store" \
-            --create-empty-src-dirs \
-            -v

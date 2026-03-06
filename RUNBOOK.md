@@ -19,6 +19,16 @@ python3 -m unittest discover -s tests -v
 python3 scripts/notebook_smoke_test.py
 ```
 
+## Repository Backup
+
+Use GitHub as the primary remote copy of the repository. For a point-in-time local backup from a clone, create a bundle file and store or upload that file manually:
+
+```bash
+git bundle create "$HOME/Desktop/MindPrism-$(date +%Y-%m-%d).bundle" --all
+```
+
+Google Drive uploads via service account are not a supported backup path for this repository. If Drive automation is needed later, use OAuth or a Shared Drive.
+
 ## Validation Rules
 
 - Missing required fields fail fast.
