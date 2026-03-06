@@ -305,12 +305,15 @@ export default function Dashboard() {
       <div className="bg-background">
         <div className="px-5 pt-4 pb-1 flex items-center justify-between" data-testid="header-brand">
           <div className="flex items-center gap-3">
-            <img
-              src={logoImg}
-              alt="mindprism"
-              className="w-10 h-10 object-contain dark:brightness-125"
-            />
-            <span className="text-lg font-bold tracking-tight text-foreground dark:text-primary-lighter">mindprism</span>
+            <div className="relative w-11 h-11 flex items-center justify-center flex-shrink-0">
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#2D1B45] via-[#341539] to-[#1a0a20] shadow-md" />
+              <img
+                src={logoImg}
+                alt="mindprism"
+                className="relative z-10 w-7 h-7 object-contain drop-shadow-[0_1px_4px_rgba(255,210,80,0.3)]"
+              />
+            </div>
+            <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-[#2D1B45] to-[#6B3A7D] bg-clip-text text-transparent dark:from-[#D4B8D6] dark:to-[#E8D5EA]">mindprism</span>
           </div>
         </div>
         {booksLoading ? (

@@ -8,16 +8,16 @@ const heroBg = "/images/hero-bg.png";
 
 function FeatherRain() {
   const feathers = useMemo(() =>
-    Array.from({ length: 18 }, (_, i) => ({
+    Array.from({ length: 7 }, (_, i) => ({
       id: i,
-      left: `${5 + Math.random() * 90}%`,
-      size: 50 + Math.random() * 40,
-      delay: -(Math.random() * 15),
-      duration: 8 + Math.random() * 7,
-      swayAmount: 30 + Math.random() * 50,
-      swayDuration: 3 + Math.random() * 3,
-      startRotate: -20 + Math.random() * 40,
-      opacity: 0.08 + Math.random() * 0.14,
+      left: `${8 + (i * 13) + Math.random() * 8}%`,
+      size: 28 + Math.random() * 18,
+      delay: -(Math.random() * 20),
+      duration: 14 + Math.random() * 10,
+      swayAmount: 40 + Math.random() * 60,
+      swayDuration: 4 + Math.random() * 3,
+      startRotate: -25 + Math.random() * 50,
+      opacity: 0.12 + Math.random() * 0.10,
     })),
   []);
 
@@ -45,11 +45,12 @@ function FeatherRain() {
             <img
               src={mindprismLogo}
               alt=""
-              className="select-none mix-blend-screen feather-spin"
+              className="select-none feather-spin"
               style={{
                 width: f.size,
                 height: f.size,
                 opacity: f.opacity,
+                filter: 'drop-shadow(0 2px 8px rgba(212,170,50,0.25))',
                 animationDuration: `${f.duration * 0.8}s`,
                 animationDelay: `${f.delay}s`,
                 // @ts-ignore
@@ -135,14 +136,14 @@ export default function LandingPage() {
             opacity: { duration: 1.2 },
           }}
         >
-          <div className="flex items-center gap-3">
-            <div className="relative w-12 h-12 flex items-center justify-center">
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#341539]/90 to-[#1a0a20] shadow-lg" />
-              <img src={mindprismLogo} alt="MindPrism" className="relative z-10 w-8 h-8 object-contain drop-shadow-[0_1px_3px_rgba(212,184,214,0.4)]" />
+          <div className="flex items-center gap-3.5">
+            <div className="relative w-14 h-14 flex items-center justify-center">
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#2D1B45] via-[#341539] to-[#1a0a20] shadow-xl shadow-[#341539]/20" />
+              <img src={mindprismLogo} alt="MindPrism" className="relative z-10 w-9 h-9 object-contain drop-shadow-[0_2px_6px_rgba(255,210,80,0.35)]" />
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-bold tracking-wide bg-gradient-to-r from-[#341539] to-[#6B3A7D] bg-clip-text text-transparent dark:from-[#D4B8D6] dark:to-[#E8D5EA]">MindPrism</span>
-              <span className="text-[10px] font-medium tracking-[0.2em] uppercase text-muted-foreground -mt-0.5">Psychology Made Simple</span>
+              <span className="text-2xl font-bold tracking-wide bg-gradient-to-r from-[#2D1B45] via-[#5B2C6F] to-[#8E44AD] bg-clip-text text-transparent dark:from-[#D4B8D6] dark:via-[#E8D5EA] dark:to-[#F0E6F3]">MindPrism</span>
+              <span className="text-[10px] font-semibold tracking-[0.22em] uppercase text-[#8E44AD]/60 dark:text-[#D4B8D6]/50 -mt-0.5">Psychology Made Simple</span>
             </div>
           </div>
         </motion.div>

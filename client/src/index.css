@@ -279,10 +279,18 @@
 
 @keyframes featherFall {
   0% {
-    transform: translateY(-60px);
+    transform: translateY(-80px);
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
   }
   100% {
-    transform: translateY(calc(100vh + 60px));
+    transform: translateY(calc(100vh + 80px));
+    opacity: 0;
   }
 }
 
@@ -290,11 +298,14 @@
   0%, 100% {
     transform: translateX(0);
   }
-  25% {
+  20% {
+    transform: translateX(calc(var(--sway, 40px) * 0.6));
+  }
+  50% {
     transform: translateX(var(--sway, 40px));
   }
-  75% {
-    transform: translateX(calc(var(--sway, 40px) * -0.6));
+  80% {
+    transform: translateX(calc(var(--sway, 40px) * -0.4));
   }
 }
 
