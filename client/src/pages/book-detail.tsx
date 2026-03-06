@@ -91,7 +91,7 @@ export default function BookDetail() {
   });
 
   const isBookmarked = progress?.bookmarked ?? false;
-  const cardProgress = progress?.currentCardIndex && progress?.totalCards
+  const cardProgress = (progress?.currentCardIndex != null && progress?.totalCards)
     ? Math.round((progress.currentCardIndex / progress.totalCards) * 100) : 0;
   const audioAvailable = hasValidAudioUrl(book?.audioUrl);
   const normalizedCoverUrl = normalizeMediaUrl(book?.coverImage);

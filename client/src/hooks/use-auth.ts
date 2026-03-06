@@ -1,5 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, QueryClient } from "@tanstack/react-query";
 import type { User } from "@shared/models/auth";
+import { queryClient as globalQueryClient } from "@/lib/queryClient";
 
 async function fetchUser(): Promise<User | null> {
   const response = await fetch("/api/auth/user", {
@@ -17,7 +18,10 @@ async function fetchUser(): Promise<User | null> {
   return response.json();
 }
 
+// C1 fix: Clear React Query cache before redirecting to prevent stale data leaks
 async function logout(): Promise<void> {
+  await globalQueryClient.cancelQueries();
+  globalQueryClient.clear();
   window.location.href = "/api/logout";
 }
 

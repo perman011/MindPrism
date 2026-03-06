@@ -62,23 +62,8 @@ const requireRole = (minRole: "writer" | "editor" | "admin" | "super_admin") => 
   };
 };
 
-function getUploadFolder(mimetype: string): string {
-  if (mimetype.startsWith("image/")) return "images";
-  if (mimetype.startsWith("audio/")) return "audio";
-  if (mimetype.startsWith("video/")) return "video";
-  return "general";
-}
-
-function sanitizeUploadBaseName(filename: string): string {
-  const ext = path.extname(filename);
-  const base = path.basename(filename, ext);
-  const cleaned = base
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80);
-  return cleaned || "file";
-}
+// S11 fix: removed local getUploadFolder and sanitizeUploadBaseName that shadowed
+// the imported versions from ./media/upload-validation
 
 const allowedMimeTypes: Record<string, boolean> = {
   "image/png": true, "image/jpeg": true, "image/jpg": true, "image/webp": true, "image/gif": true, "image/avif": true,

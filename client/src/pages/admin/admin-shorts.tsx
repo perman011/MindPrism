@@ -98,20 +98,6 @@ function resolveMediaUrl(url: string | null | undefined): string | null {
   return null;
 }
 
-function extractApiErrorMessage(error: unknown, fallback: string): string {
-  if (!(error instanceof Error)) return fallback;
-  const raw = error.message.replace(/^\d+:\s*/, "").trim();
-  if (!raw) return fallback;
-  try {
-    const parsed = JSON.parse(raw);
-    if (typeof parsed.message === "string" && parsed.message.trim().length > 0) {
-      return parsed.message;
-    }
-  } catch {
-    // fall through
-  }
-  return raw;
-}
 function getDisplayFilename(url: string | null | undefined): string | null {
   if (!url) return null;
   const lastSegment = decodeURIComponent(url.split("?")[0].split("/").pop() || "").trim();

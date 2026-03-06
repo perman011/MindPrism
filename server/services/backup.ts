@@ -1,9 +1,11 @@
-import { exec } from "child_process";
+import { execFile } from "child_process";
 import { promisify } from "util";
 import * as fs from "fs";
 import * as path from "path";
+import { createGzip } from "zlib";
+import { pipeline } from "stream/promises";
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 const BACKUP_DIR = path.resolve(process.cwd(), "backups");
 
 export interface BackupMetadata {
@@ -35,9 +37,21 @@ export async function createBackup(): Promise<BackupMetadata> {
   const startTime = Date.now();
 
   try {
-    await execAsync(`pg_dump "${databaseUrl}" | gzip > "${filepath}"`, {
+    // S1 fix: Use execFile with argument array to prevent shell injection.
+    // Pipe pg_dump stdout through gzip via Node streams instead of shell pipe.
+    const sqlPath = filepath.replace(/\.gz$/, "");
+    await execFileAsync("pg_dump", [databaseUrl], {
       timeout: 120000,
-    });
+      maxBuffer: 256 * 1024 * 1024, // 256 MB
+    }).then(({ stdout }) => fs.promises.writeFile(sqlPath, stdout));
+    // Gzip the SQL dump
+    await pipeline(
+      fs.createReadStream(sqlPath),
+      createGzip(),
+      fs.createWriteStream(filepath),
+    );
+    // Remove uncompressed intermediate file
+    if (fs.existsSync(sqlPath)) fs.unlinkSync(sqlPath);
 
     const stats = fs.statSync(filepath);
     const duration = Date.now() - startTime;
@@ -54,6 +68,9 @@ export async function createBackup(): Promise<BackupMetadata> {
     );
     return metadata;
   } catch (error: any) {
+    // Clean up any partial files
+    const sqlPath = filepath.replace(/\.gz$/, "");
+    if (fs.existsSync(sqlPath)) fs.unlinkSync(sqlPath);
     if (fs.existsSync(filepath)) {
       fs.unlinkSync(filepath);
     }

@@ -17,6 +17,17 @@ import { startNotificationScheduler, stopNotificationScheduler } from "./service
 
 initErrorTracking();
 
+// CF1 fix: Validate required environment variables at startup
+const REQUIRED_ENV = ["SESSION_SECRET", "DATABASE_URL"];
+for (const key of REQUIRED_ENV) {
+  if (!process.env[key]) {
+    throw new Error(`Missing required environment variable: ${key}. See .env.example for reference.`);
+  }
+}
+if (!process.env.SENTRY_DSN && process.env.NODE_ENV === "production") {
+  console.warn("\u26a0\ufe0f  SENTRY_DSN not set \u2014 error tracking is disabled in production");
+}
+
 const app = express();
 const httpServer = createServer(app);
 
@@ -96,6 +107,9 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // S9 fix: Apply Sentry request handler BEFORE routes for correct request context
+  applySentryRequestHandler(app);
+
   await registerRoutes(httpServer, app);
 
   app.use("/api/admin/backups", backupRouter);
@@ -105,8 +119,6 @@ app.use((req, res, next) => {
   await seedDatabase().catch((err) => {
     console.error("Failed to seed database:", err);
   });
-
-  applySentryRequestHandler(app);
 
   app.use(sentryErrorMiddleware);
 
