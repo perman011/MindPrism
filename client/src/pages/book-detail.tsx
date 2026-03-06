@@ -307,12 +307,18 @@ export default function BookDetail() {
             </div>
             <div className="relative">
               {bookShorts && bookShorts.length > 0 ? (
-                <Link href={`/book/${id}/journey?section=shorts`}>
-                  <Button variant="outline" className="w-full gap-2" data-testid="button-shorts">
-                    <Film className="w-4 h-4" />
-                    Shorts
-                  </Button>
-                </Link>
+                <Button
+                  variant="outline"
+                  className="w-full gap-2"
+                  data-testid="button-shorts"
+                  onClick={() => {
+                    setShortsPlayerIndex(0);
+                    setShowShortsPlayer(true);
+                  }}
+                >
+                  <Film className="w-4 h-4" />
+                  Shorts
+                </Button>
               ) : (
                 <Button variant="outline" className="w-full gap-2 opacity-50 cursor-not-allowed" disabled data-testid="button-shorts">
                   <Film className="w-4 h-4" />
