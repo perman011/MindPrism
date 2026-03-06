@@ -87,6 +87,8 @@ function getFriendlyFilenameFromUrl(url: string): string {
   }
 
   return raw;
+}
+
 function getDisplayFilename(url: string): string {
   const lastSegment = decodeURIComponent(url.split("?")[0].split("/").pop() || "").trim();
   if (!lastSegment) return "uploaded-file";

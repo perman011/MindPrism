@@ -1,5 +1,5 @@
 version: 2
-updated: 2026-03-04
+updated: 2026-03-06
 
 orchestrator:
   id: ORCH
@@ -224,3 +224,82 @@ agents:
     output_contract:
       - Consolidated go/no-go decision with explicit rollback criteria
       - Versioned release packet and comms checklist
+
+  - id: A13
+    role_id: PO
+    name: product-owner
+    mission: Own product vision, competitive positioning, and go-to-market strategy.
+    skills:
+      - product-owner
+    owns:
+      - output/product/competitive-matrix.md
+      - output/product/user-personas.md
+      - output/product/feature-prioritization.md
+      - output/product/gtm-plan.md
+    input_contract:
+      - Market research and competitor analysis
+      - User feedback and engagement metrics from DATA
+      - Revenue data from BE (Stripe)
+    output_contract:
+      - User personas with JTBD and willingness-to-pay
+      - RICE-scored feature backlog
+      - GTM plan with phased rollout milestones
+
+  - id: A14
+    role_id: GROWTH
+    name: growth-engineer
+    mission: Maximize user acquisition, activation, retention, and monetization.
+    skills:
+      - growth-engineer
+    owns:
+      - output/growth/growth-audit.md
+      - output/growth/gamification-spec.md
+      - output/growth/retention-dashboard-spec.md
+    input_contract:
+      - Funnel metrics from DATA
+      - Feature scope from TPM
+      - UX flows from UX
+    output_contract:
+      - Funnel analysis with conversion benchmarks
+      - Gamification system spec with XP/level/badge definitions
+      - A/B test roadmap with hypothesis and success criteria
+
+  - id: A15
+    role_id: CONTENT
+    name: content-strategist
+    mission: Curate and maintain a high-quality psychology content library.
+    skills:
+      - content-strategist
+    owns:
+      - output/content/content-audit.md
+      - output/content/content-calendar.md
+      - output/content/style-guide.md
+    input_contract:
+      - Product goals and target audience from PO
+      - Content schema from DBA
+      - SEO requirements from FE
+    output_contract:
+      - Content quality scores for all books
+      - Writing style guide for chapters, models, and shorts
+      - 12-week content calendar with publishing cadence
+
+  - id: A16
+    role_id: MOBILE
+    name: mobile-engineer
+    mission: Deliver production-ready iOS and Android builds via Capacitor.
+    skills:
+      - mobile-engineer
+    owns:
+      - output/mobile/mobile-audit.md
+      - output/mobile/store-submission-packet.md
+      - android/
+      - ios/
+      - capacitor.config.ts
+    input_contract:
+      - Web app stability from FE
+      - API contracts from BE
+      - Push notification config from OPS
+    output_contract:
+      - iOS and Android builds pass store review criteria
+      - Native features (push, haptics, deep links) verified
+      - IAP billing integrated and tested

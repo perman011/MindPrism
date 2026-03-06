@@ -1,0 +1,44 @@
+name: Daily update log
+
+permissions:
+  contents: write
+
+on:
+  schedule:
+    - cron: '5 3 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: daily-update-log
+  cancel-in-progress: true
+
+jobs:
+  append-date:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Append current date to backups/daily_update.txt
+        run: |
+          mkdir -p backups
+          touch backups/daily_update.txt
+          echo "$(date -u +'%Y-%m-%d')" >> backups/daily_update.txt
+
+      - name: Commit and push
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add backups/daily_update.txt
+
+          git diff --cached --quiet && exit 0
+
+          git commit -m "Daily update $(date -u +'%Y-%m-%d')"
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main
