@@ -29,7 +29,11 @@ export function sentryErrorMiddleware(
 
   const user = (req as any).user;
   if (user) {
-    Sentry.setUser({ id: user.id, username: user.username });
+    // S10 fix: Replit Auth uses claims.sub, not user.id
+    Sentry.setUser({
+      id: user.claims?.sub || user.id,
+      username: user.claims?.name || user.username,
+    });
   }
 
   Sentry.setContext("request", {

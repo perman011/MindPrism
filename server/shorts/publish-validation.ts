@@ -16,8 +16,16 @@ export function normalizeStoredMediaPath(value: unknown): unknown {
 
 export function normalizeShortPayload(data: Record<string, unknown>): Record<string, unknown> {
   const normalized: Record<string, unknown> = { ...data };
-  normalized.mediaUrl = normalizeStoredMediaPath(normalized.mediaUrl);
-  normalized.thumbnailUrl = normalizeStoredMediaPath(normalized.thumbnailUrl);
+
+  // Only normalize media URLs when they are explicitly present in the input.
+  // Normalizing absent keys would set them to `undefined`, which overwrites
+  // existing values during a spread-merge (e.g. `{ ...existing, ...patch }`).
+  if ("mediaUrl" in data) {
+    normalized.mediaUrl = normalizeStoredMediaPath(normalized.mediaUrl);
+  }
+  if ("thumbnailUrl" in data) {
+    normalized.thumbnailUrl = normalizeStoredMediaPath(normalized.thumbnailUrl);
+  }
 
   // If an image short only has a thumbnail, use it as the image media source.
   if (normalized.mediaType === "image") {

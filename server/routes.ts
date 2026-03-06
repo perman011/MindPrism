@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
 import { registerAdminRoutes } from "./admin-routes";
 import { registerStripeRoutes } from "./stripe-routes";
+import { registerRecallRoutes } from "./recall-routes";
 import { z } from "zod";
 import { encrypt, decrypt } from "./crypto";
 import { db } from "./db";
@@ -27,6 +28,7 @@ export async function registerRoutes(
   registerAuthRoutes(app);
   registerAdminRoutes(app);
   registerStripeRoutes(app);
+  registerRecallRoutes(app);
 
   app.get("/api/categories", async (_req, res) => {
     try {
@@ -1046,7 +1048,13 @@ export async function registerRoutes(
         });
       }
 
-      const normalizedMerged = normalizeShortPayload({ ...existing, ...patchParsed.data });
+      // Strip undefined values from the parsed patch so they don't overwrite
+      // existing DB values during the spread-merge below.
+      const cleanPatch = Object.fromEntries(
+        Object.entries(patchParsed.data).filter(([, v]) => v !== undefined),
+      );
+
+      const normalizedMerged = normalizeShortPayload({ ...existing, ...cleanPatch });
       const mergedParsed = shortPayloadSchema.safeParse(normalizedMerged);
       if (!mergedParsed.success) {
         return res.status(400).json({
@@ -1070,7 +1078,7 @@ export async function registerRoutes(
         console.warn("[shorts] Object storage validation failed, proceeding with update:", storageErr);
       }
 
-      const result = await storage.updateShort(req.params.id, patchParsed.data);
+      const result = await storage.updateShort(req.params.id, cleanPatch);
       res.json(result);
     } catch (error) {
       console.error("Error updating short:", error);

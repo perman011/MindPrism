@@ -200,6 +200,9 @@ export default function Dashboard() {
       return stored ? new Set(JSON.parse(stored)) : new Set();
     } catch { return new Set(); }
   });
+  // C4 fix: useRef to avoid stale closure in the streak milestone useEffect
+  const shownMilestonesRef = useRef(shownMilestones);
+  shownMilestonesRef.current = shownMilestones;
 
   useEffect(() => {
     trackPageView("dashboard");
@@ -223,11 +226,12 @@ export default function Dashboard() {
   useEffect(() => {
     if (!streak?.currentStreak) return;
     const current = streak.currentStreak;
+    const shown = shownMilestonesRef.current;
     for (const ms of STREAK_MILESTONES) {
-      if (current >= ms.days && !shownMilestones.has(ms.days)) {
+      if (current >= ms.days && !shown.has(ms.days)) {
         setCelebrationMilestone(ms);
         setCelebrationOpen(true);
-        const updated = new Set(shownMilestones);
+        const updated = new Set(shown);
         updated.add(ms.days);
         setShownMilestones(updated);
         localStorage.setItem("mindprism_shown_milestones", JSON.stringify(Array.from(updated)));
