@@ -1,0 +1,26 @@
+name: Daily update log
+permissions:
+  contents: write
+
+on:
+  schedule:
+    - cron: '5 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  append-date:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Append current date to backups/daily_update.txt
+        run: |
+          echo "$(date -u +'%Y-%m-%d')" >> backups/daily_update.txt
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add backups/daily_update.txt
+          git commit -m "Daily update $(date -u +'%Y-%m-%d')" || exit 0
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
