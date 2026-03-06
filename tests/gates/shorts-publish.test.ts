@@ -28,30 +28,62 @@ test("normalizeShortPayload auto-fills image mediaUrl from thumbnail", () => {
   assert.equal(normalized.content, "test content");
 });
 
-test("published media validation enforces only audio/video required fields", () => {
+test("published media validation enforces required fields by mediaType", () => {
+  // Image shorts require at least one of mediaUrl or thumbnailUrl
   assert.equal(
     getPublishedMediaValidationError({ status: "published", mediaType: "image", mediaUrl: null, thumbnailUrl: null }),
-    null,
+    "Published image shorts require an uploaded image (media or thumbnail).",
   );
   assert.equal(
+    getPublishedMediaValidationError({ status: "published", mediaType: "image", mediaUrl: null, thumbnailUrl: "/objects/uploads/images/t.png" }),
+    null,
+  );
+
+  // Audio/video shorts require both mediaUrl and thumbnailUrl
+  assert.equal(
     getPublishedMediaValidationError({ status: "published", mediaType: "audio", mediaUrl: null, thumbnailUrl: "/objects/uploads/images/t.png" }),
-    "Published audio/video shorts require an uploaded media file.",
+    "Published audio shorts require an uploaded media file.",
   );
   assert.equal(
     getPublishedMediaValidationError({ status: "published", mediaType: "video", mediaUrl: "/objects/uploads/video/v.mp4", thumbnailUrl: null }),
-    "Published audio/video shorts require a thumbnail image.",
+    "Published video shorts require a thumbnail image.",
+  );
+  assert.equal(
+    getPublishedMediaValidationError({ status: "published", mediaType: "video", mediaUrl: "/objects/uploads/video/v.mp4", thumbnailUrl: "/objects/uploads/images/t.png" }),
+    null,
+  );
+
+  // Text shorts never need media
+  assert.equal(
+    getPublishedMediaValidationError({ status: "published", mediaType: "text" }),
+    null,
+  );
+
+  // Drafts skip all validation
+  assert.equal(
+    getPublishedMediaValidationError({ status: "draft", mediaType: "video" }),
+    null,
   );
 });
 
-test("managed media targets are only required for published audio/video", () => {
+test("managed media targets are only required for published non-text types", () => {
+  // Drafts have no targets regardless of mediaType
   assert.deepEqual(
     getManagedMediaValidationTargets({ status: "draft", mediaType: "video", mediaUrl: "x", thumbnailUrl: "y" }),
     { mediaUrl: null, thumbnailUrl: null },
   );
+
+  // Published image: validates whichever URLs are present
   assert.deepEqual(
     getManagedMediaValidationTargets({ status: "published", mediaType: "image", mediaUrl: "x", thumbnailUrl: "y" }),
-    { mediaUrl: null, thumbnailUrl: null },
+    { mediaUrl: "x", thumbnailUrl: "y" },
   );
+  assert.deepEqual(
+    getManagedMediaValidationTargets({ status: "published", mediaType: "image", mediaUrl: "", thumbnailUrl: "y" }),
+    { mediaUrl: null, thumbnailUrl: "y" },
+  );
+
+  // Published audio/video: validates both
   assert.deepEqual(
     getManagedMediaValidationTargets({
       status: "published",
@@ -64,4 +96,30 @@ test("managed media targets are only required for published audio/video", () => 
       thumbnailUrl: "/objects/uploads/images/t.png",
     },
   );
+
+  // Text shorts have no targets
+  assert.deepEqual(
+    getManagedMediaValidationTargets({ status: "published", mediaType: "text", mediaUrl: null, thumbnailUrl: null }),
+    { mediaUrl: null, thumbnailUrl: null },
+  );
+});
+
+test("normalizeShortPayload does NOT inject undefined mediaUrl/thumbnailUrl for status-only patches", () => {
+  // Simulates the quick publish toggle: only { status: "published" } is sent.
+  // The normalizer must NOT add mediaUrl/thumbnailUrl keys so they don't
+  // overwrite existing DB values during a spread-merge.
+  const patch = normalizeShortPayload({ status: "published" });
+  assert.equal("mediaUrl" in patch, false, "mediaUrl should not be present in status-only patch");
+  assert.equal("thumbnailUrl" in patch, false, "thumbnailUrl should not be present in status-only patch");
+  assert.equal(patch.status, "published");
+});
+
+test("normalizeShortPayload DOES normalize mediaUrl/thumbnailUrl when explicitly provided", () => {
+  const patch = normalizeShortPayload({
+    status: "published",
+    mediaUrl: "/uploads/video/test.mp4",
+    thumbnailUrl: "uploads/images/thumb.png",
+  });
+  assert.equal(patch.mediaUrl, "/objects/uploads/video/test.mp4");
+  assert.equal(patch.thumbnailUrl, "/objects/uploads/images/thumb.png");
 });

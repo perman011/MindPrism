@@ -20,33 +20,50 @@ export function getBillingProvider(): BillingProvider {
 }
 
 async function runWebCheckout(plan: BillingPlan): Promise<BillingActionResult> {
-  const res = await apiRequest("POST", "/api/stripe/create-checkout-session", { plan });
-  const data = await res.json();
+  try {
+    const res = await apiRequest("POST", "/api/stripe/create-checkout-session", { plan });
+    const data = await res.json();
 
-  if (data?.url) {
-    return { ok: true, redirectUrl: data.url };
+    if (data?.url) {
+      return { ok: true, redirectUrl: data.url };
+    }
+
+    return {
+      ok: false,
+      code: data?.code || "STRIPE_CHECKOUT_FAILED",
+      message: data?.message || "Unable to start checkout.",
+    };
+  } catch (err: any) {
+    // C2 fix: Catch network/API errors instead of letting them propagate as unhandled rejections
+    return {
+      ok: false,
+      code: "STRIPE_CHECKOUT_ERROR",
+      message: err?.message?.replace(/^\d+:\s*/, "") || "Unable to start checkout. Please try again.",
+    };
   }
-
-  return {
-    ok: false,
-    code: data?.code || "STRIPE_CHECKOUT_FAILED",
-    message: data?.message || "Unable to start checkout.",
-  };
 }
 
 async function runWebPortal(): Promise<BillingActionResult> {
-  const res = await apiRequest("POST", "/api/stripe/create-portal-session");
-  const data = await res.json();
+  try {
+    const res = await apiRequest("POST", "/api/stripe/create-portal-session");
+    const data = await res.json();
 
-  if (data?.url) {
-    return { ok: true, redirectUrl: data.url };
+    if (data?.url) {
+      return { ok: true, redirectUrl: data.url };
+    }
+
+    return {
+      ok: false,
+      code: data?.code || "STRIPE_PORTAL_FAILED",
+      message: data?.message || "Unable to open subscription management.",
+    };
+  } catch (err: any) {
+    return {
+      ok: false,
+      code: "STRIPE_PORTAL_ERROR",
+      message: err?.message?.replace(/^\d+:\s*/, "") || "Unable to open subscription management. Please try again.",
+    };
   }
-
-  return {
-    ok: false,
-    code: data?.code || "STRIPE_PORTAL_FAILED",
-    message: data?.message || "Unable to open subscription management.",
-  };
 }
 
 export async function startUpgrade(plan: BillingPlan): Promise<BillingActionResult> {

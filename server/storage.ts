@@ -163,15 +163,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertUserProgress(data: InsertUserProgress): Promise<UserProgress> {
-    const existing = await this.getUserProgress(data.userId, data.bookId);
-    if (existing) {
-      const [result] = await db.update(userProgress)
-        .set({ ...data, lastAccessedAt: new Date() })
-        .where(eq(userProgress.id, existing.id))
-        .returning();
-      return result;
-    }
-    const [result] = await db.insert(userProgress).values(data).returning();
+    // S5 fix: Use atomic upsert to prevent race condition on concurrent requests
+    const [result] = await db.insert(userProgress)
+      .values(data)
+      .onConflictDoUpdate({
+        target: [userProgress.userId, userProgress.bookId],
+        set: {
+          ...data,
+          lastAccessedAt: new Date(),
+        },
+      })
+      .returning();
     return result;
   }
 
@@ -416,24 +418,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateChakraProgress(userId: string, chakra: string, points: number): Promise<ChakraProgress> {
-    const existing = await db.select().from(chakraProgress)
-      .where(and(eq(chakraProgress.userId, userId), eq(chakraProgress.chakra, chakra)));
-
-    if (existing.length > 0) {
-      const [result] = await db.update(chakraProgress)
-        .set({
+    // S5 fix: Use atomic upsert to prevent race condition on concurrent requests
+    const [result] = await db.insert(chakraProgress)
+      .values({ userId, chakra, points })
+      .onConflictDoUpdate({
+        target: [chakraProgress.userId, chakraProgress.chakra],
+        set: {
           points: sql`${chakraProgress.points} + ${points}`,
           updatedAt: new Date(),
-        })
-        .where(and(eq(chakraProgress.userId, userId), eq(chakraProgress.chakra, chakra)))
-        .returning();
-      return result;
-    } else {
-      const [result] = await db.insert(chakraProgress)
-        .values({ userId, chakra, points })
-        .returning();
-      return result;
-    }
+        },
+      })
+      .returning();
+    return result;
   }
 
   async getPublishedShorts(): Promise<Short[]> {

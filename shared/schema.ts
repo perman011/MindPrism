@@ -9,6 +9,7 @@ import {
   jsonb,
   date,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -45,6 +46,7 @@ export const books = pgTable("books", {
   primaryChakra: text("primary_chakra"),
   secondaryChakra: text("secondary_chakra"),
   updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
   statusCategoryIdx: index("books_status_category_idx").on(table.status, table.categoryId),
 }));
@@ -59,7 +61,7 @@ export const bookVersions = pgTable("book_versions", {
   versionType: varchar("version_type").notNull().default("draft"),
   content: jsonb("content").notNull().default({}),
   createdAt: timestamp("created_at").defaultNow(),
-  createdBy: varchar("created_by"),
+  createdBy: varchar("created_by").references(() => users.id),
   publishedAt: timestamp("published_at"),
 });
 
@@ -112,6 +114,7 @@ export const userProgress = pgTable("user_progress", {
   currentSection: text("current_section"),
 }, (table) => ({
   userBookIdx: index("user_progress_user_book_idx").on(table.userId, table.bookId),
+  userBookUnique: uniqueIndex("user_progress_user_book_unique").on(table.userId, table.bookId),
 }));
 
 export const journalEntries = pgTable("journal_entries", {
@@ -137,7 +140,9 @@ export const userInterests = pgTable("user_interests", {
   interests: text("interests").array().default([]),
   onboardingCompleted: boolean("onboarding_completed").default(false),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  userIdUnique: uniqueIndex("user_interests_user_id_unique").on(table.userId),
+}));
 
 export const stripeWebhookEvents = pgTable("stripe_webhook_events", {
   id: varchar("id", { length: 255 }).primaryKey(),
@@ -177,7 +182,9 @@ export const savedHighlights = pgTable("saved_highlights", {
   content: text("content").notNull(),
   type: text("type").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  userIdIdx: index("saved_highlights_user_id_idx").on(table.userId),
+}));
 
 export const chakraProgress = pgTable("chakra_progress", {
   id: varchar("id")
@@ -189,7 +196,9 @@ export const chakraProgress = pgTable("chakra_progress", {
   chakra: text("chakra").notNull(),
   points: integer("points").default(0),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  userChakraUnique: uniqueIndex("chakra_progress_user_chakra_unique").on(table.userId, table.chakra),
+}));
 
 export const comments = pgTable("comments", {
   id: varchar("id")
@@ -259,7 +268,9 @@ export const shortViews = pgTable("short_views", {
   shortId: varchar("short_id", { length: 255 }).notNull().references(() => shorts.id),
   userId: text("user_id"),
   viewedAt: timestamp("viewed_at").defaultNow(),
-});
+}, (table) => ({
+  shortIdIdx: index("short_views_short_id_idx").on(table.shortId),
+}));
 
 export const shortsRelations = relations(shorts, ({ one }) => ({
   book: one(books, { fields: [shorts.bookId], references: [books.id] }),
@@ -348,6 +359,119 @@ export const commentsRelations = relations(comments, ({ one }) => ({
   book: one(books, { fields: [comments.bookId], references: [books.id] }),
 }));
 
+// ---------------------------------------------------------------------------
+// Spaced Repetition (P0)
+// ---------------------------------------------------------------------------
+
+/**
+ * Admin-created recall cards for a book. Each card contains a scenario-based
+ * question drawn from the book's core psychology concepts.
+ */
+export const recallCards = pgTable("recall_cards", {
+  id: varchar("id", { length: 255 }).primaryKey().default(sql`gen_random_uuid()`),
+  bookId: varchar("book_id", { length: 255 }).notNull().references(() => books.id),
+  question: text("question").notNull(),
+  answer: text("answer").notNull(),
+  /** Optional hint shown before revealing the answer */
+  hint: text("hint"),
+  /** Difficulty rating set by admin: 1 (easy) – 5 (hard) */
+  difficulty: integer("difficulty").notNull().default(3),
+  /** Admin ordering within a book */
+  orderIndex: integer("order_index").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  bookIdx: index("recall_cards_book_id_idx").on(table.bookId),
+}));
+
+/**
+ * Per-user spaced repetition schedule for each recall card.
+ * Tracks SM-2-style parameters for optimal review intervals.
+ */
+export const userRecallSchedule = pgTable("user_recall_schedule", {
+  id: varchar("id", { length: 255 }).primaryKey().default(sql`gen_random_uuid()`),
+  userId: text("user_id").notNull().references(() => users.id),
+  cardId: varchar("card_id", { length: 255 }).notNull().references(() => recallCards.id),
+  /** SM-2 easiness factor (≥ 1.3) */
+  easeFactor: integer("ease_factor").notNull().default(250),
+  /** Current review interval in days */
+  intervalDays: integer("interval_days").notNull().default(1),
+  /** How many consecutive correct reviews */
+  repetitions: integer("repetitions").notNull().default(0),
+  /** Next scheduled review date */
+  nextReviewAt: timestamp("next_review_at").notNull().defaultNow(),
+  /** Last review date */
+  lastReviewedAt: timestamp("last_reviewed_at"),
+  /** Last self-rated quality (0-5, SM-2 scale) */
+  lastQuality: integer("last_quality"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  userCardUnique: uniqueIndex("user_recall_schedule_user_card_idx").on(table.userId, table.cardId),
+  nextReviewIdx: index("user_recall_schedule_next_review_idx").on(table.userId, table.nextReviewAt),
+}));
+
+export const recallCardsRelations = relations(recallCards, ({ one }) => ({
+  book: one(books, { fields: [recallCards.bookId], references: [books.id] }),
+}));
+
+export const userRecallScheduleRelations = relations(userRecallSchedule, ({ one }) => ({
+  user: one(users, { fields: [userRecallSchedule.userId], references: [users.id] }),
+  card: one(recallCards, { fields: [userRecallSchedule.cardId], references: [recallCards.id] }),
+}));
+
+// ---------------------------------------------------------------------------
+// "Apply This Week" Action Cards (P0)
+// ---------------------------------------------------------------------------
+
+/**
+ * Admin-created micro-challenges tied to a book. Each book produces a set
+ * of 3 low-effort behavioral experiments (< 10 min/day) that close the
+ * gap between reading psychology and practicing it.
+ */
+export const actionCards = pgTable("action_cards", {
+  id: varchar("id", { length: 255 }).primaryKey().default(sql`gen_random_uuid()`),
+  bookId: varchar("book_id", { length: 255 }).notNull().references(() => books.id),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  /** Day within the week (1-7) this card is suggested for */
+  dayNumber: integer("day_number").notNull().default(1),
+  /** Estimated minutes to complete */
+  estimatedMinutes: integer("estimated_minutes").notNull().default(10),
+  orderIndex: integer("order_index").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  bookIdx: index("action_cards_book_id_idx").on(table.bookId),
+}));
+
+/**
+ * Tracks a user's progress through action cards. Each row records that a
+ * user has accepted and/or completed a specific action card, with an
+ * optional reflection note.
+ */
+export const userActionProgress = pgTable("user_action_progress", {
+  id: varchar("id", { length: 255 }).primaryKey().default(sql`gen_random_uuid()`),
+  userId: text("user_id").notNull().references(() => users.id),
+  cardId: varchar("card_id", { length: 255 }).notNull().references(() => actionCards.id),
+  status: text("status").notNull().default("pending"),
+  /** User's optional reflection after completing the challenge */
+  reflection: text("reflection"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  userCardUnique: uniqueIndex("user_action_progress_user_card_idx").on(table.userId, table.cardId),
+  userStatusIdx: index("user_action_progress_user_status_idx").on(table.userId, table.status),
+}));
+
+export const actionCardsRelations = relations(actionCards, ({ one }) => ({
+  book: one(books, { fields: [actionCards.bookId], references: [books.id] }),
+}));
+
+export const userActionProgressRelations = relations(userActionProgress, ({ one }) => ({
+  user: one(users, { fields: [userActionProgress.userId], references: [users.id] }),
+  card: one(actionCards, { fields: [userActionProgress.cardId], references: [actionCards.id] }),
+}));
+
 export const insertBookSchema = createInsertSchema(books).omit({
   id: true,
 });
@@ -409,6 +533,22 @@ export type InsertChakraProgress = z.infer<typeof insertChakraProgressSchema>;
 export type ChakraProgress = typeof chakraProgress.$inferSelect;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
 export type Comment = typeof comments.$inferSelect;
+
+// Spaced Repetition schemas
+export const insertRecallCardSchema = createInsertSchema(recallCards).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertUserRecallScheduleSchema = createInsertSchema(userRecallSchedule).omit({ id: true, createdAt: true });
+export type InsertRecallCard = z.infer<typeof insertRecallCardSchema>;
+export type RecallCard = typeof recallCards.$inferSelect;
+export type InsertUserRecallSchedule = z.infer<typeof insertUserRecallScheduleSchema>;
+export type UserRecallSchedule = typeof userRecallSchedule.$inferSelect;
+
+// Action Card schemas
+export const insertActionCardSchema = createInsertSchema(actionCards).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertUserActionProgressSchema = createInsertSchema(userActionProgress).omit({ id: true, createdAt: true });
+export type InsertActionCard = z.infer<typeof insertActionCardSchema>;
+export type ActionCard = typeof actionCards.$inferSelect;
+export type InsertUserActionProgress = z.infer<typeof insertUserActionProgressSchema>;
+export type UserActionProgress = typeof userActionProgress.$inferSelect;
 
 export const notificationPreferences = pgTable("notification_preferences", {
   id: varchar("id")
@@ -489,7 +629,7 @@ export const quizResults = pgTable("quiz_results", {
   id: varchar("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   bookId: varchar("book_id")
     .notNull()
     .references(() => books.id, { onDelete: "cascade" }),

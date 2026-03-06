@@ -166,7 +166,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       error: null,
     }));
 
-    audio.play().catch(() => {
+    audio.play().catch((err) => {
+      console.warn("[audio] Playback blocked:", err);
       setState((prev) => ({
         ...prev,
         isPlaying: false,
@@ -184,7 +185,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     if (!audio || !state.book) return;
 
     if (audio.paused) {
-      audio.play().catch(() => {
+      audio.play().catch((err) => {
+        console.warn("[audio] togglePlay failed:", err);
         setState((prev) => ({
           ...prev,
           isPlaying: false,
