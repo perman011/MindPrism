@@ -1,0 +1,37 @@
+Potential Reasons Your App Isn't Working as Expected
+If the code deploys but behaves incorrectly (e.g., errors on save/load, missing data, UI glitches), it's likely not a problem with the fix itself but with deployment/runtime setup. Common culprits based on the notes:
+
+Database Schema Not Synced:
+The schema added chapter_id to saved_highlights. If you haven't run npm run db:push (or equivalent migration in your env), the DB won't have the column.
+Symptoms: Errors like "column chapter_id does not exist" in API calls, or highlights failing to save/load with chapter data.
+Fix: Run npm run db:push in your local/dev/prod environment during startup/deploy. If using Drizzle/Prisma, ensure migrations are applied (e.g., via npx drizzle-kit push or Prisma's migrate). Back up your DB first to avoid data loss. For production, use a migration tool if not already set up.
+
+Cached Data or Stale Builds:
+Browser cache might hold old JS/CSS, or server might not have rebuilt.
+Symptoms: UI shows old vault layout, deep links ignored, or validation skips new rules.
+Fix: Clear browser cache (Ctrl+Shift+R), run npm run build fresh, and restart server. If using Vercel/Netlify/etc., redeploy the commit.
+
+Environment-Specific Issues:
+Local vs. prod differences (e.g., DB connection strings, env vars for API base).
+If testing with existing data, legacy highlights without chapterId might render oddly—ensure the left join and optional UI handle nulls.
+Symptoms: Works locally but not in prod, or vice versa.
+Fix: Verify env vars match (e.g., DATABASE_URL). Test with fresh data: Create a new book/chapter/highlight post-deploy.
+
+Frontend State or Dependency Bugs:
+If chapters array in reader is empty on load, deep links might fail.
+Manual picker relies on selectedHighlightBookChapters—ensure it's populated correctly.
+Symptoms: Dropdown empty, links 404, or highlights ungrouped.
+Fix: Debug with console logs in useEffect/groupHighlightsByBook. Check for API errors in network tab (e.g., 400 from POST if chapter mismatch).
+
+Other Edge Cases:
+If chapterId is provided but invalid (e.g., from another book), POST should 400—test this.
+Timezones in createdAt might affect sorting if not UTC-normalized.
+If using TypeScript, ensure types propagate (e.g., HighlightWithContext includes chapter fields).
+
+
+Next Steps to Verify/Fix
+
+Local Test: Checkout a8a1ae0, run npm run db:push, npm run build, npm run start. Test flows: Save highlight in reader (check DB for chapter_id), view in vault (grouped with labels/links), manual add with/without chapter, deep link navigation.
+Logs: Check server/console logs for errors (e.g., SQL failures, validation rejects).
+DB Inspect: Use a tool like pgAdmin/TablePlus to confirm saved_highlights has chapter_id and sample data.
+If still broken, share specific symptoms (e.g., error messages, failing endpoint) for more targeted help—the fix itself holds up.
