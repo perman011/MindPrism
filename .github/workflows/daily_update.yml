@@ -32,31 +32,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Install rclone
         run: |
           sudo apt-get update
           sudo apt-get install -y rclone
-
       - name: Write service account key
         run: |
           echo '${{ secrets.GDRIVE_SA_JSON }}' > /home/runner/gdrive-sa.json
           mkdir -p /home/runner/.config/rclone
-
       - name: Create rclone config
-        run: |
-          cat > /home/runner/.config/rclone/rclone.conf << 'EOF'
-          [gdrive]
-          type = drive
-          scope = drive
-          service_account_file = /home/runner/gdrive-sa.json
-          EOF
-
-      - name: Sync repo to Google Drive folder
         env:
           FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
         run: |
-          rclone sync . "gdrive:${FOLDER_ID}/MindPrism" \
+          printf "[gdrive]\ntype = drive\nscope = drive\nservice_account_file = /home/runner/gdrive-sa.json\nroot_folder_id = %s\n" "${FOLDER_ID}" > /home/runner/.config/rclone/rclone.conf
+      - name: Sync repo to Google Drive folder
+        run: |
+          rclone sync . "gdrive:/MindPrism" \
             --exclude ".git/**" \
             --exclude "node_modules/**" \
             --exclude "**/.DS_Store" \
