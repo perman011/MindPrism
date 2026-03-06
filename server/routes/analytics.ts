@@ -12,6 +12,7 @@ const router = Router();
 
 const analyticsCache = new Map<string, { data: any; expiresAt: number }>();
 const CACHE_TTL = 5 * 60 * 1000;
+const CACHE_MAX_SIZE = 20; // S7 fix: Cap cache entries to prevent memory leak
 
 function getCached(key: string) {
   const entry = analyticsCache.get(key);
@@ -23,6 +24,11 @@ function getCached(key: string) {
 }
 
 function setCache(key: string, data: any) {
+  // S7 fix: Evict oldest entries when cache exceeds max size
+  if (analyticsCache.size >= CACHE_MAX_SIZE) {
+    const oldestKey = analyticsCache.keys().next().value;
+    if (oldestKey) analyticsCache.delete(oldestKey);
+  }
   analyticsCache.set(key, { data, expiresAt: Date.now() + CACHE_TTL });
 }
 
@@ -261,11 +267,14 @@ router.get("/admin-events/export", isAuthenticated, requireAdmin, async (req: Re
       ? eq(analyticsEvents.eventType, eventType)
       : undefined;
 
+    // S6 fix: Cap export to 100,000 rows to prevent OOM
+    const EXPORT_LIMIT = 100_000;
     const allEvents = await db
       .select()
       .from(analyticsEvents)
       .where(whereClause)
-      .orderBy(desc(analyticsEvents.createdAt));
+      .orderBy(desc(analyticsEvents.createdAt))
+      .limit(EXPORT_LIMIT);
 
     const headers = ["ID", "User ID", "Event Type", "Page URL", "Session ID", "Created At"];
     const rows = allEvents.map((e) => [

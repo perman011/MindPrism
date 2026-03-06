@@ -3,6 +3,7 @@ import webpush from "web-push";
 import { db } from "../db";
 import { notificationPreferences, users } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { isAuthenticated } from "../replit_integrations/auth";
 
 const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || "";
 const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY || "";
@@ -12,18 +13,13 @@ const vapidSubject = process.env.REPLIT_DOMAINS
 
 if (vapidPublicKey && vapidPrivateKey) {
   webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
+} else {
+  console.warn("[notifications] VAPID keys not set — push notifications disabled");
 }
 
 const router = Router();
 
-function requireAuth(req: Request, res: Response, next: Function) {
-  if (!req.isAuthenticated?.() || !req.user) {
-    return res.status(401).json({ error: "Authentication required" });
-  }
-  next();
-}
-
-router.get("/preferences", requireAuth, async (req: Request, res: Response) => {
+router.get("/preferences", isAuthenticated, async (req: Request, res: Response) => {
   try {
     const userId = (req.user as any).claims.sub;
     let [prefs] = await db.select().from(notificationPreferences).where(eq(notificationPreferences.userId, userId));
@@ -39,7 +35,7 @@ router.get("/preferences", requireAuth, async (req: Request, res: Response) => {
   }
 });
 
-router.put("/preferences", requireAuth, async (req: Request, res: Response) => {
+router.put("/preferences", isAuthenticated, async (req: Request, res: Response) => {
   try {
     const userId = (req.user as any).claims.sub;
     const { dailyReminder, streakAlerts, newContent, weeklySummary, reminderTime } = req.body;
@@ -68,7 +64,7 @@ router.put("/preferences", requireAuth, async (req: Request, res: Response) => {
   }
 });
 
-router.post("/subscribe", requireAuth, async (req: Request, res: Response) => {
+router.post("/subscribe", isAuthenticated, async (req: Request, res: Response) => {
   try {
     const userId = (req.user as any).claims.sub;
     const { subscription, permissionStatus } = req.body;
@@ -99,7 +95,7 @@ router.post("/subscribe", requireAuth, async (req: Request, res: Response) => {
   }
 });
 
-router.post("/dismiss-prompt", requireAuth, async (req: Request, res: Response) => {
+router.post("/dismiss-prompt", isAuthenticated, async (req: Request, res: Response) => {
   try {
     const userId = (req.user as any).claims.sub;
 
@@ -125,7 +121,7 @@ router.post("/dismiss-prompt", requireAuth, async (req: Request, res: Response) 
   }
 });
 
-router.post("/test", requireAuth, async (req: Request, res: Response) => {
+router.post("/test", isAuthenticated, async (req: Request, res: Response) => {
   try {
     const userId = (req.user as any).claims.sub;
     const [prefs] = await db.select().from(notificationPreferences).where(eq(notificationPreferences.userId, userId));

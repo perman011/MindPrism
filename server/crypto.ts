@@ -5,7 +5,13 @@ const IV_LENGTH = 16;
 const TAG_LENGTH = 16;
 
 function getKey(): Buffer {
-  const secret = process.env.SESSION_SECRET || "mindspark-default-key-change-in-prod";
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) {
+    throw new Error(
+      "SESSION_SECRET environment variable must be set. " +
+      "Journal encryption is disabled without it."
+    );
+  }
   return crypto.createHash("sha256").update(secret).digest();
 }
 

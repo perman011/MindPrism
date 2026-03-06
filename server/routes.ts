@@ -10,6 +10,7 @@ import { db } from "./db";
 import { userActivityLog, userProgress, books, categories, journalEntries, quizResults, chapterSummaries, shorts, shortViews, insertShortSchema } from "@shared/schema";
 import { eq, and, sql as dsql, desc, gte, count, lte, asc } from "drizzle-orm";
 import { ensureManagedMediaExists } from "./media/managed-media";
+import { publicLimiter } from "./middleware/rateLimiter";
 import {
   normalizeShortPayload,
   getPublishedMediaValidationError,
@@ -826,7 +827,14 @@ export async function registerRoutes(
         totalQuestions: z.number().min(1),
         answers: z.array(z.any()),
       });
-      const data = schema.parse(req.body);
+      const parseResult = schema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({
+          message: "Invalid quiz submission",
+          errors: parseResult.error.flatten(),
+        });
+      }
+      const data = parseResult.data;
 
       const [result] = await db.insert(quizResults).values({
         userId,
@@ -928,7 +936,8 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/shorts/:id/view", async (req: any, res) => {
+  // S8/S12 fix: Apply rate limiter to public view-count endpoint
+  app.post("/api/shorts/:id/view", publicLimiter, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub || null;
       await storage.recordShortView({ shortId: req.params.id, userId });
