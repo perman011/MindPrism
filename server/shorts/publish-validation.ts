@@ -45,17 +45,28 @@ export function getPublishedMediaValidationError(data: ShortPublishValidationInp
   if (status !== "published") return null;
 
   const mediaType = data.mediaType;
-  const requiresMedia = mediaType === "audio" || mediaType === "video";
   const mediaUrl = typeof data.mediaUrl === "string" ? data.mediaUrl.trim() : "";
-  if (requiresMedia && !mediaUrl) {
-    return "Published audio/video shorts require an uploaded media file.";
+  const thumbnailUrl = typeof data.thumbnailUrl === "string" ? data.thumbnailUrl.trim() : "";
+
+  // For image shorts, either mediaUrl or thumbnailUrl is sufficient
+  if (mediaType === "image") {
+    if (!mediaUrl && !thumbnailUrl) {
+      return "Published image shorts require an uploaded image (media or thumbnail).";
+    }
+    return null;
   }
 
-  if (mediaType === "audio" || mediaType === "video") {
-    const thumbnailUrl = typeof data.thumbnailUrl === "string" ? data.thumbnailUrl.trim() : "";
-    if (!thumbnailUrl) {
-      return "Published audio/video shorts require a thumbnail image.";
-    }
+  // For text shorts, no media is strictly required (content is the media)
+  if (mediaType === "text") {
+    return null;
+  }
+
+  // For audio/video shorts, both media file and thumbnail are required
+  if (!mediaUrl) {
+    return `Published ${mediaType} shorts require an uploaded media file.`;
+  }
+  if (!thumbnailUrl) {
+    return `Published ${mediaType} shorts require a thumbnail image.`;
   }
 
   return null;
@@ -69,13 +80,23 @@ export function getManagedMediaValidationTargets(
     return { mediaUrl: null, thumbnailUrl: null };
   }
 
-  const isAudioOrVideo = data.mediaType === "audio" || data.mediaType === "video";
-  if (!isAudioOrVideo) {
+  // Text shorts have no media to validate
+  if (data.mediaType === "text") {
     return { mediaUrl: null, thumbnailUrl: null };
   }
 
   const mediaUrl = typeof data.mediaUrl === "string" ? data.mediaUrl.trim() : "";
   const thumbnailUrl = typeof data.thumbnailUrl === "string" ? data.thumbnailUrl.trim() : "";
+
+  // For image shorts, validate whichever URL(s) are present
+  if (data.mediaType === "image") {
+    return {
+      mediaUrl: mediaUrl || null,
+      thumbnailUrl: thumbnailUrl || null,
+    };
+  }
+
+  // For audio/video, validate both
   return {
     mediaUrl: mediaUrl || null,
     thumbnailUrl: thumbnailUrl || null,

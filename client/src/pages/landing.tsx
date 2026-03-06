@@ -135,9 +135,15 @@ export default function LandingPage() {
             opacity: { duration: 1.2 },
           }}
         >
-          <div className="flex flex-col items-center">
-            <img src={mindprismLogo} alt="MindPrism" className="h-32 object-contain" style={{ aspectRatio: '1.618' }} />
-            <span className="text-lg font-bold tracking-[0.12em] text-[#111827] mt-1.5">mindprism</span>
+          <div className="flex items-center gap-3">
+            <div className="relative w-12 h-12 flex items-center justify-center">
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#341539]/90 to-[#1a0a20] shadow-lg" />
+              <img src={mindprismLogo} alt="MindPrism" className="relative z-10 w-8 h-8 object-contain drop-shadow-[0_1px_3px_rgba(212,184,214,0.4)]" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl font-bold tracking-wide bg-gradient-to-r from-[#341539] to-[#6B3A7D] bg-clip-text text-transparent dark:from-[#D4B8D6] dark:to-[#E8D5EA]">MindPrism</span>
+              <span className="text-[10px] font-medium tracking-[0.2em] uppercase text-muted-foreground -mt-0.5">Psychology Made Simple</span>
+            </div>
           </div>
         </motion.div>
       </nav>

@@ -12,3 +12,7 @@
 - `performance-engineer`: load testing, bundle analysis, caching strategy, and Core Web Vitals
 - `database-engineer`: index optimization, migration workflows, connection pooling, and data integrity
 - `release-manager`: version management, release coordination, feature flags, and rollback procedures
+- `product-owner`: competitive analysis, user persona definition, RICE/MoSCoW feature prioritization, go-to-market planning, and revenue modeling
+- `growth-engineer`: onboarding funnel optimization, retention mechanics, viral loops, A/B testing, push notifications, email lifecycle, and gamification design
+- `content-strategist`: psychology book curation, content quality scoring, chapter summary writing, mental model creation, audio production, and SEO strategy
+- `mobile-engineer`: Capacitor configuration, iOS/Android store submission, offline sync, push notifications, deep linking, and in-app purchases

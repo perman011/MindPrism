@@ -1,10 +1,10 @@
 version: 2
-updated: 2026-03-04
+updated: 2026-03-06
 
 team:
   name: mindprism-endgame-team
   mode: orchestrated
-  objective: Ship Mind Prism to stable production with secure billing, reliable content ops, strong UX, and enforced release gates.
+  objective: Ship MindPrism to consumer-grade production with secure billing, reliable content ops, premium UX, growth mechanics, mobile readiness, and enforced release gates.
 
 orchestrator:
   id: ORCH
@@ -148,14 +148,76 @@ roles:
       - output/releases/release-checklist.md
       - output/releases/changelog.md
 
+  - id: PO
+    title: Product Owner
+    skill: agents/skills/product-owner
+    responsibility:
+      - Own product vision, competitive positioning, and market strategy
+      - Define user personas and prioritize features using RICE/MoSCoW
+      - Drive go-to-market planning and revenue model decisions
+      - Set KPIs and success metrics for each release
+    outputs:
+      - output/product/competitive-matrix.md
+      - output/product/user-personas.md
+      - output/product/feature-prioritization.md
+      - output/product/gtm-plan.md
+
+  - id: GROWTH
+    title: Growth Engineer
+    skill: agents/skills/growth-engineer
+    responsibility:
+      - Optimize onboarding funnel and free-to-premium conversion
+      - Design retention mechanics (streaks, gamification, notifications)
+      - Build viral loops and referral systems
+      - Implement A/B testing framework and experiment roadmap
+    outputs:
+      - output/growth/growth-audit.md
+      - output/growth/gamification-spec.md
+      - output/growth/retention-dashboard-spec.md
+
+  - id: CONTENT
+    title: Content Strategist
+    skill: agents/skills/content-strategist
+    responsibility:
+      - Curate psychology book catalog with quality scoring
+      - Define content creation standards for chapters, models, audio, shorts
+      - Plan content calendar and publishing cadence
+      - Optimize content for SEO and discoverability
+    outputs:
+      - output/content/content-audit.md
+      - output/content/content-calendar.md
+      - output/content/style-guide.md
+
+  - id: MOBILE
+    title: Mobile Engineer
+    skill: agents/skills/mobile-engineer
+    responsibility:
+      - Configure Capacitor for iOS and Android production builds
+      - Implement native features (haptics, gestures, deep links, push)
+      - Prepare App Store and Play Store submissions
+      - Handle mobile-specific billing (IAP) and offline sync
+    outputs:
+      - output/mobile/mobile-audit.md
+      - output/mobile/store-submission-packet.md
+
 coordination:
-  max_parallel_agents: 6
+  max_parallel_agents: 8
   waves:
+    - name: Wave 0 - Strategy and Vision
+      agents:
+        - PO
+        - CONTENT
+      exit_criteria:
+        - Competitive matrix and user personas defined
+        - Content quality audit and curation criteria established
+
     - name: Wave 1 - Product and Architecture
       agents:
         - UX
         - TPM
         - ARCH
+      prerequisites:
+        - PO outputs available
       exit_criteria:
         - UX spec and PRD approved
         - target architecture and ADR baseline committed
@@ -175,10 +237,14 @@ coordination:
         - FE
         - DATA
         - OPS
+        - GROWTH
+        - MOBILE
       prerequisites:
         - Wave 2 recommendations integrated
       exit_criteria:
         - key implementation changes merged behind stable interfaces
+        - growth mechanics and gamification implemented
+        - mobile builds compiling for iOS and Android
 
     - name: Wave 4 - Validation
       agents:
@@ -193,10 +259,12 @@ coordination:
       agents:
         - RM
         - TPM
+        - PO
       prerequisites:
         - Wave 4 green
       exit_criteria:
         - release checklist complete and rollback plan verified
+        - GTM plan finalized and store submissions ready
 
   required_handoff_fields:
     - task

@@ -1005,7 +1005,10 @@ export async function registerRoutes(
         return res.status(400).json({ message: mediaValidationError });
       }
 
-      const missingMediaError = await getMissingManagedMediaValidationError(parsed.data);
+      const missingMediaError = await getMissingManagedMediaValidationError(parsed.data).catch((err) => {
+        console.warn("[shorts] Object storage validation failed during create, proceeding:", err);
+        return null;
+      });
       if (missingMediaError) {
         return res.status(400).json({ message: missingMediaError });
       }
@@ -1046,6 +1049,16 @@ export async function registerRoutes(
       const mediaValidationError = getPublishedMediaValidationError(mergedParsed.data);
       if (mediaValidationError) {
         return res.status(400).json({ message: mediaValidationError });
+      }
+
+      // Validate managed media existence (log warning but don't block on storage failures)
+      try {
+        const missingMediaError = await getMissingManagedMediaValidationError(mergedParsed.data);
+        if (missingMediaError) {
+          return res.status(400).json({ message: missingMediaError });
+        }
+      } catch (storageErr) {
+        console.warn("[shorts] Object storage validation failed, proceeding with update:", storageErr);
       }
 
       const result = await storage.updateShort(req.params.id, patchParsed.data);
