@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { boolean, index, jsonb, pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
+import { boolean, index, jsonb, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
 // Session storage table.
 // (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
@@ -28,6 +28,13 @@ export const users = pgTable("users", {
   currentPeriodEnd: timestamp("current_period_end"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  // Phase 1: New user data fields
+  lastLoginAt: timestamp("last_login_at"),
+  signupSource: text("signup_source"),
+  referralCode: varchar("referral_code"),
+  preferredReadMode: text("preferred_read_mode").default("read"),
+  timezone: text("timezone"),
+  onboardingCompletedAt: timestamp("onboarding_completed_at"),
 });
 
 export const ROLE_HIERARCHY = ["user", "writer", "editor", "admin", "super_admin"] as const;

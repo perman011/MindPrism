@@ -10,6 +10,7 @@ import {
   date,
   index,
   uniqueIndex,
+  numeric,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -46,6 +47,20 @@ export const books = pgTable("books", {
   primaryChakra: text("primary_chakra"),
   secondaryChakra: text("secondary_chakra"),
   tags: text("tags"),
+  // Phase 1: New book metadata fields
+  publisher: text("publisher"),
+  isbn: text("isbn"),
+  publishedDate: text("published_date"),
+  pageCount: integer("page_count"),
+  language: text("language").default("English"),
+  edition: text("edition"),
+  originalPrice: numeric("original_price"),
+  authorBio: text("author_bio"),
+  sourceUrl: text("source_url"),
+  rating: integer("rating"),
+  difficultyLevel: text("difficulty_level"),
+  keyTakeaways: jsonb("key_takeaways").default([]),
+  secondaryCategoryId: varchar("secondary_category_id").references(() => categories.id),
   updatedAt: timestamp("updated_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({

@@ -57,6 +57,27 @@ async function ensureCategories() {
 async function ensureSchema() {
   const migrations: { column: string; table: string; type: string }[] = [
     { table: "books", column: "tags", type: "TEXT" },
+    // Phase 1: Book metadata fields
+    { table: "books", column: "publisher", type: "TEXT" },
+    { table: "books", column: "isbn", type: "TEXT" },
+    { table: "books", column: "published_date", type: "TEXT" },
+    { table: "books", column: "page_count", type: "INTEGER" },
+    { table: "books", column: "language", type: "TEXT DEFAULT 'English'" },
+    { table: "books", column: "edition", type: "TEXT" },
+    { table: "books", column: "original_price", type: "NUMERIC" },
+    { table: "books", column: "author_bio", type: "TEXT" },
+    { table: "books", column: "source_url", type: "TEXT" },
+    { table: "books", column: "rating", type: "INTEGER" },
+    { table: "books", column: "difficulty_level", type: "TEXT" },
+    { table: "books", column: "key_takeaways", type: "JSONB DEFAULT '[]'::jsonb" },
+    { table: "books", column: "secondary_category_id", type: "VARCHAR REFERENCES categories(id)" },
+    // Phase 1: User data fields
+    { table: "users", column: "last_login_at", type: "TIMESTAMP" },
+    { table: "users", column: "signup_source", type: "TEXT" },
+    { table: "users", column: "referral_code", type: "VARCHAR" },
+    { table: "users", column: "preferred_read_mode", type: "TEXT DEFAULT 'read'" },
+    { table: "users", column: "timezone", type: "TEXT" },
+    { table: "users", column: "onboarding_completed_at", type: "TIMESTAMP" },
   ];
   for (const m of migrations) {
     try {
