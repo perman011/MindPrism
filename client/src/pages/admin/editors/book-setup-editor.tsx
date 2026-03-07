@@ -17,6 +17,12 @@ const CHAKRA_OPTIONS: { value: ChakraType; label: string; color: string }[] = [
   { value: "root", label: "Root — Survival & Stability", color: CHAKRA_MAP.root.color },
 ];
 
+const DIFFICULTY_OPTIONS = [
+  { value: "beginner", label: "Beginner" },
+  { value: "intermediate", label: "Intermediate" },
+  { value: "advanced", label: "Advanced" },
+];
+
 interface BookSetupEditorProps {
   title: string;
   author: string;
@@ -27,12 +33,29 @@ interface BookSetupEditorProps {
   primaryChakra: string;
   secondaryChakra: string;
   categoryId: string;
+  // Phase 1 new fields
+  publisher: string;
+  isbn: string;
+  publishedDate: string;
+  pageCount: string;
+  language: string;
+  edition: string;
+  originalPrice: string;
+  authorBio: string;
+  sourceUrl: string;
+  rating: string;
+  difficultyLevel: string;
+  keyTakeaways: string;
+  secondaryCategoryId: string;
   onChange: (field: string, value: string | number | boolean) => void;
 }
 
 export function BookSetupEditor({
   title, author, description, coreThesis, coverImage, audioUrl,
-  primaryChakra, secondaryChakra, categoryId, onChange,
+  primaryChakra, secondaryChakra, categoryId,
+  publisher, isbn, publishedDate, pageCount, language, edition,
+  originalPrice, authorBio, sourceUrl, rating, difficultyLevel,
+  keyTakeaways, secondaryCategoryId, onChange,
 }: BookSetupEditorProps) {
   const { data: categories } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
@@ -165,6 +188,180 @@ export function BookSetupEditor({
             label="Book Audio (Listen feature)"
             placeholder="Upload MP3 for the audio player"
           />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          <div>
+            <Label htmlFor="publisher" className="text-xs font-semibold">Publisher</Label>
+            <Input
+              id="publisher"
+              value={publisher}
+              onChange={(e) => onChange("publisher", e.target.value)}
+              placeholder="e.g. Penguin Random House"
+              data-testid="input-book-publisher"
+            />
+          </div>
+          <div>
+            <Label htmlFor="isbn" className="text-xs font-semibold">ISBN</Label>
+            <Input
+              id="isbn"
+              value={isbn}
+              onChange={(e) => onChange("isbn", e.target.value)}
+              placeholder="e.g. 978-0735211292"
+              data-testid="input-book-isbn"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4 mt-4">
+          <div>
+            <Label htmlFor="publishedDate" className="text-xs font-semibold">Published Date</Label>
+            <Input
+              id="publishedDate"
+              value={publishedDate}
+              onChange={(e) => onChange("publishedDate", e.target.value)}
+              placeholder="e.g. 2018 or Oct 2018"
+              data-testid="input-book-published-date"
+            />
+          </div>
+          <div>
+            <Label htmlFor="pageCount" className="text-xs font-semibold">Page Count</Label>
+            <Input
+              id="pageCount"
+              type="number"
+              value={pageCount}
+              onChange={(e) => onChange("pageCount", e.target.value ? parseInt(e.target.value) : "")}
+              placeholder="e.g. 320"
+              data-testid="input-book-page-count"
+            />
+          </div>
+          <div>
+            <Label htmlFor="originalPrice" className="text-xs font-semibold">Original Price ($)</Label>
+            <Input
+              id="originalPrice"
+              value={originalPrice}
+              onChange={(e) => onChange("originalPrice", e.target.value)}
+              placeholder="e.g. 24.99"
+              data-testid="input-book-original-price"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4 mt-4">
+          <div>
+            <Label htmlFor="language" className="text-xs font-semibold">Language</Label>
+            <Input
+              id="language"
+              value={language}
+              onChange={(e) => onChange("language", e.target.value)}
+              placeholder="English"
+              data-testid="input-book-language"
+            />
+          </div>
+          <div>
+            <Label htmlFor="edition" className="text-xs font-semibold">Edition</Label>
+            <Input
+              id="edition"
+              value={edition}
+              onChange={(e) => onChange("edition", e.target.value)}
+              placeholder="e.g. 1st, Revised"
+              data-testid="input-book-edition"
+            />
+          </div>
+          <div>
+            <Label className="text-xs font-semibold">Difficulty Level</Label>
+            <Select
+              value={difficultyLevel || "none"}
+              onValueChange={(val) => onChange("difficultyLevel", val === "none" ? "" : val)}
+            >
+              <SelectTrigger data-testid="select-difficulty">
+                <SelectValue placeholder="Select difficulty..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Not Set</SelectItem>
+                {DIFFICULTY_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          <div>
+            <Label htmlFor="rating" className="text-xs font-semibold">Editorial Rating (1-5)</Label>
+            <Input
+              id="rating"
+              type="number"
+              min={1}
+              max={5}
+              value={rating}
+              onChange={(e) => {
+                const v = parseInt(e.target.value);
+                if (!e.target.value) onChange("rating", "");
+                else if (v >= 1 && v <= 5) onChange("rating", v);
+              }}
+              placeholder="1-5"
+              data-testid="input-book-rating"
+            />
+          </div>
+          <div>
+            <Label className="text-xs font-semibold">Secondary Category</Label>
+            <Select
+              value={secondaryCategoryId || "none"}
+              onValueChange={(val) => onChange("secondaryCategoryId", val === "none" ? "" : val)}
+            >
+              <SelectTrigger data-testid="select-secondary-category">
+                <SelectValue placeholder="Select secondary category..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {categories?.filter(cat => cat.id !== categoryId).map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.icon} {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <Label htmlFor="sourceUrl" className="text-xs font-semibold">Buy Book Link (Amazon, etc.)</Label>
+          <Input
+            id="sourceUrl"
+            value={sourceUrl}
+            onChange={(e) => onChange("sourceUrl", e.target.value)}
+            placeholder="https://amazon.com/dp/..."
+            data-testid="input-book-source-url"
+          />
+        </div>
+
+        <div className="mt-4">
+          <Label htmlFor="authorBio" className="text-xs font-semibold">Author Bio</Label>
+          <Textarea
+            id="authorBio"
+            value={authorBio}
+            onChange={(e) => onChange("authorBio", e.target.value)}
+            placeholder="Brief author biography..."
+            rows={2}
+            data-testid="input-book-author-bio"
+          />
+        </div>
+
+        <div className="mt-4">
+          <Label htmlFor="keyTakeaways" className="text-xs font-semibold">Key Takeaways (one per line)</Label>
+          <Textarea
+            id="keyTakeaways"
+            value={keyTakeaways}
+            onChange={(e) => onChange("keyTakeaways", e.target.value)}
+            placeholder={"1. Small habits compound into big results\n2. Focus on systems, not goals\n3. Identity drives behavior"}
+            rows={4}
+            data-testid="input-book-key-takeaways"
+          />
+          <p className="text-[10px] text-muted-foreground mt-1">Enter 3-5 bullet points. Used for previews and discovery.</p>
         </div>
 
       </section>

@@ -8,7 +8,7 @@ import { registerRecallRoutes } from "./recall-routes";
 import { z } from "zod";
 import { encrypt, decrypt } from "./crypto";
 import { db } from "./db";
-import { userActivityLog, userProgress, books, categories, journalEntries, quizResults, chapterSummaries, shorts, shortViews, insertShortSchema, chakraProgress, savedHighlights, userStreaks, userInterests, notificationPreferences } from "@shared/schema";
+import { userActivityLog, userProgress, books, categories, journalEntries, quizResults, chapterSummaries, shorts, shortViews, insertShortSchema, chakraProgress, savedHighlights, userStreaks, userInterests, notificationPreferences, readingSessions, userGoals } from "@shared/schema";
 import { users } from "@shared/models/auth";
 import { eq, and, sql as dsql, desc, gte, count, lte, asc } from "drizzle-orm";
 import { ensureManagedMediaExists } from "./media/managed-media";
@@ -108,7 +108,10 @@ export async function registerRoutes(
       );
 
       let recommended = publishedBooks.filter(
-        b => b.categoryId && matchedCategoryIds.includes(b.categoryId) && !startedBookIds.has(b.id)
+        b => !startedBookIds.has(b.id) && (
+          (b.categoryId && matchedCategoryIds.includes(b.categoryId)) ||
+          (b.secondaryCategoryId && matchedCategoryIds.includes(b.secondaryCategoryId))
+        )
       );
 
       if (recommended.length < 3) {
@@ -203,11 +206,21 @@ export async function registerRoutes(
         }
       }
 
+      // Also collect secondary categories from completed books
+      for (const p of completedOrAdvanced) {
+        const book = bookMap.get(p.bookId);
+        if (book?.secondaryCategoryId) {
+          completedCategories.add(book.secondaryCategoryId);
+        }
+      }
+
       const contentBasedCandidates = publishedBooks.filter(b =>
-        b.categoryId &&
-        completedCategories.has(b.categoryId) &&
         !startedBookIds.has(b.id) &&
-        !myBookIds.has(b.id)
+        !myBookIds.has(b.id) &&
+        (
+          (b.categoryId && completedCategories.has(b.categoryId)) ||
+          (b.secondaryCategoryId && completedCategories.has(b.secondaryCategoryId))
+        )
       );
 
       for (const book of contentBasedCandidates) {
@@ -417,6 +430,190 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error updating card progress:", error);
       res.status(500).json({ message: "Failed to update progress" });
+    }
+  });
+
+  // Phase 2: Mark book as completed
+  app.post("/api/progress/:bookId/complete", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const result = await storage.markBookCompleted(userId, req.params.bookId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error marking book completed:", error);
+      res.status(500).json({ message: "Failed to mark book completed" });
+    }
+  });
+
+  // Phase 2: Book Ratings
+  app.get("/api/books/:bookId/ratings", async (req: any, res) => {
+    try {
+      const ratings = await storage.getBookRatings(req.params.bookId);
+      const avg = await storage.getBookAverageRating(req.params.bookId);
+      res.json({ ratings, average: avg.avg, count: avg.count });
+    } catch (error) {
+      console.error("Error fetching ratings:", error);
+      res.status(500).json({ message: "Failed to fetch ratings" });
+    }
+  });
+
+  app.get("/api/books/:bookId/my-rating", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const rating = await storage.getBookRating(userId, req.params.bookId);
+      res.json(rating ?? null);
+    } catch (error) {
+      console.error("Error fetching user rating:", error);
+      res.status(500).json({ message: "Failed to fetch rating" });
+    }
+  });
+
+  app.post("/api/books/:bookId/rate", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const ratingSchema = z.object({ rating: z.number().min(1).max(5), review: z.string().optional() });
+      const parsed = ratingSchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Rating must be 1-5" });
+      const result = await storage.upsertBookRating({
+        userId,
+        bookId: req.params.bookId,
+        rating: parsed.data.rating,
+        review: parsed.data.review || null,
+      });
+      res.json(result);
+    } catch (error) {
+      console.error("Error saving rating:", error);
+      res.status(500).json({ message: "Failed to save rating" });
+    }
+  });
+
+  app.delete("/api/books/:bookId/rate", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      await storage.deleteBookRating(userId, req.params.bookId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting rating:", error);
+      res.status(500).json({ message: "Failed to delete rating" });
+    }
+  });
+
+  // Phase 2: User Collections
+  app.get("/api/collections", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const userCollections = await storage.getUserCollections(userId);
+      res.json(userCollections);
+    } catch (error) {
+      console.error("Error fetching collections:", error);
+      res.status(500).json({ message: "Failed to fetch collections" });
+    }
+  });
+
+  app.post("/api/collections", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const collectionSchema = z.object({
+        name: z.string().min(1).max(100),
+        description: z.string().optional(),
+        emoji: z.string().optional(),
+      });
+      const parsed = collectionSchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Name is required" });
+      const result = await storage.createCollection({
+        userId,
+        name: parsed.data.name,
+        description: parsed.data.description || null,
+        emoji: parsed.data.emoji || "📚",
+      });
+      res.status(201).json(result);
+    } catch (error) {
+      console.error("Error creating collection:", error);
+      res.status(500).json({ message: "Failed to create collection" });
+    }
+  });
+
+  app.put("/api/collections/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const collection = await storage.getCollection(req.params.id);
+      if (!collection || collection.userId !== userId) {
+        return res.status(404).json({ message: "Collection not found" });
+      }
+      const result = await storage.updateCollection(req.params.id, req.body);
+      res.json(result);
+    } catch (error) {
+      console.error("Error updating collection:", error);
+      res.status(500).json({ message: "Failed to update collection" });
+    }
+  });
+
+  app.delete("/api/collections/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const collection = await storage.getCollection(req.params.id);
+      if (!collection || collection.userId !== userId) {
+        return res.status(404).json({ message: "Collection not found" });
+      }
+      await storage.deleteCollection(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting collection:", error);
+      res.status(500).json({ message: "Failed to delete collection" });
+    }
+  });
+
+  app.get("/api/collections/:id/books", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const collection = await storage.getCollection(req.params.id);
+      if (!collection || collection.userId !== userId) {
+        return res.status(404).json({ message: "Collection not found" });
+      }
+      const items = await storage.getCollectionBooks(req.params.id);
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching collection books:", error);
+      res.status(500).json({ message: "Failed to fetch collection books" });
+    }
+  });
+
+  app.post("/api/collections/:id/books", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const collection = await storage.getCollection(req.params.id);
+      if (!collection || collection.userId !== userId) {
+        return res.status(404).json({ message: "Collection not found" });
+      }
+      const bookSchema = z.object({ bookId: z.string() });
+      const parsed = bookSchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "bookId is required" });
+      const result = await storage.addBookToCollection({
+        collectionId: req.params.id,
+        bookId: parsed.data.bookId,
+      });
+      res.status(201).json(result);
+    } catch (error: any) {
+      if (error.message?.includes("unique") || error.code === "23505") {
+        return res.status(409).json({ message: "Book already in collection" });
+      }
+      console.error("Error adding book to collection:", error);
+      res.status(500).json({ message: "Failed to add book" });
+    }
+  });
+
+  app.delete("/api/collections/:id/books/:bookId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const collection = await storage.getCollection(req.params.id);
+      if (!collection || collection.userId !== userId) {
+        return res.status(404).json({ message: "Collection not found" });
+      }
+      await storage.removeBookFromCollection(req.params.id, req.params.bookId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error removing book from collection:", error);
+      res.status(500).json({ message: "Failed to remove book" });
     }
   });
 
@@ -1208,6 +1405,8 @@ export async function registerRoutes(
       await db.delete(userInterests).where(eq(userInterests.userId, userId));
       await db.delete(userStreaks).where(eq(userStreaks.userId, userId));
       await db.delete(shortViews).where(eq(shortViews.userId, userId));
+      await db.delete(readingSessions).where(eq(readingSessions.userId, userId));
+      await db.delete(userGoals).where(eq(userGoals.userId, userId));
       await db.delete(userActivityLog).where(eq(userActivityLog.userId, userId));
       await db.delete(users).where(eq(users.id, userId));
 
@@ -1216,6 +1415,157 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error deleting account:", error);
       res.status(500).json({ message: "Failed to delete account" });
+    }
+  });
+
+  // -------------------------------------------------------------------------
+  // Phase 3: Reading Sessions
+  // -------------------------------------------------------------------------
+
+  app.post("/api/sessions/start", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const schema = z.object({ bookId: z.string(), mode: z.enum(["read", "listen"]).default("read") });
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Invalid data" });
+      const session = await storage.createReadingSession({
+        userId,
+        bookId: parsed.data.bookId,
+        mode: parsed.data.mode,
+        startedAt: new Date(),
+      });
+      res.json(session);
+    } catch (error) {
+      console.error("Error starting session:", error);
+      res.status(500).json({ message: "Failed to start session" });
+    }
+  });
+
+  app.post("/api/sessions/:id/end", isAuthenticated, async (req: any, res) => {
+    try {
+      const schema = z.object({ durationMinutes: z.number().min(0), pagesRead: z.number().optional() });
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Invalid data" });
+      const session = await storage.endReadingSession(req.params.id, parsed.data.durationMinutes, parsed.data.pagesRead);
+      res.json(session);
+    } catch (error) {
+      console.error("Error ending session:", error);
+      res.status(500).json({ message: "Failed to end session" });
+    }
+  });
+
+  app.get("/api/sessions", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const sessions = await storage.getUserReadingSessions(userId, limit);
+      res.json(sessions);
+    } catch (error) {
+      console.error("Error fetching sessions:", error);
+      res.status(500).json({ message: "Failed to fetch sessions" });
+    }
+  });
+
+  app.get("/api/sessions/stats", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const stats = await storage.getUserReadingStats(userId);
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching session stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // -------------------------------------------------------------------------
+  // Phase 3: User Goals
+  // -------------------------------------------------------------------------
+
+  app.get("/api/goals", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const goals = await storage.getUserGoals(userId);
+      res.json(goals);
+    } catch (error) {
+      console.error("Error fetching goals:", error);
+      res.status(500).json({ message: "Failed to fetch goals" });
+    }
+  });
+
+  app.get("/api/goals/active", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const goals = await storage.getActiveGoals(userId);
+      res.json(goals);
+    } catch (error) {
+      console.error("Error fetching active goals:", error);
+      res.status(500).json({ message: "Failed to fetch active goals" });
+    }
+  });
+
+  app.post("/api/goals", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const goalSchema = z.object({
+        goalType: z.enum(["books_per_month", "minutes_per_day", "streak_days", "chapters_per_week"]),
+        targetValue: z.number().min(1),
+        periodEnd: z.string().optional(),
+      });
+      const parsed = goalSchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Invalid goal data" });
+      const goal = await storage.createUserGoal({
+        userId,
+        goalType: parsed.data.goalType,
+        targetValue: parsed.data.targetValue,
+        periodStart: new Date(),
+        periodEnd: parsed.data.periodEnd ? new Date(parsed.data.periodEnd) : null,
+        status: "active",
+        currentValue: 0,
+      });
+      res.json(goal);
+    } catch (error) {
+      console.error("Error creating goal:", error);
+      res.status(500).json({ message: "Failed to create goal" });
+    }
+  });
+
+  app.patch("/api/goals/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const goalSchema = z.object({
+        targetValue: z.number().min(1).optional(),
+        currentValue: z.number().optional(),
+        status: z.enum(["active", "completed", "expired"]).optional(),
+      });
+      const parsed = goalSchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Invalid data" });
+      const goal = await storage.updateUserGoal(req.params.id, parsed.data as any);
+      res.json(goal);
+    } catch (error) {
+      console.error("Error updating goal:", error);
+      res.status(500).json({ message: "Failed to update goal" });
+    }
+  });
+
+  app.delete("/api/goals/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      await storage.deleteUserGoal(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting goal:", error);
+      res.status(500).json({ message: "Failed to delete goal" });
+    }
+  });
+
+  app.post("/api/goals/:id/increment", isAuthenticated, async (req: any, res) => {
+    try {
+      const schema = z.object({ increment: z.number().min(1).default(1) });
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Invalid data" });
+      const goal = await storage.incrementGoalProgress(req.params.id, parsed.data.increment);
+      res.json(goal);
+    } catch (error) {
+      console.error("Error incrementing goal:", error);
+      res.status(500).json({ message: "Failed to increment goal" });
     }
   });
 

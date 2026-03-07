@@ -287,7 +287,7 @@ export default function AdminBookEditor() {
   const centerRef = useRef<HTMLDivElement>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [newBookData, setNewBookData] = useState({
+  const emptyBookForm = {
     title: "",
     author: "",
     description: "",
@@ -297,18 +297,22 @@ export default function AdminBookEditor() {
     primaryChakra: "",
     secondaryChakra: "",
     categoryId: "",
-  });
-  const [bookFormData, setBookFormData] = useState({
-    title: "",
-    author: "",
-    description: "",
-    coreThesis: "",
-    coverImage: "",
-    audioUrl: "",
-    primaryChakra: "",
-    secondaryChakra: "",
-    categoryId: "",
-  });
+    publisher: "",
+    isbn: "",
+    publishedDate: "",
+    pageCount: "",
+    language: "",
+    edition: "",
+    originalPrice: "",
+    authorBio: "",
+    sourceUrl: "",
+    rating: "",
+    difficultyLevel: "",
+    keyTakeaways: "",
+    secondaryCategoryId: "",
+  };
+  const [newBookData, setNewBookData] = useState({ ...emptyBookForm });
+  const [bookFormData, setBookFormData] = useState({ ...emptyBookForm });
 
   const { data: book, isLoading: bookLoading } = useQuery<Book>({
     queryKey: ["/api/admin/books", bookId],
@@ -370,6 +374,8 @@ export default function AdminBookEditor() {
 
   useEffect(() => {
     if (!isNew && editableBook) {
+      const kt = editableBook.keyTakeaways;
+      const keyTakeawaysStr = Array.isArray(kt) ? (kt as string[]).join("\n") : "";
       setBookFormData({
         title: editableBook.title || "",
         author: editableBook.author || "",
@@ -380,12 +386,28 @@ export default function AdminBookEditor() {
         primaryChakra: editableBook.primaryChakra || "",
         secondaryChakra: editableBook.secondaryChakra || "",
         categoryId: editableBook.categoryId || "",
+        publisher: editableBook.publisher || "",
+        isbn: editableBook.isbn || "",
+        publishedDate: editableBook.publishedDate || "",
+        pageCount: editableBook.pageCount ? String(editableBook.pageCount) : "",
+        language: editableBook.language || "",
+        edition: editableBook.edition || "",
+        originalPrice: editableBook.originalPrice || "",
+        authorBio: editableBook.authorBio || "",
+        sourceUrl: editableBook.sourceUrl || "",
+        rating: editableBook.rating ? String(editableBook.rating) : "",
+        difficultyLevel: editableBook.difficultyLevel || "",
+        keyTakeaways: keyTakeawaysStr,
+        secondaryCategoryId: editableBook.secondaryCategoryId || "",
       });
     }
   }, [editableBook, isNew]);
 
   const createBookMutation = useMutation({
     mutationFn: async () => {
+      const ktArr = newBookData.keyTakeaways
+        ? newBookData.keyTakeaways.split("\n").map(s => s.trim()).filter(Boolean)
+        : [];
       const res = await apiRequest("POST", "/api/admin/books", {
         title: newBookData.title || "Untitled Book",
         author: newBookData.author || "Unknown Author",
@@ -396,6 +418,19 @@ export default function AdminBookEditor() {
         primaryChakra: newBookData.primaryChakra || null,
         secondaryChakra: newBookData.secondaryChakra || null,
         categoryId: newBookData.categoryId || null,
+        publisher: newBookData.publisher || null,
+        isbn: newBookData.isbn || null,
+        publishedDate: newBookData.publishedDate || null,
+        pageCount: newBookData.pageCount ? parseInt(newBookData.pageCount) : null,
+        language: newBookData.language || null,
+        edition: newBookData.edition || null,
+        originalPrice: newBookData.originalPrice || null,
+        authorBio: newBookData.authorBio || null,
+        sourceUrl: newBookData.sourceUrl || null,
+        rating: newBookData.rating ? parseInt(newBookData.rating) : null,
+        difficultyLevel: newBookData.difficultyLevel || null,
+        keyTakeaways: ktArr,
+        secondaryCategoryId: newBookData.secondaryCategoryId || null,
         readTime: 10,
         listenTime: 8,
         status: "draft",
@@ -434,6 +469,18 @@ export default function AdminBookEditor() {
   });
 
   const handleBookFieldChange = useCallback((field: string, value: string | number | boolean) => {
+    // For keyTakeaways, store raw text in state but send array to API
+    let apiValue: any = value;
+    if (field === "keyTakeaways") {
+      apiValue = typeof value === "string"
+        ? value.split("\n").map(s => s.trim()).filter(Boolean)
+        : value;
+    }
+    if (field === "secondaryCategoryId" && value === "") apiValue = null;
+    if (field === "difficultyLevel" && value === "") apiValue = null;
+    if (field === "rating" && value === "") apiValue = null;
+    if (field === "pageCount" && value === "") apiValue = null;
+
     if (isNew) {
       setNewBookData(prev => ({ ...prev, [field]: value }));
       return;
@@ -443,7 +490,7 @@ export default function AdminBookEditor() {
     setSaveStatus("saving");
     saveTimeoutRef.current = setTimeout(async () => {
       try {
-        await updateBookMutation.mutateAsync({ [field]: value });
+        await updateBookMutation.mutateAsync({ [field]: apiValue });
         setSaveStatus("saved");
         setTimeout(() => setSaveStatus("idle"), 4000);
       } catch {
@@ -505,15 +552,19 @@ export default function AdminBookEditor() {
     return <PreviewMode book={book} onClose={() => setShowPreview(false)} />;
   }
 
-  const displayTitleValue = isNew ? newBookData.title : (bookFormData.title || editableBook?.title || book!.title);
-  const displayAuthorValue = isNew ? newBookData.author : (bookFormData.author || editableBook?.author || book!.author);
-  const displayDescriptionValue = isNew ? newBookData.description : (bookFormData.description || editableBook?.description || book!.description || "");
-  const displayCoreThesisValue = isNew ? newBookData.coreThesis : (bookFormData.coreThesis || editableBook?.coreThesis || book!.coreThesis || "");
-  const displayCoverImageValue = isNew ? newBookData.coverImage : (bookFormData.coverImage || editableBook?.coverImage || book!.coverImage || "");
-  const displayAudioUrlValue = isNew ? newBookData.audioUrl : (bookFormData.audioUrl || editableBook?.audioUrl || book!.audioUrl || "");
-  const displayPrimaryChakraValue = isNew ? newBookData.primaryChakra : (bookFormData.primaryChakra || editableBook?.primaryChakra || book!.primaryChakra || "");
-  const displaySecondaryChakraValue = isNew ? newBookData.secondaryChakra : (bookFormData.secondaryChakra || editableBook?.secondaryChakra || book!.secondaryChakra || "");
-  const displayCategoryValue = isNew ? newBookData.categoryId : (bookFormData.categoryId || editableBook?.categoryId || book!.categoryId || "");
+  const dv = (field: keyof typeof bookFormData) => {
+    if (isNew) return (newBookData as any)[field] ?? "";
+    return bookFormData[field] || (editableBook as any)?.[field] || (book as any)?.[field] || "";
+  };
+  const displayTitleValue = dv("title");
+  const displayAuthorValue = dv("author");
+  const displayDescriptionValue = dv("description");
+  const displayCoreThesisValue = dv("coreThesis");
+  const displayCoverImageValue = dv("coverImage");
+  const displayAudioUrlValue = dv("audioUrl");
+  const displayPrimaryChakraValue = dv("primaryChakra");
+  const displaySecondaryChakraValue = dv("secondaryChakra");
+  const displayCategoryValue = dv("categoryId");
   const displayTitle = isNew ? (newBookData.title || "New Book") : (displayTitleValue || "Untitled Book");
   const displayAuthor = isNew ? (newBookData.author || "") : (displayAuthorValue || "");
 
@@ -647,6 +698,19 @@ export default function AdminBookEditor() {
             primaryChakra={displayPrimaryChakraValue}
             secondaryChakra={displaySecondaryChakraValue}
             categoryId={displayCategoryValue}
+            publisher={dv("publisher")}
+            isbn={dv("isbn")}
+            publishedDate={dv("publishedDate")}
+            pageCount={dv("pageCount")}
+            language={dv("language")}
+            edition={dv("edition")}
+            originalPrice={dv("originalPrice")}
+            authorBio={dv("authorBio")}
+            sourceUrl={dv("sourceUrl")}
+            rating={dv("rating")}
+            difficultyLevel={dv("difficultyLevel")}
+            keyTakeaways={dv("keyTakeaways")}
+            secondaryCategoryId={dv("secondaryCategoryId")}
             onChange={handleBookFieldChange}
           />
 

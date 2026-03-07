@@ -2,7 +2,7 @@ import { SEOHead } from "@/components/SEOHead";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
-import type { Book, UserProgress } from "@shared/schema";
+import type { Book, UserProgress, BookRating } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,7 +10,7 @@ import {
   ArrowLeft, BookOpen, Brain,
   Bookmark, BookmarkCheck,
   Clock, Headphones, Share2,
-  Film, ExternalLink,
+  Film, ExternalLink, CheckCircle2,
 } from "lucide-react";
 import type { Short } from "@shared/schema";
 import { ShortsPlayer, ShortCard } from "@/components/shorts-player";
@@ -23,6 +23,8 @@ import { useEffect, useState, useCallback } from "react";
 import { trackBookOpen } from "@/lib/analytics";
 import { ShareModal } from "@/components/share-modal";
 import { normalizeMediaUrl } from "@/lib/media-url";
+import { StarRating } from "@/components/star-rating";
+import { ReadingSessionTimer } from "@/components/reading-session-timer";
 
 function hasValidAudioUrl(audioUrl: string | null | undefined): boolean {
   const normalized = normalizeMediaUrl(audioUrl);
@@ -70,6 +72,51 @@ export default function BookDetail() {
     queryKey: ["/api/books", id, "mental-models"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: !!id,
+  });
+
+  const { data: myRating } = useQuery<BookRating | null>({
+    queryKey: ["/api/books", id, "my-rating"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: !!id && !!user,
+  });
+
+  const { data: ratingsData } = useQuery<{ average: number; count: number }>({
+    queryKey: ["/api/books", id, "ratings"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: !!id,
+  });
+
+  const rateMutation = useMutation({
+    mutationFn: async (rating: number) => {
+      if (rating === 0) {
+        await apiRequest("DELETE", `/api/books/${id}/rate`);
+        return null;
+      }
+      const res = await apiRequest("POST", `/api/books/${id}/rate`, { rating });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/books", id, "my-rating"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/books", id, "ratings"] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save rating", variant: "destructive" });
+    },
+  });
+
+  const completeMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", `/api/progress/${id}/complete`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/progress", id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/progress"] });
+      toast({ title: "Book completed", description: "Great work finishing this book!" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to mark complete", variant: "destructive" });
+    },
   });
 
   const bookmarkMutation = useMutation({
@@ -235,7 +282,7 @@ export default function BookDetail() {
           <p className="text-muted-foreground text-sm text-center mb-4 leading-relaxed max-w-md" data-testid="text-book-description">{book.description}</p>
         )}
 
-        <div className="flex items-center gap-1.5 mb-6 flex-wrap justify-center">
+        <div className="flex items-center gap-1.5 mb-3 flex-wrap justify-center">
           <span className="flex items-center gap-1 text-xs text-muted-foreground" data-testid="text-read-time">
             <Clock className="w-3 h-3" />
             {book.readTime} min read
@@ -246,6 +293,35 @@ export default function BookDetail() {
             {book.listenTime} min listen
           </span>
         </div>
+
+        {/* Star Rating */}
+        <div className="flex flex-col items-center gap-1 mb-6" data-testid="section-rating">
+          <StarRating
+            value={myRating?.rating ?? 0}
+            onChange={(r) => rateMutation.mutate(r)}
+            size="md"
+          />
+          {ratingsData && ratingsData.count > 0 && (
+            <p className="text-[10px] text-muted-foreground">
+              {ratingsData.average.toFixed(1)} avg · {ratingsData.count} rating{ratingsData.count !== 1 ? "s" : ""}
+            </p>
+          )}
+          {!user && <p className="text-[10px] text-muted-foreground">Log in to rate</p>}
+        </div>
+
+        {/* Completed badge */}
+        {progress?.completedAt && (
+          <div className="flex items-center gap-1.5 mb-4 text-emerald-600 dark:text-emerald-400" data-testid="badge-completed">
+            <CheckCircle2 className="w-4 h-4" />
+            <span className="text-xs font-medium">Completed</span>
+          </div>
+        )}
+
+        {user && book && (
+          <div className="w-full max-w-md mb-4">
+            <ReadingSessionTimer bookId={book.id} bookTitle={book.title} />
+          </div>
+        )}
 
         <div className="w-full max-w-md space-y-3">
           <Button
@@ -261,14 +337,31 @@ export default function BookDetail() {
             variant="outline"
             className="w-full gap-2"
             onClick={() => {
-              const searchQuery = encodeURIComponent(`${book.title} ${book.author}`);
-              window.open(`https://www.amazon.com/s?k=${searchQuery}`, "_blank", "noopener");
+              if (book.sourceUrl) {
+                window.open(book.sourceUrl, "_blank", "noopener");
+              } else {
+                const searchQuery = encodeURIComponent(`${book.title} ${book.author}`);
+                window.open(`https://www.amazon.com/s?k=${searchQuery}`, "_blank", "noopener");
+              }
             }}
             data-testid="button-buy-online"
           >
             <ExternalLink className="w-4 h-4" />
             Buy Online
           </Button>
+
+          {user && !progress?.completedAt && (
+            <Button
+              variant="outline"
+              className="w-full gap-2"
+              onClick={() => completeMutation.mutate()}
+              disabled={completeMutation.isPending}
+              data-testid="button-mark-complete"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              {completeMutation.isPending ? "Marking..." : "Mark as Completed"}
+            </Button>
+          )}
 
           <div className="relative">
             <Button

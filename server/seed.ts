@@ -57,6 +57,29 @@ async function ensureCategories() {
 async function ensureSchema() {
   const migrations: { column: string; table: string; type: string }[] = [
     { table: "books", column: "tags", type: "TEXT" },
+    // Phase 1: Book metadata fields
+    { table: "books", column: "publisher", type: "TEXT" },
+    { table: "books", column: "isbn", type: "TEXT" },
+    { table: "books", column: "published_date", type: "TEXT" },
+    { table: "books", column: "page_count", type: "INTEGER" },
+    { table: "books", column: "language", type: "TEXT DEFAULT 'English'" },
+    { table: "books", column: "edition", type: "TEXT" },
+    { table: "books", column: "original_price", type: "NUMERIC" },
+    { table: "books", column: "author_bio", type: "TEXT" },
+    { table: "books", column: "source_url", type: "TEXT" },
+    { table: "books", column: "rating", type: "INTEGER" },
+    { table: "books", column: "difficulty_level", type: "TEXT" },
+    { table: "books", column: "key_takeaways", type: "JSONB DEFAULT '[]'::jsonb" },
+    { table: "books", column: "secondary_category_id", type: "VARCHAR REFERENCES categories(id)" },
+    // Phase 1: User data fields
+    { table: "users", column: "last_login_at", type: "TIMESTAMP" },
+    { table: "users", column: "signup_source", type: "TEXT" },
+    { table: "users", column: "referral_code", type: "VARCHAR" },
+    { table: "users", column: "preferred_read_mode", type: "TEXT DEFAULT 'read'" },
+    { table: "users", column: "timezone", type: "TEXT" },
+    { table: "users", column: "onboarding_completed_at", type: "TIMESTAMP" },
+    // Phase 2: Completion tracking
+    { table: "user_progress", column: "completed_at", type: "TIMESTAMP" },
   ];
   for (const m of migrations) {
     try {
@@ -67,6 +90,76 @@ async function ensureSchema() {
       // Column already exists — safe to ignore
       if (!e.message?.includes("already exists")) {
         console.error(`Schema migration failed for ${m.table}.${m.column}:`, e.message);
+      }
+    }
+  }
+
+  // Phase 2: Create new tables if they don't exist
+  const newTables = [
+    `CREATE TABLE IF NOT EXISTS book_ratings (
+      id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id VARCHAR NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      book_id VARCHAR NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+      rating INTEGER NOT NULL,
+      review TEXT,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(user_id, book_id)
+    )`,
+    `CREATE INDEX IF NOT EXISTS book_ratings_book_id_idx ON book_ratings(book_id)`,
+    `CREATE TABLE IF NOT EXISTS collections (
+      id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id VARCHAR NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      description TEXT,
+      emoji TEXT DEFAULT '📚',
+      is_default BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    )`,
+    `CREATE INDEX IF NOT EXISTS collections_user_id_idx ON collections(user_id)`,
+    `CREATE TABLE IF NOT EXISTS collection_books (
+      id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid(),
+      collection_id VARCHAR NOT NULL REFERENCES collections(id) ON DELETE CASCADE,
+      book_id VARCHAR NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+      added_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(collection_id, book_id)
+    )`,
+    // Phase 3: Reading Sessions
+    `CREATE TABLE IF NOT EXISTS reading_sessions (
+      id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id VARCHAR NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      book_id VARCHAR NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+      started_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      ended_at TIMESTAMP,
+      duration_minutes INTEGER,
+      pages_read INTEGER,
+      mode TEXT NOT NULL DEFAULT 'read',
+      created_at TIMESTAMP DEFAULT NOW()
+    )`,
+    `CREATE INDEX IF NOT EXISTS reading_sessions_user_book_idx ON reading_sessions(user_id, book_id)`,
+    `CREATE INDEX IF NOT EXISTS reading_sessions_user_started_idx ON reading_sessions(user_id, started_at)`,
+    // Phase 3: User Goals
+    `CREATE TABLE IF NOT EXISTS user_goals (
+      id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id VARCHAR NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      goal_type TEXT NOT NULL,
+      target_value INTEGER NOT NULL,
+      current_value INTEGER NOT NULL DEFAULT 0,
+      period_start TIMESTAMP NOT NULL DEFAULT NOW(),
+      period_end TIMESTAMP,
+      status TEXT NOT NULL DEFAULT 'active',
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    )`,
+    `CREATE INDEX IF NOT EXISTS user_goals_user_active_idx ON user_goals(user_id, status)`,
+  ];
+  for (const ddl of newTables) {
+    try {
+      await db.execute(sql.raw(ddl));
+    } catch (e: any) {
+      if (!e.message?.includes("already exists")) {
+        console.error(`Table creation failed:`, e.message);
       }
     }
   }

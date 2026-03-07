@@ -12,10 +12,17 @@ import {
   type ChakraProgress, type InsertChakraProgress,
   type Short, type InsertShort,
   type ShortView, type InsertShortView,
+  type BookRating, type InsertBookRating,
+  type Collection, type InsertCollection,
+  type CollectionBook, type InsertCollectionBook,
+  type ReadingSession, type InsertReadingSession,
+  type UserGoal, type InsertUserGoal,
   books, userProgress, journalEntries, categories,
   userInterests, userStreaks, savedHighlights,
   chapterSummaries, mentalModels, comments,
   chakraProgress, shorts, shortViews, userActivityLog,
+  bookRatings, collections, collectionBooks,
+  readingSessions, userGoals,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, desc, asc, inArray } from "drizzle-orm";
@@ -85,6 +92,40 @@ export interface IStorage {
   deleteShort(id: string): Promise<void>;
   recordShortView(data: InsertShortView): Promise<ShortView>;
   getShortViewCount(shortId: string): Promise<number>;
+
+  // Phase 2: Ratings
+  getBookRating(userId: string, bookId: string): Promise<BookRating | undefined>;
+  getBookRatings(bookId: string): Promise<BookRating[]>;
+  upsertBookRating(data: InsertBookRating): Promise<BookRating>;
+  deleteBookRating(userId: string, bookId: string): Promise<void>;
+  getBookAverageRating(bookId: string): Promise<{ avg: number; count: number }>;
+
+  // Phase 2: Collections
+  getUserCollections(userId: string): Promise<Collection[]>;
+  getCollection(id: string): Promise<Collection | undefined>;
+  createCollection(data: InsertCollection): Promise<Collection>;
+  updateCollection(id: string, data: Partial<InsertCollection>): Promise<Collection>;
+  deleteCollection(id: string): Promise<void>;
+  getCollectionBooks(collectionId: string): Promise<CollectionBook[]>;
+  addBookToCollection(data: InsertCollectionBook): Promise<CollectionBook>;
+  removeBookFromCollection(collectionId: string, bookId: string): Promise<void>;
+
+  // Phase 2: Completion
+  markBookCompleted(userId: string, bookId: string): Promise<UserProgress>;
+
+  // Phase 3: Reading Sessions
+  createReadingSession(data: InsertReadingSession): Promise<ReadingSession>;
+  endReadingSession(id: string, durationMinutes: number, pagesRead?: number): Promise<ReadingSession>;
+  getUserReadingSessions(userId: string, limit?: number): Promise<ReadingSession[]>;
+  getUserReadingStats(userId: string): Promise<{ totalMinutes: number; totalSessions: number; todayMinutes: number }>;
+
+  // Phase 3: User Goals
+  getUserGoals(userId: string): Promise<UserGoal[]>;
+  getActiveGoals(userId: string): Promise<UserGoal[]>;
+  createUserGoal(data: InsertUserGoal): Promise<UserGoal>;
+  updateUserGoal(id: string, data: Partial<InsertUserGoal>): Promise<UserGoal>;
+  deleteUserGoal(id: string): Promise<void>;
+  incrementGoalProgress(id: string, increment: number): Promise<UserGoal>;
 }
 
 async function withQueryTiming<T>(label: string, fn: () => Promise<T>): Promise<T> {
@@ -474,6 +515,201 @@ export class DatabaseStorage implements IStorage {
   async getShortViewCount(shortId: string): Promise<number> {
     const [result] = await db.select({ count: sql<number>`count(*)::int` }).from(shortViews).where(eq(shortViews.shortId, shortId));
     return result?.count ?? 0;
+  }
+
+  // Phase 2: Ratings
+  async getBookRating(userId: string, bookId: string): Promise<BookRating | undefined> {
+    const [result] = await db.select().from(bookRatings)
+      .where(and(eq(bookRatings.userId, userId), eq(bookRatings.bookId, bookId)));
+    return result;
+  }
+
+  async getBookRatings(bookId: string): Promise<BookRating[]> {
+    return db.select().from(bookRatings)
+      .where(eq(bookRatings.bookId, bookId))
+      .orderBy(desc(bookRatings.createdAt));
+  }
+
+  async upsertBookRating(data: InsertBookRating): Promise<BookRating> {
+    const existing = await this.getBookRating(data.userId, data.bookId);
+    if (existing) {
+      const [result] = await db.update(bookRatings)
+        .set({ rating: data.rating, review: data.review ?? existing.review, updatedAt: new Date() })
+        .where(eq(bookRatings.id, existing.id))
+        .returning();
+      return result;
+    }
+    const [result] = await db.insert(bookRatings).values(data).returning();
+    return result;
+  }
+
+  async deleteBookRating(userId: string, bookId: string): Promise<void> {
+    await db.delete(bookRatings)
+      .where(and(eq(bookRatings.userId, userId), eq(bookRatings.bookId, bookId)));
+  }
+
+  async getBookAverageRating(bookId: string): Promise<{ avg: number; count: number }> {
+    const [result] = await db.select({
+      avg: sql<number>`COALESCE(AVG(rating), 0)::float`,
+      count: sql<number>`COUNT(*)::int`,
+    }).from(bookRatings).where(eq(bookRatings.bookId, bookId));
+    return { avg: result?.avg ?? 0, count: result?.count ?? 0 };
+  }
+
+  // Phase 2: Collections
+  async getUserCollections(userId: string): Promise<Collection[]> {
+    return db.select().from(collections)
+      .where(eq(collections.userId, userId))
+      .orderBy(desc(collections.createdAt));
+  }
+
+  async getCollection(id: string): Promise<Collection | undefined> {
+    const [result] = await db.select().from(collections).where(eq(collections.id, id));
+    return result;
+  }
+
+  async createCollection(data: InsertCollection): Promise<Collection> {
+    const [result] = await db.insert(collections).values(data).returning();
+    return result;
+  }
+
+  async updateCollection(id: string, data: Partial<InsertCollection>): Promise<Collection> {
+    const [result] = await db.update(collections)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(collections.id, id))
+      .returning();
+    return result;
+  }
+
+  async deleteCollection(id: string): Promise<void> {
+    // collectionBooks cascade-deletes via FK
+    await db.delete(collections).where(eq(collections.id, id));
+  }
+
+  async getCollectionBooks(collectionId: string): Promise<CollectionBook[]> {
+    return db.select().from(collectionBooks)
+      .where(eq(collectionBooks.collectionId, collectionId))
+      .orderBy(desc(collectionBooks.addedAt));
+  }
+
+  async addBookToCollection(data: InsertCollectionBook): Promise<CollectionBook> {
+    const [result] = await db.insert(collectionBooks).values(data).returning();
+    return result;
+  }
+
+  async removeBookFromCollection(collectionId: string, bookId: string): Promise<void> {
+    await db.delete(collectionBooks)
+      .where(and(eq(collectionBooks.collectionId, collectionId), eq(collectionBooks.bookId, bookId)));
+  }
+
+  // Phase 2: Completion
+  async markBookCompleted(userId: string, bookId: string): Promise<UserProgress> {
+    const existing = await this.getUserProgress(userId, bookId);
+    if (existing) {
+      const [result] = await db.update(userProgress)
+        .set({ completedAt: new Date(), lastAccessedAt: new Date() })
+        .where(and(eq(userProgress.userId, userId), eq(userProgress.bookId, bookId)))
+        .returning();
+      return result;
+    }
+    const [result] = await db.insert(userProgress)
+      .values({ userId, bookId, completedAt: new Date() })
+      .returning();
+    return result;
+  }
+
+  // Phase 3: Reading Sessions
+  async createReadingSession(data: InsertReadingSession): Promise<ReadingSession> {
+    const [result] = await db.insert(readingSessions).values(data).returning();
+    return result;
+  }
+
+  async endReadingSession(id: string, durationMinutes: number, pagesRead?: number): Promise<ReadingSession> {
+    const updates: Record<string, any> = {
+      endedAt: new Date(),
+      durationMinutes,
+    };
+    if (pagesRead !== undefined) updates.pagesRead = pagesRead;
+    const [result] = await db.update(readingSessions)
+      .set(updates)
+      .where(eq(readingSessions.id, id))
+      .returning();
+    return result;
+  }
+
+  async getUserReadingSessions(userId: string, limit = 50): Promise<ReadingSession[]> {
+    return db.select().from(readingSessions)
+      .where(eq(readingSessions.userId, userId))
+      .orderBy(desc(readingSessions.startedAt))
+      .limit(limit);
+  }
+
+  async getUserReadingStats(userId: string): Promise<{ totalMinutes: number; totalSessions: number; todayMinutes: number }> {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const [totals] = await db.select({
+      totalMinutes: sql<number>`COALESCE(SUM(duration_minutes), 0)::int`,
+      totalSessions: sql<number>`COUNT(*)::int`,
+    }).from(readingSessions)
+      .where(and(eq(readingSessions.userId, userId), sql`ended_at IS NOT NULL`));
+
+    const [today] = await db.select({
+      todayMinutes: sql<number>`COALESCE(SUM(duration_minutes), 0)::int`,
+    }).from(readingSessions)
+      .where(and(
+        eq(readingSessions.userId, userId),
+        sql`ended_at IS NOT NULL`,
+        sql`started_at >= ${todayStart.toISOString()}`
+      ));
+
+    return {
+      totalMinutes: totals?.totalMinutes ?? 0,
+      totalSessions: totals?.totalSessions ?? 0,
+      todayMinutes: today?.todayMinutes ?? 0,
+    };
+  }
+
+  // Phase 3: User Goals
+  async getUserGoals(userId: string): Promise<UserGoal[]> {
+    return db.select().from(userGoals)
+      .where(eq(userGoals.userId, userId))
+      .orderBy(desc(userGoals.createdAt));
+  }
+
+  async getActiveGoals(userId: string): Promise<UserGoal[]> {
+    return db.select().from(userGoals)
+      .where(and(eq(userGoals.userId, userId), eq(userGoals.status, "active")))
+      .orderBy(desc(userGoals.createdAt));
+  }
+
+  async createUserGoal(data: InsertUserGoal): Promise<UserGoal> {
+    const [result] = await db.insert(userGoals).values(data).returning();
+    return result;
+  }
+
+  async updateUserGoal(id: string, data: Partial<InsertUserGoal>): Promise<UserGoal> {
+    const [result] = await db.update(userGoals)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(userGoals.id, id))
+      .returning();
+    return result;
+  }
+
+  async deleteUserGoal(id: string): Promise<void> {
+    await db.delete(userGoals).where(eq(userGoals.id, id));
+  }
+
+  async incrementGoalProgress(id: string, increment: number): Promise<UserGoal> {
+    const [goal] = await db.select().from(userGoals).where(eq(userGoals.id, id));
+    if (!goal) throw new Error("Goal not found");
+    const newValue = (goal.currentValue ?? 0) + increment;
+    const newStatus = newValue >= goal.targetValue ? "completed" : goal.status;
+    const [result] = await db.update(userGoals)
+      .set({ currentValue: newValue, status: newStatus, updatedAt: new Date() })
+      .where(eq(userGoals.id, id))
+      .returning();
+    return result;
   }
 }
 

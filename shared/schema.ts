@@ -10,6 +10,7 @@ import {
   date,
   index,
   uniqueIndex,
+  numeric,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -46,6 +47,20 @@ export const books = pgTable("books", {
   primaryChakra: text("primary_chakra"),
   secondaryChakra: text("secondary_chakra"),
   tags: text("tags"),
+  // Phase 1: New book metadata fields
+  publisher: text("publisher"),
+  isbn: text("isbn"),
+  publishedDate: text("published_date"),
+  pageCount: integer("page_count"),
+  language: text("language").default("English"),
+  edition: text("edition"),
+  originalPrice: numeric("original_price"),
+  authorBio: text("author_bio"),
+  sourceUrl: text("source_url"),
+  rating: integer("rating"),
+  difficultyLevel: text("difficulty_level"),
+  keyTakeaways: jsonb("key_takeaways").default([]),
+  secondaryCategoryId: varchar("secondary_category_id").references(() => categories.id),
   updatedAt: timestamp("updated_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
@@ -113,6 +128,7 @@ export const userProgress = pgTable("user_progress", {
   currentCardIndex: integer("current_card_index").default(0),
   totalCards: integer("total_cards").default(0),
   currentSection: text("current_section"),
+  completedAt: timestamp("completed_at"),
 }, (table) => ({
   userBookIdx: index("user_progress_user_book_idx").on(table.userId, table.bookId),
   userBookUnique: uniqueIndex("user_progress_user_book_unique").on(table.userId, table.bookId),
@@ -657,6 +673,130 @@ export const insertQuizResultSchema = createInsertSchema(quizResults).omit({
 });
 export type InsertQuizResult = z.infer<typeof insertQuizResultSchema>;
 export type QuizResult = typeof quizResults.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// Book Ratings (Phase 2)
+// ---------------------------------------------------------------------------
+
+export const bookRatings = pgTable("book_ratings", {
+  id: varchar("id", { length: 255 }).primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  bookId: varchar("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
+  rating: integer("rating").notNull(),
+  review: text("review"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  userBookUnique: uniqueIndex("book_ratings_user_book_unique").on(table.userId, table.bookId),
+  bookIdx: index("book_ratings_book_id_idx").on(table.bookId),
+}));
+
+export const bookRatingsRelations = relations(bookRatings, ({ one }) => ({
+  user: one(users, { fields: [bookRatings.userId], references: [users.id] }),
+  book: one(books, { fields: [bookRatings.bookId], references: [books.id] }),
+}));
+
+export const insertBookRatingSchema = createInsertSchema(bookRatings).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertBookRating = z.infer<typeof insertBookRatingSchema>;
+export type BookRating = typeof bookRatings.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// User Collections / Shelves (Phase 2)
+// ---------------------------------------------------------------------------
+
+export const collections = pgTable("collections", {
+  id: varchar("id", { length: 255 }).primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  emoji: text("emoji").default("📚"),
+  isDefault: boolean("is_default").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  userIdx: index("collections_user_id_idx").on(table.userId),
+}));
+
+export const collectionBooks = pgTable("collection_books", {
+  id: varchar("id", { length: 255 }).primaryKey().default(sql`gen_random_uuid()`),
+  collectionId: varchar("collection_id").notNull().references(() => collections.id, { onDelete: "cascade" }),
+  bookId: varchar("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
+  addedAt: timestamp("added_at").defaultNow(),
+}, (table) => ({
+  collectionBookUnique: uniqueIndex("collection_books_unique").on(table.collectionId, table.bookId),
+}));
+
+export const collectionsRelations = relations(collections, ({ one, many }) => ({
+  user: one(users, { fields: [collections.userId], references: [users.id] }),
+  books: many(collectionBooks),
+}));
+
+export const collectionBooksRelations = relations(collectionBooks, ({ one }) => ({
+  collection: one(collections, { fields: [collectionBooks.collectionId], references: [collections.id] }),
+  book: one(books, { fields: [collectionBooks.bookId], references: [books.id] }),
+}));
+
+export const insertCollectionSchema = createInsertSchema(collections).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertCollectionBookSchema = createInsertSchema(collectionBooks).omit({ id: true, addedAt: true });
+export type InsertCollection = z.infer<typeof insertCollectionSchema>;
+export type Collection = typeof collections.$inferSelect;
+export type InsertCollectionBook = z.infer<typeof insertCollectionBookSchema>;
+export type CollectionBook = typeof collectionBooks.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// Reading Sessions (Phase 3)
+// ---------------------------------------------------------------------------
+
+export const readingSessions = pgTable("reading_sessions", {
+  id: varchar("id", { length: 255 }).primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  bookId: varchar("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
+  startedAt: timestamp("started_at").notNull().defaultNow(),
+  endedAt: timestamp("ended_at"),
+  durationMinutes: integer("duration_minutes"),
+  pagesRead: integer("pages_read"),
+  mode: text("mode").notNull().default("read"), // 'read' | 'listen'
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  userBookIdx: index("reading_sessions_user_book_idx").on(table.userId, table.bookId),
+  userStartedIdx: index("reading_sessions_user_started_idx").on(table.userId, table.startedAt),
+}));
+
+export const readingSessionsRelations = relations(readingSessions, ({ one }) => ({
+  user: one(users, { fields: [readingSessions.userId], references: [users.id] }),
+  book: one(books, { fields: [readingSessions.bookId], references: [books.id] }),
+}));
+
+export const insertReadingSessionSchema = createInsertSchema(readingSessions).omit({ id: true, createdAt: true });
+export type InsertReadingSession = z.infer<typeof insertReadingSessionSchema>;
+export type ReadingSession = typeof readingSessions.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// User Goals (Phase 3)
+// ---------------------------------------------------------------------------
+
+export const userGoals = pgTable("user_goals", {
+  id: varchar("id", { length: 255 }).primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  goalType: text("goal_type").notNull(), // 'books_per_month' | 'minutes_per_day' | 'streak_days' | 'chapters_per_week'
+  targetValue: integer("target_value").notNull(),
+  currentValue: integer("current_value").notNull().default(0),
+  periodStart: timestamp("period_start").notNull().defaultNow(),
+  periodEnd: timestamp("period_end"),
+  status: text("status").notNull().default("active"), // 'active' | 'completed' | 'expired'
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  userActiveIdx: index("user_goals_user_active_idx").on(table.userId, table.status),
+}));
+
+export const userGoalsRelations = relations(userGoals, ({ one }) => ({
+  user: one(users, { fields: [userGoals.userId], references: [users.id] }),
+}));
+
+export const insertUserGoalSchema = createInsertSchema(userGoals).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertUserGoal = z.infer<typeof insertUserGoalSchema>;
+export type UserGoal = typeof userGoals.$inferSelect;
 
 export const CHAKRA_MAP = {
   root: {
