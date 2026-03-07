@@ -22,6 +22,8 @@ import { trackPageView } from "@/lib/analytics";
 import { AnimatePresence, motion } from "framer-motion";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ShareMilestonePrompt, useShareTriggers } from "@/components/progress-share-card";
+import { GoalsWidget } from "@/components/goals-widget";
+import { ReadingStatsBar } from "@/components/reading-stats";
 
 const STREAK_MILESTONES = [
   { days: 7, label: "1 Week", icon: Flame, color: "#E8A838" },
@@ -478,6 +480,9 @@ export default function Dashboard() {
           <ShareMilestonePrompt trigger={shareTrigger} onDismiss={dismissShareTrigger} />
         </div>
       )}
+
+      <ReadingStatsBar />
+      <GoalsWidget />
 
       <AnimatePresence mode="wait">
         {activeChakra && (

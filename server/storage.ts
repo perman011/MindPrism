@@ -15,11 +15,14 @@ import {
   type BookRating, type InsertBookRating,
   type Collection, type InsertCollection,
   type CollectionBook, type InsertCollectionBook,
+  type ReadingSession, type InsertReadingSession,
+  type UserGoal, type InsertUserGoal,
   books, userProgress, journalEntries, categories,
   userInterests, userStreaks, savedHighlights,
   chapterSummaries, mentalModels, comments,
   chakraProgress, shorts, shortViews, userActivityLog,
   bookRatings, collections, collectionBooks,
+  readingSessions, userGoals,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, desc, asc, inArray } from "drizzle-orm";
@@ -109,6 +112,20 @@ export interface IStorage {
 
   // Phase 2: Completion
   markBookCompleted(userId: string, bookId: string): Promise<UserProgress>;
+
+  // Phase 3: Reading Sessions
+  createReadingSession(data: InsertReadingSession): Promise<ReadingSession>;
+  endReadingSession(id: string, durationMinutes: number, pagesRead?: number): Promise<ReadingSession>;
+  getUserReadingSessions(userId: string, limit?: number): Promise<ReadingSession[]>;
+  getUserReadingStats(userId: string): Promise<{ totalMinutes: number; totalSessions: number; todayMinutes: number }>;
+
+  // Phase 3: User Goals
+  getUserGoals(userId: string): Promise<UserGoal[]>;
+  getActiveGoals(userId: string): Promise<UserGoal[]>;
+  createUserGoal(data: InsertUserGoal): Promise<UserGoal>;
+  updateUserGoal(id: string, data: Partial<InsertUserGoal>): Promise<UserGoal>;
+  deleteUserGoal(id: string): Promise<void>;
+  incrementGoalProgress(id: string, increment: number): Promise<UserGoal>;
 }
 
 async function withQueryTiming<T>(label: string, fn: () => Promise<T>): Promise<T> {
@@ -597,6 +614,100 @@ export class DatabaseStorage implements IStorage {
     }
     const [result] = await db.insert(userProgress)
       .values({ userId, bookId, completedAt: new Date() })
+      .returning();
+    return result;
+  }
+
+  // Phase 3: Reading Sessions
+  async createReadingSession(data: InsertReadingSession): Promise<ReadingSession> {
+    const [result] = await db.insert(readingSessions).values(data).returning();
+    return result;
+  }
+
+  async endReadingSession(id: string, durationMinutes: number, pagesRead?: number): Promise<ReadingSession> {
+    const updates: Record<string, any> = {
+      endedAt: new Date(),
+      durationMinutes,
+    };
+    if (pagesRead !== undefined) updates.pagesRead = pagesRead;
+    const [result] = await db.update(readingSessions)
+      .set(updates)
+      .where(eq(readingSessions.id, id))
+      .returning();
+    return result;
+  }
+
+  async getUserReadingSessions(userId: string, limit = 50): Promise<ReadingSession[]> {
+    return db.select().from(readingSessions)
+      .where(eq(readingSessions.userId, userId))
+      .orderBy(desc(readingSessions.startedAt))
+      .limit(limit);
+  }
+
+  async getUserReadingStats(userId: string): Promise<{ totalMinutes: number; totalSessions: number; todayMinutes: number }> {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const [totals] = await db.select({
+      totalMinutes: sql<number>`COALESCE(SUM(duration_minutes), 0)::int`,
+      totalSessions: sql<number>`COUNT(*)::int`,
+    }).from(readingSessions)
+      .where(and(eq(readingSessions.userId, userId), sql`ended_at IS NOT NULL`));
+
+    const [today] = await db.select({
+      todayMinutes: sql<number>`COALESCE(SUM(duration_minutes), 0)::int`,
+    }).from(readingSessions)
+      .where(and(
+        eq(readingSessions.userId, userId),
+        sql`ended_at IS NOT NULL`,
+        sql`started_at >= ${todayStart.toISOString()}`
+      ));
+
+    return {
+      totalMinutes: totals?.totalMinutes ?? 0,
+      totalSessions: totals?.totalSessions ?? 0,
+      todayMinutes: today?.todayMinutes ?? 0,
+    };
+  }
+
+  // Phase 3: User Goals
+  async getUserGoals(userId: string): Promise<UserGoal[]> {
+    return db.select().from(userGoals)
+      .where(eq(userGoals.userId, userId))
+      .orderBy(desc(userGoals.createdAt));
+  }
+
+  async getActiveGoals(userId: string): Promise<UserGoal[]> {
+    return db.select().from(userGoals)
+      .where(and(eq(userGoals.userId, userId), eq(userGoals.status, "active")))
+      .orderBy(desc(userGoals.createdAt));
+  }
+
+  async createUserGoal(data: InsertUserGoal): Promise<UserGoal> {
+    const [result] = await db.insert(userGoals).values(data).returning();
+    return result;
+  }
+
+  async updateUserGoal(id: string, data: Partial<InsertUserGoal>): Promise<UserGoal> {
+    const [result] = await db.update(userGoals)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(userGoals.id, id))
+      .returning();
+    return result;
+  }
+
+  async deleteUserGoal(id: string): Promise<void> {
+    await db.delete(userGoals).where(eq(userGoals.id, id));
+  }
+
+  async incrementGoalProgress(id: string, increment: number): Promise<UserGoal> {
+    const [goal] = await db.select().from(userGoals).where(eq(userGoals.id, id));
+    if (!goal) throw new Error("Goal not found");
+    const newValue = (goal.currentValue ?? 0) + increment;
+    const newStatus = newValue >= goal.targetValue ? "completed" : goal.status;
+    const [result] = await db.update(userGoals)
+      .set({ currentValue: newValue, status: newStatus, updatedAt: new Date() })
+      .where(eq(userGoals.id, id))
       .returning();
     return result;
   }

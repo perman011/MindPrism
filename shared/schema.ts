@@ -743,6 +743,61 @@ export type Collection = typeof collections.$inferSelect;
 export type InsertCollectionBook = z.infer<typeof insertCollectionBookSchema>;
 export type CollectionBook = typeof collectionBooks.$inferSelect;
 
+// ---------------------------------------------------------------------------
+// Reading Sessions (Phase 3)
+// ---------------------------------------------------------------------------
+
+export const readingSessions = pgTable("reading_sessions", {
+  id: varchar("id", { length: 255 }).primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  bookId: varchar("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
+  startedAt: timestamp("started_at").notNull().defaultNow(),
+  endedAt: timestamp("ended_at"),
+  durationMinutes: integer("duration_minutes"),
+  pagesRead: integer("pages_read"),
+  mode: text("mode").notNull().default("read"), // 'read' | 'listen'
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  userBookIdx: index("reading_sessions_user_book_idx").on(table.userId, table.bookId),
+  userStartedIdx: index("reading_sessions_user_started_idx").on(table.userId, table.startedAt),
+}));
+
+export const readingSessionsRelations = relations(readingSessions, ({ one }) => ({
+  user: one(users, { fields: [readingSessions.userId], references: [users.id] }),
+  book: one(books, { fields: [readingSessions.bookId], references: [books.id] }),
+}));
+
+export const insertReadingSessionSchema = createInsertSchema(readingSessions).omit({ id: true, createdAt: true });
+export type InsertReadingSession = z.infer<typeof insertReadingSessionSchema>;
+export type ReadingSession = typeof readingSessions.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// User Goals (Phase 3)
+// ---------------------------------------------------------------------------
+
+export const userGoals = pgTable("user_goals", {
+  id: varchar("id", { length: 255 }).primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  goalType: text("goal_type").notNull(), // 'books_per_month' | 'minutes_per_day' | 'streak_days' | 'chapters_per_week'
+  targetValue: integer("target_value").notNull(),
+  currentValue: integer("current_value").notNull().default(0),
+  periodStart: timestamp("period_start").notNull().defaultNow(),
+  periodEnd: timestamp("period_end"),
+  status: text("status").notNull().default("active"), // 'active' | 'completed' | 'expired'
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  userActiveIdx: index("user_goals_user_active_idx").on(table.userId, table.status),
+}));
+
+export const userGoalsRelations = relations(userGoals, ({ one }) => ({
+  user: one(users, { fields: [userGoals.userId], references: [users.id] }),
+}));
+
+export const insertUserGoalSchema = createInsertSchema(userGoals).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertUserGoal = z.infer<typeof insertUserGoalSchema>;
+export type UserGoal = typeof userGoals.$inferSelect;
+
 export const CHAKRA_MAP = {
   root: {
     name: "Root",

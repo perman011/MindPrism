@@ -24,6 +24,7 @@ import { trackBookOpen } from "@/lib/analytics";
 import { ShareModal } from "@/components/share-modal";
 import { normalizeMediaUrl } from "@/lib/media-url";
 import { StarRating } from "@/components/star-rating";
+import { ReadingSessionTimer } from "@/components/reading-session-timer";
 
 function hasValidAudioUrl(audioUrl: string | null | undefined): boolean {
   const normalized = normalizeMediaUrl(audioUrl);
@@ -313,6 +314,12 @@ export default function BookDetail() {
           <div className="flex items-center gap-1.5 mb-4 text-emerald-600 dark:text-emerald-400" data-testid="badge-completed">
             <CheckCircle2 className="w-4 h-4" />
             <span className="text-xs font-medium">Completed</span>
+          </div>
+        )}
+
+        {user && book && (
+          <div className="w-full max-w-md mb-4">
+            <ReadingSessionTimer bookId={book.id} bookTitle={book.title} />
           </div>
         )}
 

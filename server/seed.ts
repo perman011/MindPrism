@@ -125,6 +125,34 @@ async function ensureSchema() {
       added_at TIMESTAMP DEFAULT NOW(),
       UNIQUE(collection_id, book_id)
     )`,
+    // Phase 3: Reading Sessions
+    `CREATE TABLE IF NOT EXISTS reading_sessions (
+      id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id VARCHAR NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      book_id VARCHAR NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+      started_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      ended_at TIMESTAMP,
+      duration_minutes INTEGER,
+      pages_read INTEGER,
+      mode TEXT NOT NULL DEFAULT 'read',
+      created_at TIMESTAMP DEFAULT NOW()
+    )`,
+    `CREATE INDEX IF NOT EXISTS reading_sessions_user_book_idx ON reading_sessions(user_id, book_id)`,
+    `CREATE INDEX IF NOT EXISTS reading_sessions_user_started_idx ON reading_sessions(user_id, started_at)`,
+    // Phase 3: User Goals
+    `CREATE TABLE IF NOT EXISTS user_goals (
+      id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id VARCHAR NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      goal_type TEXT NOT NULL,
+      target_value INTEGER NOT NULL,
+      current_value INTEGER NOT NULL DEFAULT 0,
+      period_start TIMESTAMP NOT NULL DEFAULT NOW(),
+      period_end TIMESTAMP,
+      status TEXT NOT NULL DEFAULT 'active',
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    )`,
+    `CREATE INDEX IF NOT EXISTS user_goals_user_active_idx ON user_goals(user_id, status)`,
   ];
   for (const ddl of newTables) {
     try {
