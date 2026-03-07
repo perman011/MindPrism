@@ -109,7 +109,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">Big Ideas, Made Simple
       <SEOHead
         title="Welcome"
         description="Every book distilled into key principles, mental models, chapter summaries, audio walkthroughs, and Shorts. Business, science, philosophy, leadership and beyond."
@@ -142,7 +142,7 @@ export default function LandingPage() {
             </div>
             <div className="flex flex-col">
               <span className="text-2xl font-bold tracking-wide bg-gradient-to-r from-[#2D1B45] via-[#5B2C6F] to-[#8E44AD] bg-clip-text text-transparent dark:from-[#D4B8D6] dark:via-[#E8D5EA] dark:to-[#F0E6F3]">MindPrism</span>
-              <span className="text-[10px] font-semibold tracking-[0.22em] uppercase text-[#8E44AD]/60 dark:text-[#D4B8D6]/50 -mt-0.5">Big Ideas, Made Simple</span>
+              <span className="text-[10px] font-bold tracking-[0.22em] uppercase text-[#FFD700] dark:text-[#FFD700] -mt-0.5">Big Ideas, Made Simple</span>
             </div>
           </div>
         </motion.div>
