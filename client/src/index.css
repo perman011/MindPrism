@@ -330,6 +330,43 @@
   animation: featherSpin ease-in-out infinite;
 }
 
+/* ── Pen-writing loader animation ── */
+@keyframes penWritingRock {
+  0%, 100% {
+    transform: translateX(-50%) rotate(-6deg);
+  }
+  50% {
+    transform: translateX(-50%) rotate(6deg);
+  }
+}
+
+@keyframes penWritingInk {
+  0% {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  70% {
+    clip-path: inset(0 0% 0 0);
+    opacity: 1;
+  }
+  85%, 100% {
+    clip-path: inset(0 0% 0 0);
+    opacity: 0;
+  }
+}
+
+.pen-writing-rock {
+  animation: penWritingRock 1.6s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+.pen-writing-ink {
+  animation: penWritingInk 2.4s ease-in-out infinite;
+}
+
 @keyframes landingGradientShift {
   0% {
     background-position: 0% 50%;
