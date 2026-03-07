@@ -1,6 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import type { Book } from "@shared/schema";
+import { PenWritingLoader } from "@/components/pen-writing-loader";
 import { PremiumGate } from "@/components/premium-gate";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -206,7 +207,7 @@ export default function StoryEngine() {
   if (isLoading || !cards || !book) {
     return (
       <div className="fixed inset-0 z-[200] bg-background flex items-center justify-center">
-        <div className="w-10 h-10 rounded-md bg-primary animate-pulse" />
+        <PenWritingLoader size="md" />
       </div>
     );
   }
