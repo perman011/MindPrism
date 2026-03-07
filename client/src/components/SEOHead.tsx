@@ -23,7 +23,7 @@ export function SEOHead({
   jsonLd,
 }: SEOHeadProps) {
   const [location] = useLocation();
-  const fullTitle = title ? `${title} | ${SITE_NAME} - Psychology Made Simple` : `${SITE_NAME} - Psychology Made Simple`;
+  const fullTitle = title ? `${title} | ${SITE_NAME} - Big Ideas, Made Simple` : `${SITE_NAME} - Big Ideas, Made Simple`;
   const canonicalUrl = `${window.location.origin}${location}`;
 
   return (

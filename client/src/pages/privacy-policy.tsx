@@ -308,7 +308,7 @@ export default function PrivacyPolicy() {
         {/* Footer */}
         <div className="mt-10 pt-6 border-t border-border text-center">
           <p className="text-xs text-muted-foreground">
-            MindPrism — Psychology Made Simple
+            MindPrism — Big Ideas, Made Simple
           </p>
           <p className="text-xs text-muted-foreground mt-1">
             © {new Date().getFullYear()} MindPrism. All rights reserved.
