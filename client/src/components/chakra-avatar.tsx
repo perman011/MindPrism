@@ -11,13 +11,13 @@ interface ChakraAvatarProps {
 }
 
 const chakraPositions: Record<ChakraType, { top: string; left: string }> = {
-  crown:        { top: "11%",   left: "50%" },
-  third_eye:    { top: "19%",   left: "50%" },
-  throat:       { top: "28.5%", left: "50%" },
-  heart:        { top: "37%",   left: "50%" },
-  solar_plexus: { top: "45%",   left: "50%" },
-  sacral:       { top: "52.5%", left: "50%" },
-  root:         { top: "59.5%", left: "50%" },
+  crown:        { top: "14%",   left: "50%" },
+  third_eye:    { top: "21.5%", left: "50%" },
+  throat:       { top: "31%",   left: "50%" },
+  heart:        { top: "39%",   left: "50%" },
+  solar_plexus: { top: "47%",   left: "50%" },
+  sacral:       { top: "54%",   left: "50%" },
+  root:         { top: "61%",   left: "50%" },
 };
 
 const chakraOrder: ChakraType[] = [
