@@ -305,15 +305,17 @@ export default function Dashboard() {
       <div className="bg-background">
         <div className="px-5 pt-4 pb-1 flex items-center justify-between" data-testid="header-brand">
           <div className="flex items-center gap-3">
-            <div className="relative w-11 h-11 flex items-center justify-center flex-shrink-0">
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#2D1B45] via-[#341539] to-[#1a0a20] shadow-md" />
+            <div className="relative w-12 h-12 flex items-center justify-center flex-shrink-0">
               <img
                 src={logoImg}
                 alt="mindprism"
-                className="relative z-10 w-7 h-7 object-contain drop-shadow-[0_1px_4px_rgba(255,210,80,0.3)]"
+                className="w-full h-full object-contain drop-shadow-[0_2px_8px_rgba(255,210,80,0.3)]"
               />
             </div>
-            <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-[#2D1B45] to-[#6B3A7D] bg-clip-text text-transparent dark:from-[#D4B8D6] dark:to-[#E8D5EA]">mindprism</span>
+            <div className="flex flex-col">
+              <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-[#2D1B45] via-[#5B2C6F] to-[#8E44AD] bg-clip-text text-transparent dark:from-[#D4B8D6] dark:via-[#E8D5EA] dark:to-[#F0E6F3]">MindPrism</span>
+              <span className="text-[9px] font-semibold tracking-[0.18em] uppercase text-[#8E44AD]/50 dark:text-[#D4B8D6]/40 -mt-0.5">Big Ideas, Made Simple</span>
+            </div>
           </div>
         </div>
         {booksLoading ? (
