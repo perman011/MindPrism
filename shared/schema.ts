@@ -45,6 +45,7 @@ export const books = pgTable("books", {
   status: text("status").default("draft"),
   primaryChakra: text("primary_chakra"),
   secondaryChakra: text("secondary_chakra"),
+  tags: text("tags"),
   updatedAt: timestamp("updated_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({

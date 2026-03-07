@@ -44,12 +44,22 @@ const AdminMediaLibrary = lazy(() => import("@/pages/admin/admin-media-library")
 const ShortsPage = lazy(() => import("@/pages/shorts-page"));
 const PrivacyPolicy = lazy(() => import("@/pages/privacy-policy"));
 
+import mindprismLogo from "@assets/77531E8D-B1EB-4D23-A577-C8EC54A4B63C_1772158344341.png";
+
 function LazyFallback() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-10 h-10 rounded-md bg-primary animate-pulse" />
-        <p className="text-sm text-muted-foreground">Loading...</p>
+      <div className="flex flex-col items-center gap-4">
+        <div className="relative">
+          <img
+            src={mindprismLogo}
+            alt="MindPrism"
+            className="w-16 h-16 object-contain animate-pulse"
+            style={{ animationDuration: "1.8s" }}
+          />
+          <div className="absolute inset-0 rounded-full bg-primary/10 animate-ping" style={{ animationDuration: "2s" }} />
+        </div>
+        <span className="text-sm font-semibold tracking-wide bg-gradient-to-r from-[#2D1B45] via-[#5B2C6F] to-[#8E44AD] bg-clip-text text-transparent dark:from-[#D4B8D6] dark:via-[#E8D5EA] dark:to-[#F0E6F3]">MindPrism</span>
       </div>
     </div>
   );
