@@ -78,6 +78,8 @@ async function ensureSchema() {
     { table: "users", column: "preferred_read_mode", type: "TEXT DEFAULT 'read'" },
     { table: "users", column: "timezone", type: "TEXT" },
     { table: "users", column: "onboarding_completed_at", type: "TIMESTAMP" },
+    // Phase 2: Completion tracking
+    { table: "user_progress", column: "completed_at", type: "TIMESTAMP" },
   ];
   for (const m of migrations) {
     try {
@@ -88,6 +90,48 @@ async function ensureSchema() {
       // Column already exists — safe to ignore
       if (!e.message?.includes("already exists")) {
         console.error(`Schema migration failed for ${m.table}.${m.column}:`, e.message);
+      }
+    }
+  }
+
+  // Phase 2: Create new tables if they don't exist
+  const newTables = [
+    `CREATE TABLE IF NOT EXISTS book_ratings (
+      id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id VARCHAR NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      book_id VARCHAR NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+      rating INTEGER NOT NULL,
+      review TEXT,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(user_id, book_id)
+    )`,
+    `CREATE INDEX IF NOT EXISTS book_ratings_book_id_idx ON book_ratings(book_id)`,
+    `CREATE TABLE IF NOT EXISTS collections (
+      id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id VARCHAR NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      description TEXT,
+      emoji TEXT DEFAULT '📚',
+      is_default BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    )`,
+    `CREATE INDEX IF NOT EXISTS collections_user_id_idx ON collections(user_id)`,
+    `CREATE TABLE IF NOT EXISTS collection_books (
+      id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid(),
+      collection_id VARCHAR NOT NULL REFERENCES collections(id) ON DELETE CASCADE,
+      book_id VARCHAR NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+      added_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(collection_id, book_id)
+    )`,
+  ];
+  for (const ddl of newTables) {
+    try {
+      await db.execute(sql.raw(ddl));
+    } catch (e: any) {
+      if (!e.message?.includes("already exists")) {
+        console.error(`Table creation failed:`, e.message);
       }
     }
   }

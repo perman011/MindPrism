@@ -420,6 +420,190 @@ export async function registerRoutes(
     }
   });
 
+  // Phase 2: Mark book as completed
+  app.post("/api/progress/:bookId/complete", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const result = await storage.markBookCompleted(userId, req.params.bookId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error marking book completed:", error);
+      res.status(500).json({ message: "Failed to mark book completed" });
+    }
+  });
+
+  // Phase 2: Book Ratings
+  app.get("/api/books/:bookId/ratings", async (req: any, res) => {
+    try {
+      const ratings = await storage.getBookRatings(req.params.bookId);
+      const avg = await storage.getBookAverageRating(req.params.bookId);
+      res.json({ ratings, average: avg.avg, count: avg.count });
+    } catch (error) {
+      console.error("Error fetching ratings:", error);
+      res.status(500).json({ message: "Failed to fetch ratings" });
+    }
+  });
+
+  app.get("/api/books/:bookId/my-rating", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const rating = await storage.getBookRating(userId, req.params.bookId);
+      res.json(rating ?? null);
+    } catch (error) {
+      console.error("Error fetching user rating:", error);
+      res.status(500).json({ message: "Failed to fetch rating" });
+    }
+  });
+
+  app.post("/api/books/:bookId/rate", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const ratingSchema = z.object({ rating: z.number().min(1).max(5), review: z.string().optional() });
+      const parsed = ratingSchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Rating must be 1-5" });
+      const result = await storage.upsertBookRating({
+        userId,
+        bookId: req.params.bookId,
+        rating: parsed.data.rating,
+        review: parsed.data.review || null,
+      });
+      res.json(result);
+    } catch (error) {
+      console.error("Error saving rating:", error);
+      res.status(500).json({ message: "Failed to save rating" });
+    }
+  });
+
+  app.delete("/api/books/:bookId/rate", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      await storage.deleteBookRating(userId, req.params.bookId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting rating:", error);
+      res.status(500).json({ message: "Failed to delete rating" });
+    }
+  });
+
+  // Phase 2: User Collections
+  app.get("/api/collections", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const userCollections = await storage.getUserCollections(userId);
+      res.json(userCollections);
+    } catch (error) {
+      console.error("Error fetching collections:", error);
+      res.status(500).json({ message: "Failed to fetch collections" });
+    }
+  });
+
+  app.post("/api/collections", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const collectionSchema = z.object({
+        name: z.string().min(1).max(100),
+        description: z.string().optional(),
+        emoji: z.string().optional(),
+      });
+      const parsed = collectionSchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "Name is required" });
+      const result = await storage.createCollection({
+        userId,
+        name: parsed.data.name,
+        description: parsed.data.description || null,
+        emoji: parsed.data.emoji || "📚",
+      });
+      res.status(201).json(result);
+    } catch (error) {
+      console.error("Error creating collection:", error);
+      res.status(500).json({ message: "Failed to create collection" });
+    }
+  });
+
+  app.put("/api/collections/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const collection = await storage.getCollection(req.params.id);
+      if (!collection || collection.userId !== userId) {
+        return res.status(404).json({ message: "Collection not found" });
+      }
+      const result = await storage.updateCollection(req.params.id, req.body);
+      res.json(result);
+    } catch (error) {
+      console.error("Error updating collection:", error);
+      res.status(500).json({ message: "Failed to update collection" });
+    }
+  });
+
+  app.delete("/api/collections/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const collection = await storage.getCollection(req.params.id);
+      if (!collection || collection.userId !== userId) {
+        return res.status(404).json({ message: "Collection not found" });
+      }
+      await storage.deleteCollection(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting collection:", error);
+      res.status(500).json({ message: "Failed to delete collection" });
+    }
+  });
+
+  app.get("/api/collections/:id/books", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const collection = await storage.getCollection(req.params.id);
+      if (!collection || collection.userId !== userId) {
+        return res.status(404).json({ message: "Collection not found" });
+      }
+      const items = await storage.getCollectionBooks(req.params.id);
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching collection books:", error);
+      res.status(500).json({ message: "Failed to fetch collection books" });
+    }
+  });
+
+  app.post("/api/collections/:id/books", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const collection = await storage.getCollection(req.params.id);
+      if (!collection || collection.userId !== userId) {
+        return res.status(404).json({ message: "Collection not found" });
+      }
+      const bookSchema = z.object({ bookId: z.string() });
+      const parsed = bookSchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: "bookId is required" });
+      const result = await storage.addBookToCollection({
+        collectionId: req.params.id,
+        bookId: parsed.data.bookId,
+      });
+      res.status(201).json(result);
+    } catch (error: any) {
+      if (error.message?.includes("unique") || error.code === "23505") {
+        return res.status(409).json({ message: "Book already in collection" });
+      }
+      console.error("Error adding book to collection:", error);
+      res.status(500).json({ message: "Failed to add book" });
+    }
+  });
+
+  app.delete("/api/collections/:id/books/:bookId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const collection = await storage.getCollection(req.params.id);
+      if (!collection || collection.userId !== userId) {
+        return res.status(404).json({ message: "Collection not found" });
+      }
+      await storage.removeBookFromCollection(req.params.id, req.params.bookId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error removing book from collection:", error);
+      res.status(500).json({ message: "Failed to remove book" });
+    }
+  });
+
   app.post("/api/journal", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;

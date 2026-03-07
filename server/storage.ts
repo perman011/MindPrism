@@ -12,10 +12,14 @@ import {
   type ChakraProgress, type InsertChakraProgress,
   type Short, type InsertShort,
   type ShortView, type InsertShortView,
+  type BookRating, type InsertBookRating,
+  type Collection, type InsertCollection,
+  type CollectionBook, type InsertCollectionBook,
   books, userProgress, journalEntries, categories,
   userInterests, userStreaks, savedHighlights,
   chapterSummaries, mentalModels, comments,
   chakraProgress, shorts, shortViews, userActivityLog,
+  bookRatings, collections, collectionBooks,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, desc, asc, inArray } from "drizzle-orm";
@@ -85,6 +89,26 @@ export interface IStorage {
   deleteShort(id: string): Promise<void>;
   recordShortView(data: InsertShortView): Promise<ShortView>;
   getShortViewCount(shortId: string): Promise<number>;
+
+  // Phase 2: Ratings
+  getBookRating(userId: string, bookId: string): Promise<BookRating | undefined>;
+  getBookRatings(bookId: string): Promise<BookRating[]>;
+  upsertBookRating(data: InsertBookRating): Promise<BookRating>;
+  deleteBookRating(userId: string, bookId: string): Promise<void>;
+  getBookAverageRating(bookId: string): Promise<{ avg: number; count: number }>;
+
+  // Phase 2: Collections
+  getUserCollections(userId: string): Promise<Collection[]>;
+  getCollection(id: string): Promise<Collection | undefined>;
+  createCollection(data: InsertCollection): Promise<Collection>;
+  updateCollection(id: string, data: Partial<InsertCollection>): Promise<Collection>;
+  deleteCollection(id: string): Promise<void>;
+  getCollectionBooks(collectionId: string): Promise<CollectionBook[]>;
+  addBookToCollection(data: InsertCollectionBook): Promise<CollectionBook>;
+  removeBookFromCollection(collectionId: string, bookId: string): Promise<void>;
+
+  // Phase 2: Completion
+  markBookCompleted(userId: string, bookId: string): Promise<UserProgress>;
 }
 
 async function withQueryTiming<T>(label: string, fn: () => Promise<T>): Promise<T> {
@@ -474,6 +498,107 @@ export class DatabaseStorage implements IStorage {
   async getShortViewCount(shortId: string): Promise<number> {
     const [result] = await db.select({ count: sql<number>`count(*)::int` }).from(shortViews).where(eq(shortViews.shortId, shortId));
     return result?.count ?? 0;
+  }
+
+  // Phase 2: Ratings
+  async getBookRating(userId: string, bookId: string): Promise<BookRating | undefined> {
+    const [result] = await db.select().from(bookRatings)
+      .where(and(eq(bookRatings.userId, userId), eq(bookRatings.bookId, bookId)));
+    return result;
+  }
+
+  async getBookRatings(bookId: string): Promise<BookRating[]> {
+    return db.select().from(bookRatings)
+      .where(eq(bookRatings.bookId, bookId))
+      .orderBy(desc(bookRatings.createdAt));
+  }
+
+  async upsertBookRating(data: InsertBookRating): Promise<BookRating> {
+    const existing = await this.getBookRating(data.userId, data.bookId);
+    if (existing) {
+      const [result] = await db.update(bookRatings)
+        .set({ rating: data.rating, review: data.review ?? existing.review, updatedAt: new Date() })
+        .where(eq(bookRatings.id, existing.id))
+        .returning();
+      return result;
+    }
+    const [result] = await db.insert(bookRatings).values(data).returning();
+    return result;
+  }
+
+  async deleteBookRating(userId: string, bookId: string): Promise<void> {
+    await db.delete(bookRatings)
+      .where(and(eq(bookRatings.userId, userId), eq(bookRatings.bookId, bookId)));
+  }
+
+  async getBookAverageRating(bookId: string): Promise<{ avg: number; count: number }> {
+    const [result] = await db.select({
+      avg: sql<number>`COALESCE(AVG(rating), 0)::float`,
+      count: sql<number>`COUNT(*)::int`,
+    }).from(bookRatings).where(eq(bookRatings.bookId, bookId));
+    return { avg: result?.avg ?? 0, count: result?.count ?? 0 };
+  }
+
+  // Phase 2: Collections
+  async getUserCollections(userId: string): Promise<Collection[]> {
+    return db.select().from(collections)
+      .where(eq(collections.userId, userId))
+      .orderBy(desc(collections.createdAt));
+  }
+
+  async getCollection(id: string): Promise<Collection | undefined> {
+    const [result] = await db.select().from(collections).where(eq(collections.id, id));
+    return result;
+  }
+
+  async createCollection(data: InsertCollection): Promise<Collection> {
+    const [result] = await db.insert(collections).values(data).returning();
+    return result;
+  }
+
+  async updateCollection(id: string, data: Partial<InsertCollection>): Promise<Collection> {
+    const [result] = await db.update(collections)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(collections.id, id))
+      .returning();
+    return result;
+  }
+
+  async deleteCollection(id: string): Promise<void> {
+    // collectionBooks cascade-deletes via FK
+    await db.delete(collections).where(eq(collections.id, id));
+  }
+
+  async getCollectionBooks(collectionId: string): Promise<CollectionBook[]> {
+    return db.select().from(collectionBooks)
+      .where(eq(collectionBooks.collectionId, collectionId))
+      .orderBy(desc(collectionBooks.addedAt));
+  }
+
+  async addBookToCollection(data: InsertCollectionBook): Promise<CollectionBook> {
+    const [result] = await db.insert(collectionBooks).values(data).returning();
+    return result;
+  }
+
+  async removeBookFromCollection(collectionId: string, bookId: string): Promise<void> {
+    await db.delete(collectionBooks)
+      .where(and(eq(collectionBooks.collectionId, collectionId), eq(collectionBooks.bookId, bookId)));
+  }
+
+  // Phase 2: Completion
+  async markBookCompleted(userId: string, bookId: string): Promise<UserProgress> {
+    const existing = await this.getUserProgress(userId, bookId);
+    if (existing) {
+      const [result] = await db.update(userProgress)
+        .set({ completedAt: new Date(), lastAccessedAt: new Date() })
+        .where(and(eq(userProgress.userId, userId), eq(userProgress.bookId, bookId)))
+        .returning();
+      return result;
+    }
+    const [result] = await db.insert(userProgress)
+      .values({ userId, bookId, completedAt: new Date() })
+      .returning();
+    return result;
   }
 }
 
