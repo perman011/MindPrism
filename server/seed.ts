@@ -2,7 +2,7 @@ import { storage } from "./storage";
 import { db } from "./db";
 import { books, shorts } from "@shared/schema";
 import { users } from "@shared/models/auth";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 async function ensureAdminRole() {
   const adminIds = (process.env.ADMIN_USER_IDS || "35323958").split(",").map(s => s.trim()).filter(Boolean);
@@ -53,7 +53,27 @@ async function ensureCategories() {
   }
 }
 
+/** Add any missing columns so Drizzle queries don't crash on existing DBs */
+async function ensureSchema() {
+  const migrations: { column: string; table: string; type: string }[] = [
+    { table: "books", column: "tags", type: "TEXT" },
+  ];
+  for (const m of migrations) {
+    try {
+      await db.execute(sql.raw(
+        `ALTER TABLE ${m.table} ADD COLUMN IF NOT EXISTS ${m.column} ${m.type}`
+      ));
+    } catch (e: any) {
+      // Column already exists — safe to ignore
+      if (!e.message?.includes("already exists")) {
+        console.error(`Schema migration failed for ${m.table}.${m.column}:`, e.message);
+      }
+    }
+  }
+}
+
 export async function seedDatabase() {
+  await ensureSchema();
   await ensureAdminRole();
   await ensureCategories();
 
