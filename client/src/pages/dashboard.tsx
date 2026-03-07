@@ -316,7 +316,7 @@ export default function Dashboard() {
             </div>
             <div className="flex flex-col">
               <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-[#2D1B45] via-[#5B2C6F] to-[#8E44AD] bg-clip-text text-transparent dark:from-[#D4B8D6] dark:via-[#E8D5EA] dark:to-[#F0E6F3]">MindPrism</span>
-              <span className="text-[9px] font-semibold tracking-[0.18em] uppercase text-[#8E44AD]/50 dark:text-[#D4B8D6]/40 -mt-0.5">Big Ideas, Made Simple</span>
+              <span className="text-[9px] font-semibold tracking-[0.18em] uppercase text-[#FFD700] dark:text-[#FFD700] -mt-0.5">Big Ideas, Made Simple</span>
             </div>
           </div>
         </div>
