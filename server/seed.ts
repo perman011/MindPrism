@@ -15,8 +15,47 @@ async function ensureAdminRole() {
   }
 }
 
+const ALL_CATEGORIES = [
+  { name: "Habits", slug: "habits", icon: "target", color: "amber" },
+  { name: "Mindset", slug: "mindset", icon: "brain", color: "purple" },
+  { name: "Mindfulness", slug: "mindfulness", icon: "eye", color: "teal" },
+  { name: "Emotions", slug: "emotions", icon: "lightbulb", color: "rose" },
+  { name: "Purpose", slug: "meaning", icon: "sparkles", color: "indigo" },
+  { name: "Business", slug: "business", icon: "briefcase", color: "blue" },
+  { name: "Leadership", slug: "leadership", icon: "crown", color: "gold" },
+  { name: "Productivity", slug: "productivity", icon: "zap", color: "orange" },
+  { name: "Science", slug: "science", icon: "flask", color: "cyan" },
+  { name: "History", slug: "history", icon: "scroll", color: "brown" },
+  { name: "Health & Fitness", slug: "health-fitness", icon: "heart-pulse", color: "red" },
+  { name: "Relationships", slug: "relationships", icon: "users", color: "pink" },
+  { name: "Money & Finance", slug: "money-finance", icon: "wallet", color: "emerald" },
+  { name: "Creativity", slug: "creativity", icon: "palette", color: "violet" },
+  { name: "Philosophy", slug: "philosophy", icon: "book-open", color: "slate" },
+  { name: "Parenting", slug: "parenting", icon: "baby", color: "sky" },
+  { name: "Spirituality", slug: "spirituality", icon: "sun", color: "yellow" },
+  { name: "Communication", slug: "communication", icon: "message-circle", color: "lime" },
+  { name: "Technology", slug: "technology", icon: "cpu", color: "zinc" },
+  { name: "Biography", slug: "biography", icon: "user", color: "stone" },
+];
+
+async function ensureCategories() {
+  const existing = await storage.getCategories();
+  const existingSlugs = new Set(existing.map(c => c.slug));
+  let created = 0;
+  for (const cat of ALL_CATEGORIES) {
+    if (!existingSlugs.has(cat.slug)) {
+      await storage.createCategory(cat);
+      created++;
+    }
+  }
+  if (created > 0) {
+    console.log(`Ensured categories: ${created} new categories created`);
+  }
+}
+
 export async function seedDatabase() {
   await ensureAdminRole();
+  await ensureCategories();
 
   const existingBooks = await db.select().from(books).limit(1);
   if (existingBooks.length > 0) {

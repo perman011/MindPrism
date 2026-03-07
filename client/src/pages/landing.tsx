@@ -67,19 +67,19 @@ function FeatherRain() {
 
 const slides = [
   {
-    title: "Master psychology's most powerful concepts.",
-    highlight: "In minutes.",
-    description: "Every dense psychology book distilled into its most powerful ideas — visual, interactive, and unforgettable.",
+    title: "Every great book distilled into",
+    highlight: "powerful ideas.",
+    description: "Mental models, key principles, and chapter-by-chapter summaries — from business to science, philosophy to leadership.",
   },
   {
-    title: "Chapters, Models &",
-    highlight: "Audio Summaries.",
-    description: "For the busy mind. Learn through interactive cards, mental models, and listen on the go.",
+    title: "Read, listen &",
+    highlight: "watch Shorts.",
+    description: "Chapter summaries, audio walkthroughs, and bite-sized video Shorts for every book. Learn however you like.",
   },
   {
     title: "Track your growth.",
     highlight: "Build your mind.",
-    description: "Personal journal, streak tracking, and a vault of saved insights. Your psychology toolkit, always with you.",
+    description: "Personal journal, streak tracking, and a vault of saved insights — your all-in-one reading companion.",
   },
 ];
 
@@ -112,7 +112,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
       <SEOHead
         title="Welcome"
-        description="Transform dense psychology books into bite-sized chapters, mental models, and audio summaries. Start your personal growth journey today."
+        description="Every great book distilled into mental models, chapter summaries, audio walkthroughs, and Shorts. Business, science, philosophy, leadership and more — start your reading journey today."
         ogImage="/images/mindprism-logo.jpeg"
       />
       <div className="absolute inset-0 z-0">
@@ -143,7 +143,7 @@ export default function LandingPage() {
             </div>
             <div className="flex flex-col">
               <span className="text-2xl font-bold tracking-wide bg-gradient-to-r from-[#2D1B45] via-[#5B2C6F] to-[#8E44AD] bg-clip-text text-transparent dark:from-[#D4B8D6] dark:via-[#E8D5EA] dark:to-[#F0E6F3]">MindPrism</span>
-              <span className="text-[10px] font-semibold tracking-[0.22em] uppercase text-[#8E44AD]/60 dark:text-[#D4B8D6]/50 -mt-0.5">Psychology Made Simple</span>
+              <span className="text-[10px] font-semibold tracking-[0.22em] uppercase text-[#8E44AD]/60 dark:text-[#D4B8D6]/50 -mt-0.5">Big Ideas, Made Simple</span>
             </div>
           </div>
         </motion.div>

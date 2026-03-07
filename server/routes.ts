@@ -53,18 +53,26 @@ export async function registerRoutes(
   });
 
   const INTEREST_TO_CATEGORY_SLUGS: Record<string, string[]> = {
-    "anxiety": ["mindfulness", "emotions"],
-    "productivity": ["habits", "mindset"],
-    "body-language": ["emotions", "mindset"],
-    "leadership": ["mindset", "meaning"],
-    "mindfulness": ["mindfulness"],
     "habits": ["habits"],
-    "relationships": ["emotions", "mindfulness"],
-    "decision-making": ["mindset", "habits"],
-    "confidence": ["mindset", "meaning"],
-    "stoicism": ["mindfulness", "meaning"],
-    "creativity": ["mindset", "meaning"],
-    "emotional-iq": ["emotions", "mindfulness"],
+    "business": ["business", "leadership"],
+    "leadership": ["leadership", "business"],
+    "productivity": ["productivity", "habits"],
+    "finance": ["money-finance", "business"],
+    "science": ["science", "technology"],
+    "history": ["history", "biography"],
+    "health": ["health-fitness"],
+    "mindfulness": ["mindfulness", "spirituality"],
+    "relationships": ["relationships", "communication"],
+    "mindset": ["mindset", "habits"],
+    "philosophy": ["philosophy", "meaning"],
+    "creativity": ["creativity"],
+    "communication": ["communication", "relationships"],
+    "spirituality": ["spirituality", "mindfulness"],
+    "technology": ["technology", "science"],
+    "biography": ["biography", "history"],
+    "parenting": ["parenting", "relationships"],
+    "emotions": ["emotions", "mindfulness"],
+    "purpose": ["meaning", "philosophy"],
   };
 
   app.get("/api/books/recommended", isAuthenticated, async (req: any, res) => {
