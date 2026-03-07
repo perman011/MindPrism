@@ -66,7 +66,16 @@ export function PenWritingLoader({ size = "md", label }: PenWritingLoaderProps) 
 
       {/* optional label */}
       {label && (
-        <p className="text-sm text-muted-foreground animate-pulse" style={{ animationDuration: "2s" }}>
+        <p
+          className="text-sm font-semibold tracking-wide animate-pulse"
+          style={{
+            animationDuration: "2s",
+            background: "linear-gradient(135deg, #c9a227 0%, #f4d76e 40%, #d4aa32 70%, #a67c00 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
           {label}
         </p>
       )}
