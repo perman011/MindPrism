@@ -109,7 +109,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">Big Ideas, Made Simple
+    <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
       <SEOHead
         title="Welcome"
         description="Every book distilled into key principles, mental models, chapter summaries, audio walkthroughs, and Shorts. Business, science, philosophy, leadership and beyond."
