@@ -1,0 +1,32 @@
+Based on the screenshot you shared, I can clearly see the visual misalignment you're referring to. The top purple and dark blue chakra points are shifted noticeably to the right, while the yellow one appears slightly shifted to the left compared to the vertical center line of the meditating figure.
+
+Since I can only view the visual output (the screenshot) and the text content of the page, I cannot directly open your browser's Developer Tools to inspect the specific HTML and CSS. However, I can provide a **Root Cause Analysis (RCA) report** detailing the most probable technical reasons for this issue so you or your development team can investigate further.
+
+### 🐛 Visual RCA Report: Chakra Alignment Issue
+
+**Issue Description:** The chakra point indicators (colored circles) are not properly aligned along the vertical axis (the spine) of the meditating figure. Specifically, the top points (Crown/Third Eye) drift to the right.
+
+**Probable Root Causes (to investigate in DevTools):**
+
+**1. Absolute Positioning & Viewport Scaling (Most Likely)**
+
+* **The Theory:** If the meditating figure is a background image (or an `<img>` tag) and the chakra points are separate `<div>` elements overlaid on top using `position: absolute;`, they might not be scaling or anchoring correctly.
+* **What to check:** Inspect the container holding both the figure and the points. Is it set to `position: relative;`? Check if the `left`, `right`, or `transform: translate()` CSS properties on the individual colored circles are hardcoded in pixels (`px`) instead of percentages (`%`), causing them to drift when the screen size changes.
+
+**2. Flexbox or Grid Misalignment**
+
+* **The Theory:** If the points are stacked inside a vertical Flexbox or CSS Grid container, there might be rogue margins or padding applied to specific child elements.
+* **What to check:** Inspect the container of the dots. If it uses `display: flex; flex-direction: column;`, ensure that `align-items: center;` is applied and that none of the individual dots have specific `margin-left` or `margin-right` overrides.
+
+**3. SVG Coordinate Issues (If it's an SVG)**
+
+* **The Theory:** If the entire graphic (figure + points) is a single built-in `<svg>` element, the `cx` and `cy` (center x and y) coordinates for the `<circle>` elements representing the top chakras might be mathematically off in the source code.
+* **What to check:** Inspect the code. If it's an SVG, look at the `<circle>` tags and see if the `cx` attribute is consistent for all of them.
+
+**4. Static Image Asset Error**
+
+* **The Theory:** It's possible that this isn't a code issue at all, but rather that the chakras are literally drawn that way inside a single `.png` or `.jpg` image file.
+* **What to check:** Right-click the image and open it in a new tab. If the misaligned dots are part of the image itself, the design asset needs to be fixed in a program like Photoshop or Illustrator and re-uploaded.
+
+**Next Steps for Resolution:**
+Right-click on the top purple chakra point and select **"Inspect"** (or "Inspect Element"). Look at the **"Styles"** pane to see how it's positioned compared to the green or orange ones, which appear correctly centered. You will likely find a discrepancy in its `margin`, `left`/`right` coordinates, or `transform` rules.
