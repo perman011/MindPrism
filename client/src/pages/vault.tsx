@@ -1,3 +1,4 @@
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { SEOHead } from "@/components/SEOHead";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
@@ -22,7 +23,7 @@ import { StreakChart } from "@/components/streak-chart";
 import { motion } from "framer-motion";
 import { openSubscriptionManagement } from "@/lib/billing";
 import { trackJournalWrite } from "@/lib/analytics";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 
 interface VaultStats {
   booksStarted: number;
@@ -49,6 +50,7 @@ function extractApiErrorMessage(error: unknown, fallback: string): string {
 export default function Vault() {
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
+  const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<"journal" | "highlights" | "settings">("journal");
   const [journalDraft, setJournalDraft] = useState("");
   const [manualHighlightBookId, setManualHighlightBookId] = useState("");
@@ -157,6 +159,19 @@ export default function Vault() {
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to delete highlight.", variant: "destructive" });
+    },
+  });
+
+  const deleteAccountMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("DELETE", "/api/account");
+    },
+    onSuccess: () => {
+      logout();
+      setLocation("/");
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete account. Please try again or contact support@mindprism.io.", variant: "destructive" });
     },
   });
 
@@ -599,6 +614,51 @@ export default function Vault() {
                 <LogOut className="w-4 h-4" />
                 Log Out
               </Button>
+            </div>
+
+            {/* Danger Zone */}
+            <div className="mt-6 pt-6 border-t border-border">
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-destructive mb-3">Danger Zone</h3>
+              <Card className="p-5 border-destructive/30 bg-destructive/5">
+                <div className="space-y-2 mb-4">
+                  <p className="text-sm font-semibold text-foreground">Delete Account</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Permanently delete your account and all associated data. This action cannot be undone.
+                  </p>
+                </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="w-full"
+                      data-testid="button-delete-account"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 mr-2" />
+                      Delete Account
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will permanently delete your account and all your data including journal
+                        entries, reading progress, and quiz results. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        onClick={() => deleteAccountMutation.mutate()}
+                        data-testid="button-confirm-delete-account"
+                      >
+                        {deleteAccountMutation.isPending ? "Deleting..." : "Yes, Delete My Account"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </Card>
             </div>
           </motion.div>
         )}

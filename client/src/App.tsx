@@ -42,6 +42,7 @@ const AdminShorts = lazy(() => import("@/pages/admin/admin-shorts"));
 const AdminShortEditor = lazy(() => import("@/pages/admin/admin-short-editor"));
 const AdminMediaLibrary = lazy(() => import("@/pages/admin/admin-media-library"));
 const ShortsPage = lazy(() => import("@/pages/shorts-page"));
+const PrivacyPolicy = lazy(() => import("@/pages/privacy-policy"));
 
 function LazyFallback() {
   return (
@@ -74,29 +75,34 @@ function AuthenticatedApp() {
 
   if (!interests || !interests.onboardingCompleted) {
     return (
-      <Suspense fallback={<LazyFallback />}>
-        <Onboarding />
-      </Suspense>
+      <ErrorBoundary>
+        <Suspense fallback={<LazyFallback />}>
+          <Onboarding />
+        </Suspense>
+      </ErrorBoundary>
     );
   }
 
   if (location === "/shorts" || location.startsWith("/shorts/book/")) {
     return (
-      <Suspense fallback={<LazyFallback />}>
-        <AudioProvider>
-          <Switch>
-            <Route path="/shorts" component={ShortsPage} />
-            <Route path="/shorts/book/:bookId" component={ShortsPage} />
-          </Switch>
-        </AudioProvider>
-      </Suspense>
+      <ErrorBoundary>
+        <Suspense fallback={<LazyFallback />}>
+          <AudioProvider>
+            <Switch>
+              <Route path="/shorts" component={ShortsPage} />
+              <Route path="/shorts/book/:bookId" component={ShortsPage} />
+            </Switch>
+          </AudioProvider>
+        </Suspense>
+      </ErrorBoundary>
     );
   }
 
   return (
     <AudioProvider>
-      <Suspense fallback={<LazyFallback />}>
-        <div className="max-w-2xl mx-auto pb-20">
+      <ErrorBoundary>
+        <Suspense fallback={<LazyFallback />}>
+          <div className="max-w-2xl mx-auto pb-20">
           <PageTransition key={location}>
             <Switch>
               <Route path="/" component={Dashboard} />
@@ -107,11 +113,13 @@ function AuthenticatedApp() {
               <Route path="/book/:id/read" component={ChapterReader} />
               <Route path="/book/:id/journey/:section" component={StoryEngine} />
               <Route path="/book/:id/journey" component={StoryEngine} />
+              <Route path="/privacy" component={PrivacyPolicy} />
               <Route component={NotFound} />
             </Switch>
           </PageTransition>
-        </div>
-      </Suspense>
+          </div>
+        </Suspense>
+      </ErrorBoundary>
       <MiniPlayer />
       <FullScreenPlayer />
       <BottomNav />
@@ -132,6 +140,10 @@ function AppRouter() {
     return <WelcomeRedirect />;
   }
 
+  if (location === "/privacy") {
+    return <Suspense fallback={<LazyFallback />}><PrivacyPolicy /></Suspense>;
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -145,19 +157,20 @@ function AppRouter() {
 
   if (!user) {
     if (location.startsWith("/admin")) {
-      return <Suspense fallback={<LazyFallback />}><AdminLogin /></Suspense>;
+      return <ErrorBoundary><Suspense fallback={<LazyFallback />}><AdminLogin /></Suspense></ErrorBoundary>;
     }
-    return <Suspense fallback={<LazyFallback />}><LandingPage /></Suspense>;
+    return <ErrorBoundary><Suspense fallback={<LazyFallback />}><LandingPage /></Suspense></ErrorBoundary>;
   }
 
   if (location.startsWith("/admin")) {
     if (!canAccessAdminRoute(user.role, location)) {
-      return <Suspense fallback={<LazyFallback />}><AdminAccessDenied /></Suspense>;
+      return <ErrorBoundary><Suspense fallback={<LazyFallback />}><AdminAccessDenied /></Suspense></ErrorBoundary>;
     }
     return (
       <AdminLayout>
-        <Suspense fallback={<LazyFallback />}>
-          <Switch>
+        <ErrorBoundary>
+          <Suspense fallback={<LazyFallback />}>
+            <Switch>
             <Route path="/admin" component={AdminBooks} />
             <Route path="/admin/books/:id" component={AdminBookEditor} />
             <Route path="/admin/shorts" component={AdminShorts} />
@@ -167,8 +180,9 @@ function AppRouter() {
             <Route path="/admin/analytics" component={AnalyticsDashboard} />
             <Route path="/admin/media" component={AdminMediaLibrary} />
             <Route component={NotFound} />
-          </Switch>
-        </Suspense>
+            </Switch>
+          </Suspense>
+        </ErrorBoundary>
       </AdminLayout>
     );
   }

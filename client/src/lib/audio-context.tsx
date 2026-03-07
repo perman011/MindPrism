@@ -270,7 +270,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     navigator.mediaSession.setActionHandler("play", () => {
       const audio = audioRef.current;
       if (!audio) return;
-      audio.play().catch(() => {});
+      audio.play().catch((err) => { console.warn("[audio] auto-resume failed:", err); });
     });
 
     navigator.mediaSession.setActionHandler("pause", () => {

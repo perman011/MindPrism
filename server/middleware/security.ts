@@ -7,10 +7,11 @@ const ALLOWED_ORIGINS = [
 ];
 
 function isAllowedOrigin(origin: string): boolean {
+  const isDev = process.env.NODE_ENV !== "production";
   if (ALLOWED_ORIGINS.includes(origin)) return true;
   if (/^https:\/\/[a-z0-9-]+\.replit\.app$/.test(origin)) return true;
   if (/^https:\/\/[a-z0-9-]+\.repl\.co$/.test(origin)) return true;
-  if (/^https?:\/\/localhost(:\d+)?$/.test(origin)) return true;
+  if (isDev && /^https?:\/\/localhost(:\d+)?$/.test(origin)) return true;
   return false;
 }
 
