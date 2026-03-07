@@ -67,14 +67,14 @@ function FeatherRain() {
 
 const slides = [
   {
-    title: "Every great book distilled into",
-    highlight: "powerful ideas.",
-    description: "Mental models, key principles, and chapter-by-chapter summaries — from business to science, philosophy to leadership.",
+    title: "Every book. Key principles.",
+    highlight: "In minutes.",
+    description: "Chapter-by-chapter summaries, mental models, and the core principles — distilled from the world's best books.",
   },
   {
-    title: "Read, listen &",
-    highlight: "watch Shorts.",
-    description: "Chapter summaries, audio walkthroughs, and bite-sized video Shorts for every book. Learn however you like.",
+    title: "Shorts for every story.",
+    highlight: "Read, listen, watch.",
+    description: "Bite-sized video Shorts, audio walkthroughs, and reading cards for every book. Learn however suits you.",
   },
   {
     title: "Track your growth.",
@@ -112,7 +112,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
       <SEOHead
         title="Welcome"
-        description="Every great book distilled into mental models, chapter summaries, audio walkthroughs, and Shorts. Business, science, philosophy, leadership and more — start your reading journey today."
+        description="Every book distilled into key principles, mental models, chapter summaries, audio walkthroughs, and Shorts. Business, science, philosophy, leadership and beyond."
         ogImage="/images/mindprism-logo.jpeg"
       />
       <div className="absolute inset-0 z-0">
@@ -137,9 +137,8 @@ export default function LandingPage() {
           }}
         >
           <div className="flex items-center gap-3.5">
-            <div className="relative w-14 h-14 flex items-center justify-center">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#2D1B45] via-[#341539] to-[#1a0a20] shadow-xl shadow-[#341539]/20" />
-              <img src={mindprismLogo} alt="MindPrism" className="relative z-10 w-9 h-9 object-contain drop-shadow-[0_2px_6px_rgba(255,210,80,0.35)]" />
+            <div className="relative w-16 h-16 flex items-center justify-center">
+              <img src={mindprismLogo} alt="MindPrism" className="w-full h-full object-contain drop-shadow-[0_2px_8px_rgba(255,210,80,0.3)]" />
             </div>
             <div className="flex flex-col">
               <span className="text-2xl font-bold tracking-wide bg-gradient-to-r from-[#2D1B45] via-[#5B2C6F] to-[#8E44AD] bg-clip-text text-transparent dark:from-[#D4B8D6] dark:via-[#E8D5EA] dark:to-[#F0E6F3]">MindPrism</span>

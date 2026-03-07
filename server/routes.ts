@@ -218,6 +218,40 @@ export async function registerRoutes(
         }
       }
 
+      // Chakra-based similarity: boost books sharing primary/secondary chakras with completed books
+      const completedChakras = new Set<string>();
+      for (const p of completedOrAdvanced) {
+        const book = bookMap.get(p.bookId);
+        if (book?.primaryChakra) completedChakras.add(book.primaryChakra);
+        if (book?.secondaryChakra) completedChakras.add(book.secondaryChakra);
+      }
+      if (completedChakras.size > 0) {
+        for (const book of publishedBooks) {
+          if (startedBookIds.has(book.id) || myBookIds.has(book.id)) continue;
+          let chakraBoost = 0;
+          if (book.primaryChakra && completedChakras.has(book.primaryChakra)) chakraBoost += 0.15;
+          if (book.secondaryChakra && completedChakras.has(book.secondaryChakra)) chakraBoost += 0.08;
+          if (chakraBoost > 0) {
+            collaborativeScores.set(book.id, (collaborativeScores.get(book.id) || 0) + chakraBoost);
+          }
+        }
+      }
+
+      // Same-author affinity: boost unread books by authors you've already read
+      const readAuthors = new Set<string>();
+      for (const p of completedOrAdvanced) {
+        const book = bookMap.get(p.bookId);
+        if (book?.author) readAuthors.add(book.author.toLowerCase());
+      }
+      if (readAuthors.size > 0) {
+        for (const book of publishedBooks) {
+          if (startedBookIds.has(book.id) || myBookIds.has(book.id)) continue;
+          if (book.author && readAuthors.has(book.author.toLowerCase())) {
+            collaborativeScores.set(book.id, (collaborativeScores.get(book.id) || 0) + 0.25);
+          }
+        }
+      }
+
       const sortedByScore = Array.from(collaborativeScores.entries())
         .sort((a, b) => b[1] - a[1])
         .slice(0, 10);
